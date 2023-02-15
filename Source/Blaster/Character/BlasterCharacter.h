@@ -32,6 +32,9 @@ protected:
 	void AimOffset(float DeltaTime);
 	void TurnInPlace(float DeltaTime);
 	virtual void Jump() override;
+
+	UFUNCTION(BlueprintCallable)
+	EPhysicalSurface GetSurfaceType();
 	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
