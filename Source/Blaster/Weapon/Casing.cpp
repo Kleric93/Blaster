@@ -37,7 +37,7 @@ void ACasing::Tick(float DeltaTime)
 	// Rotate the mesh randomly only when it hasn't hit anything yet
 	if (!bHasHit)
 	{
-		FRotator DeltaRotation = FRotator(0.f, 0.f, FMath::RandRange(10.f, 50.f));
+		FRotator DeltaRotation = FRotator(FMath::RandRange(10.f, 50.f));
 		CasingMesh->AddLocalRotation(DeltaRotation, false);
 	}
 }
