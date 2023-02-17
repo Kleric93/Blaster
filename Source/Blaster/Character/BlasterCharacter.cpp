@@ -51,6 +51,32 @@ ABlasterCharacter::ABlasterCharacter()
 	MinNetUpdateFrequency = 33.f;
 }
 
+EPhysicalSurface ABlasterCharacter::GetSurfaceType()
+{
+	FHitResult HitResult;
+	const FVector Start{ GetActorLocation()};
+	const FVector End{ Start + FVector(0.f, 0.f, -400.f) };
+	FCollisionQueryParams QueryParams;
+	QueryParams.bReturnPhysicalMaterial = true;
+	QueryParams.AddIgnoredActor(this);
+	GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		Start,
+		End,
+		ECollisionChannel::ECC_Visibility,
+		QueryParams);
+	if (HitResult.bBlockingHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("HitResult Actor: %s"), *HitResult.GetActor()->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("HitResult Component: %s"), *HitResult.GetComponent()->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("HitResult Location: %s"), *HitResult.ImpactPoint.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("HitResult Normal: %s"), *HitResult.ImpactNormal.ToString());
+	}
+	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
+
+}
+
+
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -365,22 +391,6 @@ void ABlasterCharacter::FireButtonReleased()
 	{
 		Combat->FireButtonPressed(false);
 	}
-}
-
-EPhysicalSurface ABlasterCharacter::GetSurfaceType()
-{
-	FHitResult HitResult;
-	const FVector Start{ GetActorLocation() };
-	const FVector End{ Start + FVector(0.f, 0.f, -400.f) };
-	FCollisionQueryParams QueryParams;
-	QueryParams.bReturnPhysicalMaterial = true;
-	GetWorld()->LineTraceSingleByChannel(
-		HitResult,
-		Start,
-		End,
-		ECollisionChannel::ECC_Visibility,
-		QueryParams);
-	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 }
 
 void ABlasterCharacter::HideCameraIfCharacterClose()
