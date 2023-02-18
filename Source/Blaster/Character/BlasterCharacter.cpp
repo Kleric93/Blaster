@@ -14,6 +14,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Blaster/Blaster.h"
 #include "BlasterAnimInstance.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -98,6 +99,11 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	BlasterPlayerController = Cast<ABlasterPlayerController>(Controller);
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 
 void ABlasterCharacter::Tick(float DeltaTime)
