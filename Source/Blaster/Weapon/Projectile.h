@@ -15,12 +15,19 @@ public:
 	AProjectile();
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSpawnBulletHoles(const FHitResult& Hit);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastSpawnBulletHoles(const FHitResult& Hit);
 
 protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
@@ -41,10 +48,15 @@ private:
 	UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
+	UMaterialInterface* ImpactHolesMaterial;
+
+	UPROPERTY(EditAnywhere)
+	float LifeSpan = 10.0f;
+
+	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound;
 
 
 
 public:	
-
 };
