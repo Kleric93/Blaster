@@ -21,12 +21,10 @@ public:
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
 
-	UFUNCTION(NetMulticast, Unreliable)
-		void MulticastHit();
-
 	virtual void OnRep_ReplicatedMovement() override;
 
 protected:
+
 	virtual void BeginPlay() override;
 
 	void MoveForward(float Value);
@@ -45,6 +43,11 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
+
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+
+	void UpdateHUDHealth();
 
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
