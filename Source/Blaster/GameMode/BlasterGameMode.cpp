@@ -21,6 +21,7 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 	{
 		ElimmedCharacter->Reset();
 		ElimmedCharacter->Destroy();
+
 	}
 	if (ElimmedController)
 	{

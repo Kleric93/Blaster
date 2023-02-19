@@ -73,15 +73,7 @@ EPhysicalSurface ABlasterCharacter::GetSurfaceType()
 		End,
 		ECollisionChannel::ECC_Visibility,
 		QueryParams);
-	if (HitResult.bBlockingHit)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("HitResult Actor: %s"), *HitResult.GetActor()->GetName());
-		UE_LOG(LogTemp, Warning, TEXT("HitResult Component: %s"), *HitResult.GetComponent()->GetName());
-		UE_LOG(LogTemp, Warning, TEXT("HitResult Location: %s"), *HitResult.ImpactPoint.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("HitResult Normal: %s"), *HitResult.ImpactNormal.ToString());
-	}
 	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
-
 }
 
 
@@ -121,6 +113,7 @@ void ABlasterCharacter::MulticastElim_Implementation()
 {
 	bElimmed = true;
 	PlayElimMontage();
+	RespawnSentence();
 
 	// Start dissolve effect
 	if (DissolveMaterialInstance)
@@ -181,6 +174,13 @@ void ABlasterCharacter::Destroyed()
 	{
 		ElimBotComponent->DestroyComponent();
 	}
+
+}
+
+void ABlasterCharacter::RespawnSentence()
+{
+	FTransform SpawnTransform = GetActorTransform();
+	UGameplayStatics::SpawnSoundAtLocation(this, RespawnSentences, SpawnTransform.GetLocation());	
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -598,6 +598,7 @@ bool ABlasterCharacter::IsAiming()
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
 	if (Combat == nullptr) return nullptr;
+
 	return Combat->EquippedWeapon;
 }
 

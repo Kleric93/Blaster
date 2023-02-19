@@ -30,6 +30,8 @@ public:
 
 	virtual void Destroyed() override;
 
+	void RespawnSentence();
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -170,6 +172,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* RespawnSentences;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
