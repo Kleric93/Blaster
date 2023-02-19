@@ -128,6 +128,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
+	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
 
 	bool bElimmed = false;
@@ -179,6 +180,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* RespawnSentences;
 
+	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 
 public:	
