@@ -58,6 +58,9 @@ protected:
 
 	void UpdateHUDHealth();
 
+	// Poll for any relevant classes and initialize our HUD
+	void PollInit();
+
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
 	
@@ -175,6 +178,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* RespawnSentences;
+
+	class ABlasterPlayerState* BlasterPlayerState;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);

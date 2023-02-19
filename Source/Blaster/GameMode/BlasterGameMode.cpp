@@ -8,9 +8,18 @@
 #include "Blaster/Blaster.h"
 #include "GameFramework/PlayerStart.h"
 #include "Sound/SoundCue.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 
 void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
 {
+    ABlasterPlayerState* AttackerPlayerState = AttackerController ? Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
+    ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
+
+    if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+    {
+        AttackerPlayerState->AddToScore(1.f);
+    }
+
 	if (ElimmedCharacter)
 	{
 		ElimmedCharacter->Elim();
