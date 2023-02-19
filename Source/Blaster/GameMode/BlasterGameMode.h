@@ -17,4 +17,11 @@ class BLASTER_API ABlasterGameMode : public AGameMode
 public:
 	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
+
+private:
+	UPROPERTY(EditDefaultsOnly)
+	float NearbyRadius = 500.0f;
+
+	UPROPERTY(EditDefaultsOnly)
+	FVector DefaultLocation = FVector(0, 0, 0);
 };
