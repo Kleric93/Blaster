@@ -52,6 +52,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 		UTexture2D* CrosshairsBottom;
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound;
+
 	/*
 	*** Zoomed FOV while Aiming
 	*/
