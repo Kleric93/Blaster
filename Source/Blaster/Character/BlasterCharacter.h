@@ -21,6 +21,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim();
@@ -42,6 +43,7 @@ protected:
 	void Lookup(float Value);
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
+	void ReloadButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void AimOffset(float DeltaTime);
@@ -93,19 +95,29 @@ private:
 
 	ETurningInPlace TurningInPlace;
 
+	void HideCameraIfCharacterClose();
+
+	//
+	/// Animation Montages
+	//
+
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
-	void HideCameraIfCharacterClose();
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* ReloadMontage;
+
 
 	UPROPERTY(EditAnywhere)
-		float CameraThreshold = 200.f;
+	float CameraThreshold = 200.f;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-		class UAnimMontage* ElimMontage;
+	class UAnimMontage* ElimMontage;
+
+
 
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
