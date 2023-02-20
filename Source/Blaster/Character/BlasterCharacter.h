@@ -191,7 +191,7 @@ private:
 	class USoundCue* ElimBotSound;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* RespawnSentences;
+	USoundCue* RespawnSentences;
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;

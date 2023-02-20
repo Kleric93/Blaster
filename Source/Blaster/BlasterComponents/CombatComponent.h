@@ -28,8 +28,10 @@ public:
 	void Reload();
 
 	UFUNCTION(BlueprintCallable)
-	void FinishReloading();
+		void FinishReloading();
+
 protected:
+
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
 
@@ -58,7 +60,10 @@ protected:
 
 	void HandleReload();
 
+	int32 AmountToReload();
+
 private:
+
 	UPROPERTY()
 	class ABlasterCharacter* Character;
 
@@ -143,6 +148,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	void UpdateAmmoValues();
 public:	
 
 		
