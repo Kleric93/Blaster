@@ -55,6 +55,14 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
+	void EjectMagazine();
+	void MagazineAnimation();
+
+	//UFUNCTION(BlueprintCallable)
+	//void GrabMagazine();
+	//UFUNCTION(BlueprintCallable)
+	//void ReleaseClip();
+
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -107,6 +115,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AMagazine> MagazineClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
+	FTransform MagazineTransform;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
+	USceneComponent* HandSceneComponent;
 
 
 	UPROPERTY(EditAnywhere)

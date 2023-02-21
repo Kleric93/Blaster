@@ -22,6 +22,8 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "Blaster/Weapon/Magazine.h"
 
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -59,6 +61,8 @@ ABlasterCharacter::ABlasterCharacter()
 	MinNetUpdateFrequency = 33.f;
 
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+
+	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HandSceneComp"));
 }
 
 void ABlasterCharacter::PollInit()
@@ -270,7 +274,7 @@ void ABlasterCharacter::PostInitializeComponents()
 void ABlasterCharacter::PlayFireMontage(bool bAiming)
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
-	
+
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && FireWeaponMontage)
 	{
@@ -295,12 +299,74 @@ void ABlasterCharacter::PlayReloadMontage()
 		{
 		case EWeaponType::EWT_AssaultRifle:
 			SectionName = FName("Rifle");
+			MagazineAnimation();
+			EjectMagazine();
+
+			
 			break;
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
+
+void ABlasterCharacter::MagazineAnimation()
+{
+	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
+	UAnimationAsset* MagAnim = EquippedWeapon->GetMagazineAnimation();
+	EquippedWeapon->GetWeaponMesh()->PlayAnimation(MagAnim, false);
+}
+
+
+void ABlasterCharacter::EjectMagazine()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Ejecting magazine..."));
+
+	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
+	const USkeletalMeshSocket* MagazineEjectSocket = EquippedWeapon->GetWeaponMesh()->GetSocketByName(FName("MagazineEject"));
+	if (MagazineEjectSocket)
+	{
+		FTransform SocketTransform = MagazineEjectSocket->GetSocketTransform(EquippedWeapon->GetWeaponMesh());
+
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			// Set a timer to spawn the magazine after 0.2 seconds
+			FTimerHandle TimerHandle;
+			World->GetTimerManager().SetTimer(TimerHandle, [this, World, SocketTransform]()
+				{
+					AMagazine* SpawnedMagazine = World->SpawnActor<AMagazine>(
+						MagazineClass,
+						SocketTransform.GetLocation(),
+						SocketTransform.GetRotation().Rotator()
+						);
+				}, 0.2f, false);
+		}
+	}
+}
+
+/*void ABlasterCharacter::GrabMagazine()
+{
+	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
+	if (EquippedWeapon == nullptr) return;
+	if (HandSceneComponent == nullptr) return;
+	
+	int32 MagazineBoneIndex{ EquippedWeapon->GetWeaponMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
+	MagazineTransform = EquippedWeapon->GetWeaponMesh()->GetBoneTransform(MagazineBoneIndex);
+
+	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepRelative, true);
+	HandSceneComponent->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("hand_l")));
+	HandSceneComponent->SetWorldTransform(MagazineTransform);
+
+	EquippedWeapon->SetMovingMagazine(true);
+}
+
+void ABlasterCharacter::ReleaseClip()
+{
+	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
+	EquippedWeapon->SetMovingMagazine(false);
+}*/
+
 
 void ABlasterCharacter::PlayElimMontage()
 {

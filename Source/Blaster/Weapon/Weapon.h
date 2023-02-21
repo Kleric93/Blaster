@@ -113,6 +113,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* FireAnimation;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	class UAnimationAsset* MagazineAnimation;
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
@@ -136,6 +139,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//bool bMovingMagazine;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	//FName ClipBoneName;
+
 public:	
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -146,4 +155,7 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetmagCapacity() const { return MagCapacity; }
+	FORCEINLINE UAnimationAsset* GetMagazineAnimation() const { return MagazineAnimation; }
+	//FORCEINLINE FName GetClipBoneName() const { return ClipBoneName; }
+	//FORCEINLINE void SetMovingMagazine(bool Move) { bMovingMagazine = Move; }
 };

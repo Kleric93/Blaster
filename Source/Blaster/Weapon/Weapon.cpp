@@ -16,6 +16,7 @@
 
 
 AWeapon::AWeapon()
+	//ClipBoneName(TEXT("Clip_Bone"))
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
