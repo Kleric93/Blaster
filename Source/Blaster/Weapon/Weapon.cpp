@@ -185,12 +185,33 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 		PickupWidget->SetVisibility(bShowWidget);
 
 		UUserWidget* UserWidget = PickupWidget->GetUserWidgetObject();
+		UTextBlock* AmmoText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("AmmoText")));
+		UTextBlock* WeaponTypeText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("WeaponType")));
 		if (UserWidget)
 		{
-			UTextBlock* AmmoText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("AmmoText")));
 			if (AmmoText)
 			{
 				AmmoText->SetText(FText::FromString(FString::FromInt(Ammo)));
+			}
+
+			// Get the WeaponType block from the widget
+			if (WeaponTypeText)
+			{
+				// Update the text to display the weapon type
+				switch (WeaponType)
+				{
+				case EWeaponType::EWT_AssaultRifle:
+					WeaponTypeText->SetText(FText::FromString(TEXT("Assault Rifle")));
+					break;
+
+				case EWeaponType::EWT_NotAWeapon:
+					WeaponTypeText->SetText(FText::FromString(TEXT("Not A Weapon Sadly")));
+					break;
+
+				default:
+					WeaponTypeText->SetText(FText::FromString(TEXT("Unknown")));
+					break;
+				}
 			}
 		}
 	}

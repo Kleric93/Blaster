@@ -62,6 +62,8 @@ protected:
 
 	int32 AmountToReload();
 
+	void SetWeaponTypeOnHUD();
+
 private:
 
 	UPROPERTY()

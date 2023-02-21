@@ -153,6 +153,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
+	SetWeaponTypeOnHUD();
+
 
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
@@ -273,6 +275,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character)
 	{
+		SetWeaponTypeOnHUD();
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket)
@@ -286,6 +289,9 @@ void UCombatComponent::OnRep_EquippedWeapon()
 				Character->GetActorLocation()
 			);
 		}
+
+	
+
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 	}
@@ -462,4 +468,12 @@ void UCombatComponent::OnRep_CarriedAmmo()
 void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+}
+
+void UCombatComponent::SetWeaponTypeOnHUD()
+{
+	if (Controller && EquippedWeapon)
+	{
+		Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
+	}
 }
