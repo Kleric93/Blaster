@@ -12,6 +12,7 @@
 #include "Casing.h"
 #include "Engine/SKeletalMeshSocket.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Components/TextBlock.h"
 
 
 
@@ -182,6 +183,16 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
+
+		UUserWidget* UserWidget = PickupWidget->GetUserWidgetObject();
+		if (UserWidget)
+		{
+			UTextBlock* AmmoText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("AmmoText")));
+			if (AmmoText)
+			{
+				AmmoText->SetText(FText::FromString(FString::FromInt(Ammo)));
+			}
+		}
 	}
 }
 
