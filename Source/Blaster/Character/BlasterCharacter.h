@@ -34,6 +34,9 @@ public:
 
 	void RespawnSentence();
 
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -57,21 +60,13 @@ protected:
 	void PlayHitReactMontage();
 	void EjectMagazine();
 	void MagazineAnimation();
-
-	//UFUNCTION(BlueprintCallable)
-	//void GrabMagazine();
-	//UFUNCTION(BlueprintCallable)
-	//void ReleaseClip();
-
+	void UpdateHUDHealth();
+	// Poll for any relevant classes and initialize our HUD
+	void PollInit();
+	void RotateInPlace(float DeltaTime);
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-
-	void UpdateHUDHealth();
-
-	// Poll for any relevant classes and initialize our HUD
-	void PollInit();
-
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
 	
@@ -228,4 +223,6 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };
