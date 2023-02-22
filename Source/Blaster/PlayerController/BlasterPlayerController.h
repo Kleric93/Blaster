@@ -47,7 +47,7 @@ protected:
 	void ServerRequestServerTime(float TimeOfClientRequest);
 
 	// reports the current server time to the client in response to ServerRequestServerTime
-	UFUNCTION(Server, Reliable)
+	UFUNCTION(Client, Reliable)
 	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
 
 	// Difference between client and server times
