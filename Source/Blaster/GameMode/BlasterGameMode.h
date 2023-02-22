@@ -51,4 +51,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	FVector DefaultLocation = FVector(0, 0, 0);
+
+public:
+	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 };
