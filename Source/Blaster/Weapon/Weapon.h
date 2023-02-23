@@ -139,11 +139,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EWeaponType WeaponType;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	//bool bMovingMagazine;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//FName ClipBoneName;
+	class UBoxComponent* CollisionBox;
 
 public:	
 	void SetWeaponState(EWeaponState State);
@@ -156,6 +152,4 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetmagCapacity() const { return MagCapacity; }
 	FORCEINLINE UAnimationAsset* GetMagazineAnimation() const { return MagazineAnimation; }
-	//FORCEINLINE FName GetClipBoneName() const { return ClipBoneName; }
-	//FORCEINLINE void SetMovingMagazine(bool Move) { bMovingMagazine = Move; }
 };

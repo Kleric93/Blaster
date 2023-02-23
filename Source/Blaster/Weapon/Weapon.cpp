@@ -13,6 +13,8 @@
 #include "Engine/SKeletalMeshSocket.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/TextBlock.h"
+#include "Components/BoxComponent.h"
+#include "Blaster/Blaster.h"
 
 
 
@@ -37,6 +39,11 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
+	/*
+	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
+	CollisionBox->SetupAttachment(WeaponMesh);
+	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);*/
 }
 
 void AWeapon::BeginPlay()
@@ -204,8 +211,8 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 					WeaponTypeText->SetText(FText::FromString(TEXT("Assault Rifle")));
 					break;
 
-				case EWeaponType::EWT_NotAWeapon:
-					WeaponTypeText->SetText(FText::FromString(TEXT("Not A Weapon Sadly")));
+				case EWeaponType::EWT_M4AZ:
+					WeaponTypeText->SetText(FText::FromString(TEXT("M4AZapper")));
 					break;
 
 				default:

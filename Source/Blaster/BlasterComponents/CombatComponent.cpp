@@ -17,8 +17,6 @@
 #include "Sound/SoundCue.h"
 
 
-
-
 UCombatComponent::UCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -70,7 +68,6 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
 	}
-
 }
 
 void UCombatComponent::FireButtonPressed(bool bPressed)
