@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerStart.h"
 #include "Sound/SoundCue.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
+#include "Blaster/GameState/BlasterGameState.h"
 
 namespace MatchState
 {
@@ -78,9 +79,12 @@ void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacte
     ABlasterPlayerState* AttackerPlayerState = AttackerController ? Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
     ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
 
-    if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
+    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+
+    if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && BlasterGameState)
     {
         AttackerPlayerState->AddToScore(1.f);
+        BlasterGameState->UpdateTopScore(AttackerPlayerState);
     }
 
     if (VictimPlayerState)
@@ -123,6 +127,11 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
         // Find all available player starts
         TArray<AActor*> PlayerStarts;
         UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
+        if (MatchState == MatchState::Cooldown)
+        {
+            ABlasterCharacter* Character = Cast<ABlasterCharacter>(ElimmedCharacter);
+            Character->bDisableGameplay = true;
+        }
 
         // Define maximum number of attempts to find a suitable spawn location
         const int32 MaxAttempts = 10;

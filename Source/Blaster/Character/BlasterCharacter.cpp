@@ -95,7 +95,6 @@ EPhysicalSurface ABlasterCharacter::GetSurfaceType()
 	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 }
 
-
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -152,6 +151,10 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
 	bDisableGameplay = true;
+	if (Combat)
+	{
+		Combat->FireButtonPressed(false);
+	}
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -194,7 +197,11 @@ void ABlasterCharacter::Destroyed()
 	{
 		ElimBotComponent->DestroyComponent();
 	}
-	if (Combat && Combat->EquippedWeapon)
+
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = BlasterGameMode && BlasterGameMode->GetMatchState() != MatchState::InProgress;
+	
+	if (Combat && Combat->EquippedWeapon && bMatchNotInProgress)
 	{
 		Combat->EquippedWeapon->Destroy();
 	}
@@ -720,6 +727,7 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+	
 }
 
 bool ABlasterCharacter::IsWeaponEquipped()
