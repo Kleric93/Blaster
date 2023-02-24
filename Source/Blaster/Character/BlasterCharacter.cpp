@@ -318,6 +318,17 @@ void ABlasterCharacter::PlayReloadMontage()
 			ARMagazineAnimation();
 			EjectMagazine();
 			break;
+
+		case EWeaponType::EWT_RocketLauncher:
+			SectionName = FName("Rifle");
+			ARMagazineAnimation();
+			break;
+
+		case EWeaponType::EWT_M4AZ:
+			SectionName = FName("Rifle");
+			ARMagazineAnimation();
+			EjectMagazine();
+			break;
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName);
