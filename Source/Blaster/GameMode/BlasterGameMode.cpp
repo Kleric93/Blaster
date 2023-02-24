@@ -10,6 +10,7 @@
 #include "Sound/SoundCue.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 namespace MatchState
 {
@@ -127,10 +128,14 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
         // Find all available player starts
         TArray<AActor*> PlayerStarts;
         UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
-        if (MatchState == MatchState::Cooldown)
+        if (MatchState != MatchState::InProgress)
         {
             ABlasterCharacter* Character = Cast<ABlasterCharacter>(ElimmedCharacter);
-            Character->bDisableGameplay = true;
+           Character->bDisableGameplay = true;
+           Character->GetCharacterMovement()->DisableMovement();
+           Character->GetCharacterMovement()->StopMovementImmediately();
+          
+           UE_LOG(LogTemp, Warning, TEXT("Function called: MatchState != InProgress"));
         }
 
         // Define maximum number of attempts to find a suitable spawn location
@@ -171,5 +176,16 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
         UE_LOG(LogTemp, Warning, TEXT("No suitable spawn location found for player %s"), *ElimmedController->GetName());
         FRotator DefaultRotation = FRotator(0.0f, 0.0f, 0.0f);
         RestartPlayerAtTransform(ElimmedController, FTransform(DefaultRotation, DefaultLocation));
+
+       
+    }
+    if (MatchState != MatchState::InProgress)
+    {
+        ABlasterCharacter* Character = Cast<ABlasterCharacter>(ElimmedCharacter);
+        Character->bDisableGameplay = true;
+        Character->GetCharacterMovement()->DisableMovement();
+        Character->GetCharacterMovement()->StopMovementImmediately();
+
+        UE_LOG(LogTemp, Warning, TEXT("Function called: MatchState != InProgress"));
     }
 }
