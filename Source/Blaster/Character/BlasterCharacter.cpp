@@ -315,10 +315,8 @@ void ABlasterCharacter::PlayReloadMontage()
 		{
 		case EWeaponType::EWT_AssaultRifle:
 			SectionName = FName("Rifle");
-			MagazineAnimation();
+			ARMagazineAnimation();
 			EjectMagazine();
-
-			
 			break;
 		}
 
@@ -326,7 +324,7 @@ void ABlasterCharacter::PlayReloadMontage()
 	}
 }
 
-void ABlasterCharacter::MagazineAnimation()
+void ABlasterCharacter::ARMagazineAnimation()
 {
 	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
 	UAnimationAsset* MagAnim = EquippedWeapon->GetMagazineAnimation();

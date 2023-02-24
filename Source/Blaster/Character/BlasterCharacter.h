@@ -59,7 +59,7 @@ protected:
 	void FireButtonReleased();
 	void PlayHitReactMontage();
 	void EjectMagazine();
-	void MagazineAnimation();
+	void ARMagazineAnimation();
 	void UpdateHUDHealth();
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();

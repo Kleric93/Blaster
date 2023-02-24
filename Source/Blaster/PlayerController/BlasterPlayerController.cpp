@@ -212,6 +212,9 @@ void ABlasterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
 		case EWeaponType::EWT_AssaultRifle:
 			EquippedWeaponType = FString::Printf(TEXT("Assault Rifle"));
 			break;
+		case EWeaponType::EWT_RocketLauncher:
+			EquippedWeaponType = FString::Printf(TEXT("Rocket Launcher"));
+			break;
 		case EWeaponType::EWT_M4AZ:
 			EquippedWeaponType = FString::Printf(TEXT("M4AZapper"));
 			break;
@@ -384,7 +387,7 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD)
 	{
-		BlasterHUD->AddCharacterOverlay();
+		if(BlasterHUD->CharacterOverlay == nullptr) BlasterHUD->AddCharacterOverlay();
 		if (BlasterHUD->Announcement)
 		{
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
