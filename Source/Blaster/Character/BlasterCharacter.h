@@ -40,7 +40,7 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
-
+	void ARMagazineAnimation();
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Turn(float Value);
@@ -58,8 +58,6 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
-	void EjectMagazine();
-	void ARMagazineAnimation();
 	void UpdateHUDHealth();
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
@@ -110,12 +108,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* ReloadMontage;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AMagazine> MagazineClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
-	FTransform MagazineTransform;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 	USceneComponent* HandSceneComponent;

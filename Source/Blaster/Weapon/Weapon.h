@@ -33,6 +33,7 @@ public:
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	void AddAmmo(int32 AmmoToAdd);
+	class AMagazine* EjectMagazine();
 
 	/*
 	* Textures for the weapon Crosshairs
@@ -144,7 +145,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UTexture2D* WeaponTypeIcon;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AMagazine> MagazineClass;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
+	FTransform MagazineTransform;
 
 	class UBoxComponent* CollisionBox;
 

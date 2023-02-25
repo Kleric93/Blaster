@@ -301,11 +301,18 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
+void ABlasterCharacter::ARMagazineAnimation()
+{
+	UAnimationAsset* MagAnim = Combat->EquippedWeapon->GetMagazineAnimation();
+	Combat->EquippedWeapon->GetWeaponMesh()->PlayAnimation(MagAnim, false);
+}
+
 void ABlasterCharacter::PlayReloadMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	AMagazine* MagToEject = Combat->EquippedWeapon->EjectMagazine();
 	if (AnimInstance && ReloadMontage)
 	{
 		AnimInstance->Montage_Play(ReloadMontage);
@@ -316,7 +323,7 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_AssaultRifle:
 			SectionName = FName("Rifle");
 			ARMagazineAnimation();
-			EjectMagazine();
+			MagToEject;
 			break;
 
 		case EWeaponType::EWT_RocketLauncher:
@@ -330,48 +337,13 @@ void ABlasterCharacter::PlayReloadMontage()
 			break;
 
 		case EWeaponType::EWT_M4AZ:
-			SectionName = FName("Rifle");
+			SectionName = FName("M4AZ");
 			ARMagazineAnimation();
-			EjectMagazine();
+			MagToEject;			
 			break;
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName);
-	}
-}
-
-void ABlasterCharacter::ARMagazineAnimation()
-{
-	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
-	UAnimationAsset* MagAnim = EquippedWeapon->GetMagazineAnimation();
-	EquippedWeapon->GetWeaponMesh()->PlayAnimation(MagAnim, false);
-}
-
-
-void ABlasterCharacter::EjectMagazine()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Ejecting magazine..."));
-
-	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
-	const USkeletalMeshSocket* MagazineEjectSocket = EquippedWeapon->GetWeaponMesh()->GetSocketByName(FName("MagazineEject"));
-	if (MagazineEjectSocket)
-	{
-		FTransform SocketTransform = MagazineEjectSocket->GetSocketTransform(EquippedWeapon->GetWeaponMesh());
-
-		UWorld* World = GetWorld();
-		if (World)
-		{
-			// Set a timer to spawn the magazine after 0.2 seconds
-			FTimerHandle TimerHandle;
-			World->GetTimerManager().SetTimer(TimerHandle, [this, World, SocketTransform]()
-				{
-					AMagazine* SpawnedMagazine = World->SpawnActor<AMagazine>(
-						MagazineClass,
-						SocketTransform.GetLocation(),
-						SocketTransform.GetRotation().Rotator()
-						);
-				}, 0.2f, false);
-		}
 	}
 }
 

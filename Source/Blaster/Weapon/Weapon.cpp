@@ -10,6 +10,7 @@
 #include "Animation/AnimationAsset.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Casing.h"
+#include "Magazine.h"
 #include "Engine/SKeletalMeshSocket.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/TextBlock.h"
@@ -287,4 +288,36 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 bool AWeapon::IsEmpty()
 {
 	return Ammo <= 0;
+}
+
+AMagazine* AWeapon::EjectMagazine()
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Ejecting magazine..."));
+
+	const USkeletalMeshSocket* MagazineEjectSocket = WeaponMesh->GetSocketByName(FName("MagazineEject"));
+	if (MagazineEjectSocket)
+	{
+		FTransform SocketTransform = MagazineEjectSocket->GetSocketTransform(WeaponMesh);
+
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			// Set a timer to spawn the magazine after 0.2 seconds
+			FTimerHandle TimerHandle;
+			
+			World->GetTimerManager().SetTimer(TimerHandle, [this, World, SocketTransform]()
+				{
+					AMagazine* SpawnedMagazine = World->SpawnActor<AMagazine>(
+						MagazineClass,
+						SocketTransform.GetLocation(),
+						SocketTransform.GetRotation().Rotator()
+						);
+				return SpawnedMagazine;
+				}, 0.2f, false);
+
+			
+		}
+	}
+	return nullptr;
 }
