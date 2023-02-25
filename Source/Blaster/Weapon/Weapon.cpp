@@ -224,6 +224,10 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 					WeaponTypeText->SetText(FText::FromString(TEXT("Rocket Launcher")));
 					break;
 
+				case EWeaponType::EWT_Pistol:
+					WeaponTypeText->SetText(FText::FromString(TEXT("Pistol")));
+					break;
+
 				case EWeaponType::EWT_M4AZ:
 					WeaponTypeText->SetText(FText::FromString(TEXT("M4AZapper")));
 					break;
