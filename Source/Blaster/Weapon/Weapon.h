@@ -138,6 +138,13 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	EWeaponType WeaponType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true")) 
+	UTexture2D* AmmoTypeIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UTexture2D* WeaponTypeIcon;
+
+
 
 	class UBoxComponent* CollisionBox;
 
@@ -152,4 +159,8 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetmagCapacity() const { return MagCapacity; }
 	FORCEINLINE UAnimationAsset* GetMagazineAnimation() const { return MagazineAnimation; }
+
+	//testing
+	FORCEINLINE UTexture2D* GetWeaponTypeIcon() const { return WeaponTypeIcon; }
+	FORCEINLINE UTexture2D* GetAmmoTypeIcon() const { return AmmoTypeIcon; }
 };

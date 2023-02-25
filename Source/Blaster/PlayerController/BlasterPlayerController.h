@@ -95,4 +95,8 @@ private:
 	float HUDScore;
 	int32 HUDDefeats;
 	EWeaponType HUDWeaponType;
+
+	UPROPERTY(EditAnywhere)
+	class UTexture2D* DefaultWeaponIcon;
+	UTexture2D* DefaultAmmoIcon;
 };

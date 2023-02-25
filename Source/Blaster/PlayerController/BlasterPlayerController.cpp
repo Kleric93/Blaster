@@ -14,6 +14,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/Weapon/Weapon.h"
+#include "Components/Image.h"
+
 
 void ABlasterPlayerController::BeginPlay()
 {
@@ -200,12 +203,36 @@ void ABlasterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 
 void ABlasterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
 {
+	
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	bool bHUDValid = BlasterHUD &&
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->WeaponType;
-	if (bHUDValid)
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+		AWeapon* EquippedWeapon = Cast<AWeapon>(BlasterCharacter->GetEquippedWeapon());
+
+	if (bHUDValid && BlasterCharacter && EquippedWeapon && BlasterHUD)
 	{
+		UTexture2D* AmmoIcon = EquippedWeapon->GetAmmoTypeIcon();
+		UTexture2D* WeaponIcon = EquippedWeapon->GetWeaponTypeIcon();
+
+		UImage* AmmoImageWidget = Cast<UImage>(BlasterHUD->CharacterOverlay->GetWidgetFromName(TEXT("AmmoTypeIcon")));
+		UImage* WeaponImageWidget = Cast<UImage>(BlasterHUD->CharacterOverlay->GetWidgetFromName(TEXT("WeaponTypeIcon")));
+		UImage* DefaultAmmoWidget = Cast<UImage>(BlasterHUD->CharacterOverlay->GetWidgetFromName(TEXT("AmmoTypeIcon")));
+		UImage* DefaultWeaponWidget = Cast<UImage>(BlasterHUD->CharacterOverlay->GetWidgetFromName(TEXT("WeaponTypeIcon")));
+
+		if (AmmoIcon && WeaponIcon && BlasterHUD)
+		{
+			AmmoImageWidget->SetBrushFromTexture(AmmoIcon);
+			WeaponImageWidget->SetBrushFromTexture(WeaponIcon);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("you ded bish"));
+			DefaultAmmoWidget->SetBrushFromTexture(DefaultAmmoIcon);
+			DefaultWeaponWidget->SetBrushFromTexture(DefaultAmmoIcon);
+		}
+		
 		FString EquippedWeaponType;
 		switch (WeaponType)
 		{
@@ -450,4 +477,3 @@ void ABlasterPlayerController::HandleCooldown()
 		BlasterCharacter->GetCombat()->FireButtonPressed(false);
 	}
 }
-

@@ -15,6 +15,7 @@
 #include "Components/TextBlock.h"
 #include "Components/BoxComponent.h"
 #include "Blaster/Blaster.h"
+#include "Components/Image.h"
 
 
 
@@ -191,15 +192,22 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
-
 		UUserWidget* UserWidget = PickupWidget->GetUserWidgetObject();
-		UTextBlock* AmmoText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("AmmoText")));
-		UTextBlock* WeaponTypeText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("WeaponType")));
+		
 		if (UserWidget)
 		{
+			UTextBlock* AmmoText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("AmmoText")));
+			UTextBlock* WeaponTypeText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("WeaponType")));
+			UImage* ImageWidget = Cast<UImage>(UserWidget->GetWidgetFromName(TEXT("AmmoTypeIcon")));
+
 			if (AmmoText)
 			{
 				AmmoText->SetText(FText::FromString(FString::FromInt(Ammo)));
+			}
+
+			if (AmmoTypeIcon)
+			{
+				ImageWidget->SetBrushFromTexture(AmmoTypeIcon);
 			}
 
 			// Get the WeaponType block from the widget

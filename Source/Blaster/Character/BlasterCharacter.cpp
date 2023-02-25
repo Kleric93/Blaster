@@ -370,29 +370,6 @@ void ABlasterCharacter::EjectMagazine()
 	}
 }
 
-/*void ABlasterCharacter::GrabMagazine()
-{
-	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
-	if (EquippedWeapon == nullptr) return;
-	if (HandSceneComponent == nullptr) return;
-	
-	int32 MagazineBoneIndex{ EquippedWeapon->GetWeaponMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
-	MagazineTransform = EquippedWeapon->GetWeaponMesh()->GetBoneTransform(MagazineBoneIndex);
-
-	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepRelative, true);
-	HandSceneComponent->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("hand_l")));
-	HandSceneComponent->SetWorldTransform(MagazineTransform);
-
-	EquippedWeapon->SetMovingMagazine(true);
-}
-
-void ABlasterCharacter::ReleaseClip()
-{
-	AWeapon* EquippedWeapon = Cast<AWeapon>(Combat->EquippedWeapon);
-	EquippedWeapon->SetMovingMagazine(false);
-}*/
-
-
 void ABlasterCharacter::PlayElimMontage()
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
