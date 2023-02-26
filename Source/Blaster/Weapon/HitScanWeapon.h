@@ -24,6 +24,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastSpawnBulletHoles(const FHitResult& Hit);
 
+protected:
+
+
 private:
 
 	UPROPERTY(EditAnywhere)
@@ -43,4 +46,13 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		float LifeSpan = 10.0f;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditAnywhere)
+		USoundCue* FireSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* HitSound;
 };

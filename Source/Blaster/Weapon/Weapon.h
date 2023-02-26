@@ -145,11 +145,17 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UTexture2D* WeaponTypeIcon;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = MagazineEject)
 	TSubclassOf<class AMagazine> MagazineClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 	FTransform MagazineTransform;
+
+	UPROPERTY(EditAnywhere, Category = MagazineEject)
+	float MagSpawnDelay = 0.2f;
+
+	UPROPERTY(EditAnywhere, Category = MagazineEject)
+	FRotator MagazineSpawnRotation;
 
 	class UBoxComponent* CollisionBox;
 

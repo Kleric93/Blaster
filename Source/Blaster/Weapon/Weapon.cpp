@@ -229,6 +229,10 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 					WeaponTypeText->SetText(FText::FromString(TEXT("Pistol")));
 					break;
 
+				case EWeaponType::EWT_SMG:
+					WeaponTypeText->SetText(FText::FromString(TEXT("SMG")));
+					break;
+
 				case EWeaponType::EWT_M4AZ:
 					WeaponTypeText->SetText(FText::FromString(TEXT("M4AZapper")));
 					break;
@@ -314,7 +318,7 @@ AMagazine* AWeapon::EjectMagazine()
 						SocketTransform.GetRotation().Rotator()
 						);
 				return SpawnedMagazine;
-				}, 0.2f, false);
+				}, MagSpawnDelay, false);
 
 			
 		}

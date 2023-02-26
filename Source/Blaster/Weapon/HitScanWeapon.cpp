@@ -9,7 +9,7 @@
 #include "Components/DecalComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Blaster/Blaster.h"
-
+#include "Sound/SoundCue.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -30,11 +30,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		UWorld* World = GetWorld();
 		if (World)
 		{
+			FCollisionQueryParams TraceParams(FName(TEXT("FireTrace")), true, OwnerPawn);
+
 			World->LineTraceSingleByChannel(
 				FireHit,
 				Start,
 				End,
-				ECollisionChannel::ECC_Visibility
+				ECollisionChannel::ECC_Visibility,
+				TraceParams
 			);
 			FVector BeamEnd = End;
 			if (FireHit.bBlockingHit)
@@ -61,19 +64,43 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						);
 					ServerSpawnBulletHoles(FireHit);
 				}
-				if (BeamParticles)
+				if (HitSound)
 				{
-					UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
-						World,
-						BeamParticles,
-						SocketTransform
+					UGameplayStatics::PlaySoundAtLocation(
+						this,
+						HitSound,
+						FireHit.ImpactPoint
 					);
-					if (Beam)
-					{
-						Beam->SetVectorParameter(FName("Target"), BeamEnd);
-					}
 				}
 			}
+			if (BeamParticles)
+			{
+				UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
+					World,
+					BeamParticles,
+					SocketTransform
+				);
+				if (Beam)
+				{
+					Beam->SetVectorParameter(FName("Target"), BeamEnd);
+				}
+			}
+		}
+		if (MuzzleFlash)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				World,
+				MuzzleFlash,
+				SocketTransform
+			);
+		}
+		if (FireSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				FireSound,
+				GetActorLocation()
+			);
 		}
 	}
 }
@@ -100,6 +127,7 @@ void AHitScanWeapon::MulticastSpawnBulletHoles_Implementation(const FHitResult& 
 		//DecalSize = FVector(16.0f, 16.0f, 16.0f); // Adjust this as needed
 		UDecalComponent* DecalBullets = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DecalMaterial, DecalSize, HitLocation, Rotation, LifeSpan);
 
+		
 		// Set the LOD properties of the DecalActor component
 		if (DecalBullets)
 		{

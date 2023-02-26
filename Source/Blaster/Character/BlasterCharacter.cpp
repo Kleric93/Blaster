@@ -336,6 +336,11 @@ void ABlasterCharacter::PlayReloadMontage()
 			ARMagazineAnimation();
 			break;
 
+		case EWeaponType::EWT_SMG:
+			SectionName = FName("Rifle");
+			ARMagazineAnimation();
+			break;
+
 		case EWeaponType::EWT_M4AZ:
 			SectionName = FName("M4AZ");
 			ARMagazineAnimation();
