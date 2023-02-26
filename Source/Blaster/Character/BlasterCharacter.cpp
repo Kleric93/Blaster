@@ -344,7 +344,25 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_M4AZ:
 			SectionName = FName("M4AZ");
 			ARMagazineAnimation();
-			MagToEject;			
+			MagToEject;
+			break;
+
+		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Rifle");
+			ARMagazineAnimation();
+			MagToEject;
+			break;
+
+		case EWeaponType::EWT_SniperRifle:
+			SectionName = FName("Rifle");
+			ARMagazineAnimation();
+			MagToEject;
+			break;
+
+		case EWeaponType::EWT_GrenadeLauncher:
+			SectionName = FName("Rifle");
+			ARMagazineAnimation();
+			MagToEject;
 			break;
 		}
 

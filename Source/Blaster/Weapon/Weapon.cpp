@@ -255,6 +255,18 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 					WeaponTypeText->SetText(FText::FromString(TEXT("M4AZapper")));
 					break;
 
+				case EWeaponType::EWT_Shotgun:
+					WeaponTypeText->SetText(FText::FromString(TEXT("Shotgun")));
+					break;
+
+				case EWeaponType::EWT_SniperRifle:
+					WeaponTypeText->SetText(FText::FromString(TEXT("Sniper Rifle")));
+					break;
+
+				case EWeaponType::EWT_GrenadeLauncher:
+					WeaponTypeText->SetText(FText::FromString(TEXT("Grenade Launcher")));
+					break;
+
 				default:
 					WeaponTypeText->SetText(FText::FromString(TEXT("Unknown")));
 					break;

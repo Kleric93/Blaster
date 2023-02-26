@@ -5,11 +5,14 @@
 #include "Engine/SkeletalmeshSocket.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/DecalComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "Blaster/Blaster.h"
 #include "Sound/SoundCue.h"
+#include "DrawDebugHelpers.h"
+#include "WeaponTypes.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -134,4 +137,25 @@ void AHitScanWeapon::MulticastSpawnBulletHoles_Implementation(const FHitResult& 
 			DecalBullets->SetFadeScreenSize(0.001f); // Set the screen size at which the decal will begin to fade out
 		}
 	}
+}
+
+FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
+{
+	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
+	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
+	FVector EndLoc = SphereCenter + RandVec;
+	FVector ToEndLoc = EndLoc - TraceStart;
+
+	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
+	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, true);
+	DrawDebugLine(
+		GetWorld(),
+		TraceStart,
+		FVector(TraceStart + ToEndLoc * TRACE_LENGHT / ToEndLoc.Size()),
+		FColor::Cyan,
+		true
+	);
+
+	return FVector(TraceStart + ToEndLoc * TRACE_LENGHT / ToEndLoc.Size());
 }

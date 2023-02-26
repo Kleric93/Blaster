@@ -26,6 +26,7 @@ public:
 
 protected:
 
+	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
 
 private:
 
@@ -55,4 +56,16 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound;
+
+	///
+	/// Trace end with scatter
+	//
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+	float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+	float SphereRadius = 75.f;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+	bool bUseScatter = false;
 };

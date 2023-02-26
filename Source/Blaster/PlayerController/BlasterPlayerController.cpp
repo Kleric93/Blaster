@@ -251,6 +251,15 @@ void ABlasterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
 		case EWeaponType::EWT_M4AZ:
 			EquippedWeaponType = FString::Printf(TEXT("M4AZapper"));
 			break;
+		case EWeaponType::EWT_Shotgun:
+			EquippedWeaponType = FString::Printf(TEXT("Shotgun"));
+			break;
+		case EWeaponType::EWT_SniperRifle:
+			EquippedWeaponType = FString::Printf(TEXT("Sniper Rifle"));
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			EquippedWeaponType = FString::Printf(TEXT("Grenade Launcher"));
+			break;
 		case EWeaponType::EWT_MAX:
 			break;
 		default:

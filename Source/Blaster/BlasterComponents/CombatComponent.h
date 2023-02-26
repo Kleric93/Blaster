@@ -158,6 +158,15 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingM4AZAmmo = 30;
 
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 8;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo = 4;
+
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo = 0;
+
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
