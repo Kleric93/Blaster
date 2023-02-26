@@ -9,6 +9,8 @@
 #include "Sound/SoundCue.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/Blaster.h"
+#include "Components/DecalComponent.h"
+
 
 AProjectile::AProjectile()
 {
@@ -110,7 +112,12 @@ void AProjectile::MulticastSpawnBulletHoles_Implementation(const FHitResult& Hit
 		// Spawn the decal
 		UMaterialInterface* DecalMaterial = ImpactHolesMaterial;
 		FVector DecalSize = FVector(16.0f, 16.0f, 16.0f); // Adjust this as needed
-		UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DecalMaterial, DecalSize, HitLocation, Rotation, LifeSpan);
+		UDecalComponent* DecalBullets = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DecalMaterial, DecalSize, HitLocation, Rotation, LifeSpan);
+
+		if (DecalBullets)
+		{
+			DecalBullets->SetFadeScreenSize(0.001f); // Set the screen size at which the decal will begin to fade out
+		}
 	}
 }
 

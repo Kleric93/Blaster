@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Weapon.h"
+#include "Blaster/Blaster.h"
 #include "HitScanWeapon.generated.h"
 
 /**
@@ -17,6 +18,12 @@ class BLASTER_API AHitScanWeapon : public AWeapon
 public:
 	virtual void Fire(const FVector& HitTarget) override;
 
+	UFUNCTION(Server, Reliable)
+		void ServerSpawnBulletHoles(const FHitResult& Hit);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastSpawnBulletHoles(const FHitResult& Hit);
+
 private:
 
 	UPROPERTY(EditAnywhere)
@@ -27,4 +34,13 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* BeamParticles;
+
+	UPROPERTY(EditAnywhere)
+		UMaterialInterface* ImpactHolesMaterial;
+
+	UPROPERTY(EditAnywhere)
+	FVector DecalSize;
+
+	UPROPERTY(EditAnywhere)
+		float LifeSpan = 10.0f;
 };

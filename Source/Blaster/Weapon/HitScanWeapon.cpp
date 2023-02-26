@@ -6,6 +6,10 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Components/DecalComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Blaster/Blaster.h"
+
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -55,6 +59,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 						FireHit.ImpactPoint,
 						FireHit.ImpactNormal.Rotation()
 						);
+					ServerSpawnBulletHoles(FireHit);
 				}
 				if (BeamParticles)
 				{
@@ -69,6 +74,36 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					}
 				}
 			}
+		}
+	}
+}
+
+void AHitScanWeapon::ServerSpawnBulletHoles_Implementation(const FHitResult& Hit)
+{
+	MulticastSpawnBulletHoles(Hit);
+}
+
+void AHitScanWeapon::MulticastSpawnBulletHoles_Implementation(const FHitResult& Hit)
+{
+	if (GetWorld())
+	{
+		// Set up the decal parameters
+		FVector HitLocation = Hit.ImpactPoint;
+		FVector HitNormal = Hit.ImpactNormal;
+		FRotator Rotation = HitNormal.Rotation();
+
+		float RandomRollOffset = FMath::RandRange(-180.0f, 180.0f);
+		Rotation = FRotator(Rotation.Pitch, Rotation.Yaw, Rotation.Roll + RandomRollOffset);
+
+		// Spawn the decal
+		UMaterialInterface* DecalMaterial = ImpactHolesMaterial;
+		//DecalSize = FVector(16.0f, 16.0f, 16.0f); // Adjust this as needed
+		UDecalComponent* DecalBullets = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), DecalMaterial, DecalSize, HitLocation, Rotation, LifeSpan);
+
+		// Set the LOD properties of the DecalActor component
+		if (DecalBullets)
+		{
+			DecalBullets->SetFadeScreenSize(0.001f); // Set the screen size at which the decal will begin to fade out
 		}
 	}
 }
