@@ -10,6 +10,8 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/Blaster.h"
 #include "Components/DecalComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 
 AProjectile::AProjectile()
@@ -54,6 +56,47 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	ServerSpawnBulletHoles(Hit);
 
 	Destroy();
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if (TrailSystem)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailSystem,
+			GetRootComponent(),
+			FName(),
+			GetActorLocation(),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
+}
+
+void AProjectile::ExplodeDamage()
+{
+	APawn* FiringPawn = GetInstigator();
+	if (FiringPawn && HasAuthority())
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if (FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this, // world
+				Damage, //base dmg
+				30.f, //min. dmg
+				GetActorLocation(), // origin of radial dmg
+				DamageInnerRadius, // damage inner radius
+				DamageOuterRadius, // damage outer radius
+				1.f, // damage falloff
+				UDamageType::StaticClass(), // damage type class
+				TArray<AActor*>(), // ignored actors
+				this, // dmg causer
+				FiringController // instigator controller
+			);
+		}
+	}
 }
 
 
@@ -125,6 +168,21 @@ void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&AProjectile::DestroyTimerFinished,
+		DestroyTime
+	);
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
 }
 
 void AProjectile::Destroyed()
