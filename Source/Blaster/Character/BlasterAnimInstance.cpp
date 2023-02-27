@@ -69,7 +69,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandRotation = LeftHandTransform.GetRotation();
 
 
-		if (BlasterCharacter->IsLocallyControlled())
+		if (BlasterCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() != EWeaponType::EWT_SniperRifle)
 		{
 			bLocallyControlled = true;
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);
@@ -85,7 +85,11 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		*/
 	}
 
-	bUseFABRIK = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
+	if (EquippedWeapon)
+	{
+		bUseFABRIK = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() != EWeaponType::EWT_SniperRifle;
+
+	}
 	bUseAimOffsets = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
 	bTransformRightHand = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
 }

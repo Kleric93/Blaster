@@ -35,6 +35,9 @@ public:
 	void AddAmmo(int32 AmmoToAdd);
 	class AMagazine* EjectMagazine();
 
+	UFUNCTION()
+	void SpawnCasing();
+
 	/*
 	* Textures for the weapon Crosshairs
 	*/
@@ -55,6 +58,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* EquipSound;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* SniperReload;
 
 	/*
 	*** Zoomed FOV while Aiming

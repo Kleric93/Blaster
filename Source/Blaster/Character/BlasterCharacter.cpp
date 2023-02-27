@@ -301,8 +301,17 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
-		SectionName = bAiming ? FName("RifleIronSights") : FName("RifleHip");
-		AnimInstance->Montage_JumpToSection(SectionName);
+		if (Combat->EquippedWeapon->GetWeaponType() != EWeaponType::EWT_SniperRifle)
+		{
+			SectionName = bAiming ? FName("RifleIronSights") : FName("RifleHip");
+			AnimInstance->Montage_JumpToSection(SectionName);
+		}
+		else
+		{
+			SectionName = bAiming ? FName("SniperFireIronsights") : FName("SniperFireIronsights");
+			AnimInstance->Montage_JumpToSection(SectionName);
+		}
+		
 	}
 }
 

@@ -17,6 +17,8 @@
 #include "Components/BoxComponent.h"
 #include "Blaster/Blaster.h"
 #include "Components/Image.h"
+#include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
 
 
 
@@ -282,25 +284,37 @@ void AWeapon::Fire(const FVector& HitTarget)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
-	if (CasingClass)
+	if (CasingClass && WeaponType != EWeaponType::EWT_SniperRifle)
 	{
-		const USkeletalMeshSocket* AmmoEjectSocket = GetWeaponMesh()->GetSocketByName(FName("AmmoEject"));
-		if (AmmoEjectSocket)
-		{
-			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
-
-			UWorld* World = GetWorld();
-			if (World)
-			{
-				World->SpawnActor<ACasing>(
-					CasingClass,
-					SocketTransform.GetLocation(),
-					SocketTransform.GetRotation().Rotator()
-					);
-			}
-		}
+		SpawnCasing();
+	}
+	else if (CasingClass && WeaponType == EWeaponType::EWT_SniperRifle)
+	{
+		FTimerDelegate TimerCallback;
+		FTimerHandle TimerHandle;
+		TimerCallback.BindUFunction(this, FName("SpawnCasing"));
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 1.2f, false);
 	}
 	SpendRound();
+}
+
+void AWeapon::SpawnCasing()
+{
+	const USkeletalMeshSocket* AmmoEjectSocket = GetWeaponMesh()->GetSocketByName(FName("AmmoEject"));
+	if (AmmoEjectSocket)
+	{
+		FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);
+
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			World->SpawnActor<ACasing>(
+				CasingClass,
+				SocketTransform.GetLocation(),
+				SocketTransform.GetRotation().Rotator()
+				);
+		}
+	}
 }
 
 void AWeapon::Dropped()
