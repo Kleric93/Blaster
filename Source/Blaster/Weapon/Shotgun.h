@@ -17,7 +17,6 @@ class BLASTER_API AShotgun : public AHitScanWeapon
 public:
 
 	virtual void Fire(const FVector& HitTarget) override;
-
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
