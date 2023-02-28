@@ -33,6 +33,8 @@ public:
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	void AddAmmo(int32 AmmoToAdd);
+
+	UFUNCTION(BlueprintCallable)
 	class AMagazine* EjectMagazine();
 
 	UFUNCTION()

@@ -28,6 +28,7 @@ protected:
 
 	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
+	
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles;
@@ -38,8 +39,15 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* ImpactHolesMaterial;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
 	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
+	float FullDamageDistance = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
+	float LeastDamageDistance = 80.f;
+
 
 private:
 
@@ -67,6 +75,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
 	float SphereRadius = 75.f;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+	float SphereRadiusWhenAimed = 0.f;
 
 	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
 	bool bUseScatter = false;

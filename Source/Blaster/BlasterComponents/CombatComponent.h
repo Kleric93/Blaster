@@ -31,11 +31,13 @@ public:
 		void FinishReloading();
 
 	void FireButtonPressed(bool bPressed);
+	
 
 protected:
+	void SetAiming(bool bIsAiming);
 
 	virtual void BeginPlay() override;
-	void SetAiming(bool bIsAiming);
+	
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
@@ -176,5 +178,5 @@ private:
 	void UpdateAmmoValues();
 public:	
 
-		
+	FORCEINLINE bool IsAiming() const { return bAiming; }
 };

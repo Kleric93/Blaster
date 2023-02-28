@@ -13,7 +13,9 @@
 #include "Sound/SoundCue.h"
 #include "DrawDebugHelpers.h"
 #include "WeaponTypes.h"
-
+#include "Blaster/Weapon/Weapon.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
+/*
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
@@ -36,7 +38,90 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		{
 			UGameplayStatics::ApplyDamage(
 				BlasterCharacter,
-				Damage,
+				BaseDamage,
+				InstigatorController,
+				this,
+				UDamageType::StaticClass()
+			);
+		}
+		if (ImpactParticles)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				ImpactParticles,
+				FireHit.ImpactPoint,
+				FireHit.ImpactNormal.Rotation()
+			);
+			ServerSpawnBulletHoles(FireHit);
+		}
+		if (HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				HitSound,
+				FireHit.ImpactPoint
+			);
+		}
+		if (MuzzleFlash)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				MuzzleFlash,
+				SocketTransform
+			);
+		}
+		if (FireSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				FireSound,
+				GetActorLocation()
+			);
+		}
+	}
+}*/
+
+void AHitScanWeapon::Fire(const FVector& HitTarget)
+{
+	Super::Fire(HitTarget);
+
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	if (OwnerPawn == nullptr) return;
+	AController* InstigatorController = OwnerPawn->GetController();
+
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket)
+	{
+		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		FVector Start = SocketTransform.GetLocation();
+
+		FHitResult FireHit;
+		WeaponTraceHit(Start, HitTarget, FireHit);
+
+		float Distance = (FireHit.ImpactPoint - Start).Size() / 100.f;
+		float DamageMultiplier = 1.f;
+		if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		{
+			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) /  LeastDamageDistance);
+		}
+		else if (Distance > FullDamageDistance)
+		{
+			DamageMultiplier = 0.1f;
+		}
+
+		float FinalDamage = Damage * DamageMultiplier;
+
+		UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
+		UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
+		//UE_LOG(LogTemp, Warning, TEXT("ActorHit: %s"), *FireHit.GetActor()->GetName());
+
+
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
+		if (BlasterCharacter && HasAuthority() && &InstigatorController)
+		{
+			UGameplayStatics::ApplyDamage(
+				BlasterCharacter,
+				FinalDamage,
 				InstigatorController,
 				this,
 				UDamageType::StaticClass()
@@ -84,11 +169,10 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	UWorld* World = GetWorld();
 	if (World)
 	{
-
 		APawn* OwnerPawn = Cast<APawn>(GetOwner());
-
 		FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
 		FCollisionQueryParams TraceParams(FName(TEXT("FireTrace")), true, OwnerPawn);
+		TraceParams.AddIgnoredActor(this);
 
 		World->LineTraceSingleByChannel(
 			OutHit,
@@ -154,9 +238,23 @@ FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVe
 {
 	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
 	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
-	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
-	FVector EndLoc = SphereCenter + RandVec;
-	FVector ToEndLoc = EndLoc - TraceStart;
+	UCombatComponent* CombatComponent = GetOwner()->FindComponentByClass<UCombatComponent>();
+
+	if (CombatComponent && CombatComponent->IsAiming())
+	{
+		FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadiusWhenAimed);
+		FVector EndLoc = SphereCenter + RandVec;
+		FVector ToEndLoc = EndLoc - TraceStart;
+		return FVector(TraceStart + ToEndLoc * TRACE_LENGHT / ToEndLoc.Size());
+	}
+	else
+	{
+		FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
+		FVector EndLoc = SphereCenter + RandVec;
+		FVector ToEndLoc = EndLoc - TraceStart;
+		return FVector(TraceStart + ToEndLoc * TRACE_LENGHT / ToEndLoc.Size());
+	}
+
 	/*
 	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
 	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, true);
@@ -168,5 +266,4 @@ FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVe
 		true
 	);*/
 
-	return FVector(TraceStart + ToEndLoc * TRACE_LENGHT / ToEndLoc.Size());
 }

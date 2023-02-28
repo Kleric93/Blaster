@@ -351,20 +351,13 @@ AMagazine* AWeapon::EjectMagazine()
 		UWorld* World = GetWorld();
 		if (World)
 		{
-			// Set a timer to spawn the magazine after 0.2 seconds
-			FTimerHandle TimerHandle;
-			
-			World->GetTimerManager().SetTimer(TimerHandle, [this, World, SocketTransform]()
-				{
-					AMagazine* SpawnedMagazine = World->SpawnActor<AMagazine>(
-						MagazineClass,
-						SocketTransform.GetLocation(),
-						SocketTransform.GetRotation().Rotator()
-						);
-				return SpawnedMagazine;
-				}, MagSpawnDelay, false);
+			AMagazine* SpawnedMagazine = World->SpawnActor<AMagazine>(
+			MagazineClass,
+			SocketTransform.GetLocation(),
+			SocketTransform.GetRotation().Rotator()
+			);
 
-			
+			return SpawnedMagazine;
 		}
 	}
 	return nullptr;

@@ -326,7 +326,12 @@ void ABlasterCharacter::PlayReloadMontage()
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	AMagazine* MagToEject = Combat->EquippedWeapon->EjectMagazine();
+	//AMagazine* MagToEject = Combat->EquippedWeapon->EjectMagazine();
+
+	FTimerDelegate TimerCallback;
+	FTimerHandle TimerHandle;
+	TimerCallback.BindUFunction(Combat->EquippedWeapon, FName("EjectMagazine"));
+
 	if (AnimInstance && ReloadMontage)
 	{
 		AnimInstance->Montage_Play(ReloadMontage);
@@ -337,7 +342,7 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_AssaultRifle:
 			SectionName = FName("Rifle");
 			ARMagazineAnimation();
-			MagToEject;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 0.2f, false);
 			break;
 
 		case EWeaponType::EWT_RocketLauncher:
@@ -353,30 +358,28 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_SMG:
 			SectionName = FName("Rifle");
 			ARMagazineAnimation();
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 0.2f, false);
 			break;
 
 		case EWeaponType::EWT_M4AZ:
 			SectionName = FName("M4AZ");
 			ARMagazineAnimation();
-			MagToEject;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 0.2f, false);
 			break;
 
 		case EWeaponType::EWT_Shotgun:
 			SectionName = FName("Rifle");
 			ARMagazineAnimation();
-			MagToEject;
 			break;
 
 		case EWeaponType::EWT_SniperRifle:
 			SectionName = FName("Rifle");
 			ARMagazineAnimation();
-			MagToEject;
 			break;
 
 		case EWeaponType::EWT_GrenadeLauncher:
 			SectionName = FName("Rifle");
 			ARMagazineAnimation();
-			MagToEject;
 			break;
 		}
 

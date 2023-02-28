@@ -66,6 +66,7 @@ protected:
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
 
+
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	UFUNCTION(BlueprintCallable)
