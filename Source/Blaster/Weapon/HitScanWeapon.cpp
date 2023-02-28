@@ -111,8 +111,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 		float FinalDamage = Damage * DamageMultiplier;
 
-		UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
-		UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
+		//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
+		//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
 		//UE_LOG(LogTemp, Warning, TEXT("ActorHit: %s"), *FireHit.GetActor()->GetName());
 
 
