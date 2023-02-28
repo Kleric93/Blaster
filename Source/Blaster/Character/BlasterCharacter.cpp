@@ -324,7 +324,7 @@ void ABlasterCharacter::ARMagazineAnimation()
 void ABlasterCharacter::PlayReloadMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
-
+	
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	//AMagazine* MagToEject = Combat->EquippedWeapon->EjectMagazine();
 

@@ -1,0 +1,38 @@
+Begin Object Class=/Script/Engine.SoundCue Name="Device_5_Stop_Cue"
+   Begin Object Class=/Script/Engine.SoundNodeWavePlayer Name="SoundNodeWavePlayer_0"
+   End Object
+   Begin Object Class=/Script/AudioEditor.SoundCueGraph Name="SoundCueGraph_0"
+      Begin Object Class=/Script/AudioEditor.SoundCueGraphNode_Root Name="SoundCueGraphNode_Root_0"
+      End Object
+      Begin Object Class=/Script/AudioEditor.SoundCueGraphNode Name="SoundCueGraphNode_0"
+      End Object
+   End Object
+   Begin Object Name="SoundNodeWavePlayer_0"
+      SoundWaveAssetPtr="/Game/Sci-FiSoundPack/Electric/wav/Device_5_Stop.Device_5_Stop"
+      GraphNode=/Script/AudioEditor.SoundCueGraphNode'"Device_5_Stop_Cue:SoundCueGraph_0.SoundCueGraphNode_0"'
+   End Object
+   Begin Object Name="SoundCueGraph_0"
+      Begin Object Name="SoundCueGraphNode_Root_0"
+         NodePosY=-58
+         NodeGuid=7177331A432ABC54B2466E81069A698D
+         CustomProperties Pin (PinId=506FA5464F96DBA5C554B2A91C5A31A6,PinType.PinCategory="SoundNode",PinType.PinSubCategory="Root",PinType.PinSubCategoryObject=None,PinType.PinSubCategoryMemberReference=(),PinType.PinValueType=(),PinType.ContainerType=None,PinType.bIsReference=False,PinType.bIsConst=False,PinType.bIsWeakPointer=False,PinType.bIsUObjectWrapper=False,PinType.bSerializeAsSinglePrecisionFloat=False,LinkedTo=(SoundCueGraphNode_0 F834C4E147F5B269E74CB58881E36B0C,),PersistentGuid=00000000000000000000000000000000,bHidden=False,bNotConnectable=False,bDefaultValueIsReadOnly=False,bDefaultValueIsIgnored=False,bAdvancedView=False,bOrphanedPin=False,)
+      End Object
+      Begin Object Name="SoundCueGraphNode_0"
+         SoundNode=/Script/Engine.SoundNodeWavePlayer'"Device_5_Stop_Cue:SoundNodeWavePlayer_0"'
+         NodePosX=-250
+         NodePosY=-35
+         NodeGuid=4A8F1B894C15327457C3A1BCFD8E37BB
+         CustomProperties Pin (PinId=F834C4E147F5B269E74CB58881E36B0C,PinName="Output",Direction="EGPD_Output",PinType.PinCategory="SoundNode",PinType.PinSubCategory="",PinType.PinSubCategoryObject=None,PinType.PinSubCategoryMemberReference=(),PinType.PinValueType=(),PinType.ContainerType=None,PinType.bIsReference=False,PinType.bIsConst=False,PinType.bIsWeakPointer=False,PinType.bIsUObjectWrapper=False,PinType.bSerializeAsSinglePrecisionFloat=False,LinkedTo=(SoundCueGraphNode_Root_0 506FA5464F96DBA5C554B2A91C5A31A6,),PersistentGuid=00000000000000000000000000000000,bHidden=False,bNotConnectable=False,bDefaultValueIsReadOnly=False,bDefaultValueIsIgnored=False,bAdvancedView=False,bOrphanedPin=False,)
+      End Object
+      Schema=/Script/CoreUObject.Class'"/Script/AudioEditor.SoundCueGraphSchema"'
+      Nodes(0)=/Script/AudioEditor.SoundCueGraphNode_Root'"SoundCueGraphNode_Root_0"'
+      Nodes(1)=/Script/AudioEditor.SoundCueGraphNode'"SoundCueGraphNode_0"'
+      bAllowDeletion=False
+      GraphGuid=ED4CC7A041F58CBB8EEF54957EAFCB24
+   End Object
+   FirstNode=/Script/Engine.SoundNodeWavePlayer'"SoundNodeWavePlayer_0"'
+   AllNodes(0)=/Script/Engine.SoundNodeWavePlayer'"SoundNodeWavePlayer_0"'
+   SoundCueGraph=/Script/AudioEditor.SoundCueGraph'"SoundCueGraph_0"'
+   Duration=2.000000
+   MaxDistance=2097152.000000
+End Object

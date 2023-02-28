@@ -69,7 +69,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		LeftHandRotation = LeftHandTransform.GetRotation();
 
 
-		if (BlasterCharacter->IsLocallyControlled() && EquippedWeapon->GetWeaponType() != EWeaponType::EWT_SniperRifle)
+		if (BlasterCharacter->IsLocallyControlled()/* && EquippedWeapon->GetWeaponType() != EWeaponType::EWT_SniperRifle*/)
 		{
 			bLocallyControlled = true;
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);

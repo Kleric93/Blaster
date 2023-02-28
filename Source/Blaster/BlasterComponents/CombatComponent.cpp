@@ -195,6 +195,10 @@ void UCombatComponent::ServerReload_Implementation()
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
 
 	CombatState = ECombatState::ECS_Reloading;
+	if (bAiming)
+	{
+		bAiming = false;
+	}
 	HandleReload();
 }
 
@@ -210,6 +214,7 @@ void UCombatComponent::FinishReloading()
 	{
 		Fire();
 	}
+
 }
 
 void UCombatComponent::UpdateAmmoValues()
@@ -432,6 +437,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
+	CombatState = ECombatState::ECS_Unoccupied;
 	ServerSetAiming(bIsAiming);
 	if (Character)
 	{
@@ -440,6 +446,10 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
+	}
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ)
+	{
+		Character->ShowM4ScopeWidget(bIsAiming, CombatState);
 	}
 }
 

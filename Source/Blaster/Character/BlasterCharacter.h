@@ -39,6 +39,8 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowM4ScopeWidget(bool bShowScope, ECombatState CombatState);
 
 protected:
 
