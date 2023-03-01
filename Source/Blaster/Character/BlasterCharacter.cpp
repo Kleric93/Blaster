@@ -114,6 +114,8 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 void ABlasterCharacter::Elim()
 {
+	UE_LOG(LogTemp, Warning, TEXT("Elim called on %s"), *GetName());
+
 	if (Combat && Combat->EquippedWeapon)
 	{
 		Combat->EquippedWeapon->Dropped();
@@ -326,11 +328,20 @@ void ABlasterCharacter::PlayReloadMontage()
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 	
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	//AMagazine* MagToEject = Combat->EquippedWeapon->EjectMagazine();
+
+	// Create a weak reference to the EquippedWeapon object
+	TWeakObjectPtr<AWeapon> WeakWeapon = Combat->EquippedWeapon;
 
 	FTimerDelegate TimerCallback;
 	FTimerHandle TimerHandle;
-	TimerCallback.BindUFunction(Combat->EquippedWeapon, FName("EjectMagazine"));
+	TimerCallback.BindLambda([WeakWeapon]()
+		{
+			// Check if the EquippedWeapon object is still valid before calling its functions
+			if (WeakWeapon.IsValid())
+			{
+				WeakWeapon->EjectMagazine();
+			}
+		});
 
 	if (AnimInstance && ReloadMontage)
 	{
@@ -346,12 +357,12 @@ void ABlasterCharacter::PlayReloadMontage()
 			break;
 
 		case EWeaponType::EWT_RocketLauncher:
-			SectionName = FName("Rifle");
+			SectionName = FName("Rocket");
 			ARMagazineAnimation();
 			break;
 
 		case EWeaponType::EWT_Pistol:
-			SectionName = FName("Rifle");
+			SectionName = FName("Pistol");
 			ARMagazineAnimation();
 			break;
 
@@ -364,21 +375,21 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_M4AZ:
 			SectionName = FName("M4AZ");
 			ARMagazineAnimation();
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 0.2f, false);
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 0.4f, false);
 			break;
 
 		case EWeaponType::EWT_Shotgun:
-			SectionName = FName("Rifle");
+			SectionName = FName("Shotgun");
 			ARMagazineAnimation();
 			break;
 
 		case EWeaponType::EWT_SniperRifle:
-			SectionName = FName("Rifle");
+			SectionName = FName("Sniper");
 			ARMagazineAnimation();
 			break;
 
 		case EWeaponType::EWT_GrenadeLauncher:
-			SectionName = FName("Rifle");
+			SectionName = FName("GrenadeLauncher");
 			ARMagazineAnimation();
 			break;
 		}
