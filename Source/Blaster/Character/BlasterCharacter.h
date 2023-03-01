@@ -24,6 +24,7 @@ public:
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
 	void PlayElimMontage();
+	void PlayThrowGrenadeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim();
 
@@ -67,7 +68,8 @@ protected:
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
-
+	void GrenadeButtonPressed();
+	//void SmokeGrenadeButtonPressed();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
@@ -128,7 +130,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* ElimMontage;
 
-
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* ThrowGrenadeMontage;
 
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;

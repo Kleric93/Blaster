@@ -97,7 +97,7 @@ void UCombatComponent::Fire()
 		ServerFire(HitTarget);
 		if (EquippedWeapon)
 		{
-			CrosshairShootingFactor += 1.f;
+			CrosshairShootingFactor = .75f;
 		}
 		StartFireTimer();
 	}
@@ -153,6 +153,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
@@ -200,7 +201,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		ServerReload();
 	}
@@ -236,10 +237,10 @@ void UCombatComponent::FinishReloading()
 void UCombatComponent::UpdateAmmoValues()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
-	int32 RealoadAmount = AmountToReload();
+	int32 ReloadAmount = AmountToReload();
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= RealoadAmount;
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
 		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 
@@ -249,7 +250,7 @@ void UCombatComponent::UpdateAmmoValues()
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 
-	EquippedWeapon->AddAmmo(-RealoadAmount);
+	EquippedWeapon->AddAmmo(-ReloadAmount);
 }
 
 void UCombatComponent::UpdateShotgunAmmoValues()
@@ -284,6 +285,11 @@ void UCombatComponent::JumpToShotgunEnd()
 	}
 }
 
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
 void UCombatComponent::OnRep_CombatState()
 {
 	switch (CombatState)
@@ -296,6 +302,12 @@ void UCombatComponent::OnRep_CombatState()
 		break;
 	case ECombatState::ECS_Reloading:
 		HandleReload();
+		break;
+	case ECombatState::ECS_ThrowingGrenade:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->PlayThrowGrenadeMontage();
+		}
 		break;
 	case ECombatState::ECS_MAX:
 		break;
@@ -319,6 +331,29 @@ int32 UCombatComponent::AmountToReload()
 		return FMath::Clamp(RoomInMag, 0, Least);
 	}
 	return 0;
+}
+
+void UCombatComponent::ThrowGrenade()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+	}
+	if (Character && !Character->HasAuthority())
+	{
+		ServerThrowGrenade();
+	}
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+	}
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -375,7 +410,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
 		}
 
-		FVector End = Start + CrosshairWorldDirection * TRACE_LENGHT;
+		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 		GetWorld()->LineTraceSingleByChannel(
 			TraceHitResult,
 			Start,
@@ -556,3 +591,4 @@ void UCombatComponent::SetWeaponTypeOnHUD()
 		Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
 	}
 }
+

@@ -85,11 +85,7 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		*/
 	}
 
-	if (EquippedWeapon)
-	{
-		bUseFABRIK = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() != EWeaponType::EWT_SniperRifle;
-
-	}
-	bUseAimOffsets = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
-	bTransformRightHand = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
+	bUseFABRIK = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+	bUseAimOffsets = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
+	bTransformRightHand = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
 }

@@ -10,8 +10,6 @@
 #include "CombatComponent.generated.h"
 
 
-#define TRACE_LENGHT 80000.f
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -36,6 +34,9 @@ public:
 	void ShotgunShellReload();
 
 	void JumpToShotgunEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
 
 protected:
 	void SetAiming(bool bIsAiming);
@@ -70,6 +71,14 @@ protected:
 	int32 AmountToReload();
 
 	void SetWeaponTypeOnHUD();
+
+	void ThrowGrenade();
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
+
+	//void ThrowSmokeGrenade();
+	//UFUNCTION(Server, Reliable)
+	//void ServerThrowSmokeGrenade();
 
 private:
 
