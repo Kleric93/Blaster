@@ -19,6 +19,7 @@
 #include "Components/Image.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 
 
 
@@ -122,7 +123,12 @@ void AWeapon::SpendRound()
 
 void AWeapon::OnRep_Ammo()
 {
-	--Ammo;
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombat() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}
+	//--Ammo;
 	SetHUDAmmo();
 }
 
@@ -336,6 +342,11 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 bool AWeapon::IsEmpty()
 {
 	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
 }
 
 AMagazine* AWeapon::EjectMagazine()
