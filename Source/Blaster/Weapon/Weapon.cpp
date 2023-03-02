@@ -307,7 +307,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
-	if (CasingClass && WeaponType != EWeaponType::EWT_SniperRifle)
+	if (CasingClass && WeaponType != EWeaponType::EWT_SniperRifle && WeaponType != EWeaponType::EWT_Shotgun)
 	{
 		SpawnCasing();
 	}
@@ -317,6 +317,13 @@ void AWeapon::Fire(const FVector& HitTarget)
 		FTimerHandle TimerHandle;
 		TimerCallback.BindUFunction(this, FName("SpawnCasing"));
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 1.2f, false);
+	}
+	else if (CasingClass && WeaponType == EWeaponType::EWT_Shotgun)
+	{
+		FTimerDelegate TimerCallback;
+		FTimerHandle TimerHandle;
+		TimerCallback.BindUFunction(this, FName("SpawnCasing"));
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, .5f, false);
 	}
 	SpendRound();
 }

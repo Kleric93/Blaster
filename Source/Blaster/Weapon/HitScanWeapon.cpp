@@ -15,6 +15,9 @@
 #include "WeaponTypes.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Engine/SKeletalMeshSocket.h"
 /*
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -80,6 +83,31 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		}
 	}
 }*/
+
+
+void AHitScanWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+	Super::BeginPlay();
+	SpawnSparksSystem();
+}
+
+void AHitScanWeapon::SpawnSparksSystem()
+{
+	if (GetWeaponMesh() == nullptr || ChargerSparksSystem == nullptr || ChargerSparksSystemComponent != nullptr) return;
+
+	FVector ChargerLocation = GetWeaponMesh()->GetSocketLocation(FName("ChargerSparks"));
+	FRotator ChargerRotation = GetWeaponMesh()->GetSocketRotation(FName("ChargerSparks"));
+	ChargerSparksSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+		ChargerSparksSystem,
+		GetRootComponent(),
+		FName(),
+		ChargerLocation,
+		ChargerRotation,
+		EAttachLocation::KeepWorldPosition,
+		false
+	);
+}
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {

@@ -26,9 +26,10 @@ public:
 
 protected:
 
+	virtual void BeginPlay() override;
 	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
-	
+	void SpawnSparksSystem();
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles;
@@ -47,6 +48,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
 	float LeastDamageDistance = 80.f;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* ChargerSparksSystem;
+
+	UPROPERTY()
+	class UNiagaraComponent* ChargerSparksSystemComponent;
 
 
 private:

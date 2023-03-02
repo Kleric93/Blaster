@@ -109,15 +109,18 @@ protected:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex);
 
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32 Ammo;
+
+	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
+		EWeaponState WeaponState;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USphereComponent* AreaSphere;
-
-	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
-	EWeaponState WeaponState;
 
 	UFUNCTION()
 	void OnRep_WeaponState();
@@ -133,9 +136,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
-
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 Ammo;
 
 	UFUNCTION()
 	void OnRep_Ammo();

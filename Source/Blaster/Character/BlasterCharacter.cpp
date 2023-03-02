@@ -379,6 +379,7 @@ void ABlasterCharacter::PlayReloadMontage()
 		case EWeaponType::EWT_Pistol:
 			SectionName = FName("Pistol");
 			ARMagazineAnimation();
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, 0.2f, false);
 			break;
 
 		case EWeaponType::EWT_SMG:
