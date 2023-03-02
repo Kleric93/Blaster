@@ -80,6 +80,13 @@ protected:
 	//UFUNCTION(Server, Reliable)
 	//void ServerThrowSmokeGrenade();
 
+	void DropEquippedWeapon();
+	void AttachActorToRighthand(AActor* ActorToAttach);
+	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void UpdateCarriedAmmo();
+	void PlayEquipWeaponSound();
+	void ReloadEmptyWeapon();
+
 private:
 
 	UPROPERTY()
