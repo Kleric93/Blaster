@@ -63,6 +63,10 @@ ABlasterCharacter::ABlasterCharacter()
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 
 	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HandSceneComp"));
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::PollInit()
@@ -757,6 +761,7 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 	if (OverlappingWeapon)
 	{
 		OverlappingWeapon->ShowPickupWidget(false);
+		OverlappingWeapon->EnableCustomDepth(false);
 	}
 	OverlappingWeapon = Weapon;
 	if (IsLocallyControlled())
@@ -764,9 +769,25 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 		if (OverlappingWeapon)
 		{
 			OverlappingWeapon->ShowPickupWidget(true);
+			OverlappingWeapon->EnableCustomDepth(true);
 		}
 	}
 	
+}
+
+void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+		OverlappingWeapon->EnableCustomDepth(true);
+
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+		LastWeapon->EnableCustomDepth(false);
+	}
 }
 
 bool ABlasterCharacter::IsWeaponEquipped()
@@ -790,18 +811,6 @@ FVector ABlasterCharacter::GetHitTarget() const
 {
 	if (Combat == nullptr) return FVector();
 	return Combat->HitTarget;
-}
-
-void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
-{
-	if (OverlappingWeapon)
-	{
-		OverlappingWeapon->ShowPickupWidget(true);
-	}
-	if (LastWeapon)
-	{
-		LastWeapon->ShowPickupWidget(false);
-	}
 }
 
 ECombatState ABlasterCharacter::GetCombatState() const

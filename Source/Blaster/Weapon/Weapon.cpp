@@ -40,7 +40,6 @@ AWeapon::AWeapon()
 
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_WHITE);
 	WeaponMesh->MarkRenderStateDirty();
-	EnableCustomDepth(true);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(RootComponent);
@@ -75,7 +74,10 @@ void AWeapon::BeginPlay()
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
 	}
-
+	if (WeaponMesh)
+	{
+		EnableCustomDepth(false);
+	}
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(false);
@@ -103,6 +105,10 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	{
 		BlasterCharacter->SetOverlappingWeapon(this);
 	}
+	if (WeaponMesh && BlasterCharacter->IsLocallyControlled())
+	{
+		EnableCustomDepth(true);
+	}
 }
 
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -111,6 +117,10 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	if (BlasterCharacter)
 	{
 		BlasterCharacter->SetOverlappingWeapon(nullptr);
+	}
+	if (WeaponMesh && BlasterCharacter->IsLocallyControlled())
+	{
+		EnableCustomDepth(false);
 	}
 }
 
@@ -190,7 +200,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->MarkRenderStateDirty();
-		EnableCustomDepth(true);
+		EnableCustomDepth(false);
 		break;
 	}
 }
@@ -226,7 +236,7 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->MarkRenderStateDirty();
-		EnableCustomDepth(true);
+		EnableCustomDepth(false);
 		break;
 	}
 }
