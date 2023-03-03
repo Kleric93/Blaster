@@ -209,7 +209,20 @@ private:
 
 	void UpdateShotgunAmmoValues();
 
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+		int32 Grenades = 2;
+
+	UFUNCTION()
+		void OnRep_Grenades();
+
+	UPROPERTY(EditAnywhere)
+		int32 MaxGrenades = 2;
+
+	void UpdateHUDGrenades();
+
 public:	
 
 	FORCEINLINE bool IsAiming() const { return bAiming; }
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+
 };

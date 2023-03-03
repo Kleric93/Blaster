@@ -24,6 +24,7 @@ public:
 	void SetHUDWeaponType(EWeaponType WeaponType);
 	void SetHUDMatchCountdown(float CountdownTime);
 	void SetHUDAnnouncementCountdown(float CountdownTime);
+	void SetHUDGrenades(int32 Grenades);
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnPossess(APawn* InPawn) override;
@@ -95,6 +96,7 @@ private:
 	float HUDScore;
 	int32 HUDDefeats;
 	EWeaponType HUDWeaponType;
+	int32 HUDGrenades;
 
 	UPROPERTY(EditAnywhere)
 	class UTexture2D* DefaultWeaponIcon;
