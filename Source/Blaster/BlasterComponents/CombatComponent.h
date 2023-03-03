@@ -41,6 +41,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Launchgrenade();
 
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+
 protected:
 	void SetAiming(bool bIsAiming);
 
@@ -78,6 +81,9 @@ protected:
 	void ThrowGrenade();
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GrenadeClass;
 
 	//void ThrowSmokeGrenade();
 	//UFUNCTION(Server, Reliable)
