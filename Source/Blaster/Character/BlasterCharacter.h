@@ -43,6 +43,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowM4ScopeWidget(bool bShowScope, ECombatState CombatState);
 	void UpdateHUDHealth();
+	void UpdateHUDShield();
+
 
 protected:
 
@@ -156,6 +158,21 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
+
+	//
+	/// Player Shield
+	//
+
+	UPROPERTY(EditAnywhere, Category = "PlayerStats")
+		float MaxShield = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "PlayerStats")
+		float Shield = 100.f;
+
+	UFUNCTION()
+		void OnRep_Shield(float LastShield);
+
+
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;

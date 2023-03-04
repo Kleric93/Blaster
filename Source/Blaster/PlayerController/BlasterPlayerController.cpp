@@ -135,6 +135,44 @@ void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 }
 
+void ABlasterPlayerController::SetHUDShield(float Shield, float MaxShield)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->ShieldBar &&
+		BlasterHUD->CharacterOverlay->ShieldText;
+
+	if (bHUDValid)
+	{
+		const float ShieldPercent = Shield / MaxShield;
+		BlasterHUD->CharacterOverlay->HealthBar->SetPercent(ShieldPercent);
+		FString ShieldText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Shield), FMath::CeilToInt(MaxShield));
+		BlasterHUD->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
+
+		// Set the color of the health bar based on the percentage of health remaining
+		if (ShieldPercent > 0.5f)
+		{
+			BlasterHUD->CharacterOverlay->ShieldBar->SetFillColorAndOpacity(FLinearColor(0.f, 0.f, 1.f));
+		}
+		else if (ShieldPercent > 0.2f)
+		{
+			BlasterHUD->CharacterOverlay->ShieldBar->SetFillColorAndOpacity(FLinearColor(0.2f, 0.2f, 0.8f)); // Yellow
+		}
+		else
+		{
+			BlasterHUD->CharacterOverlay->ShieldBar->SetFillColorAndOpacity(FLinearColor(0.4f, 0.4f, 0.6f)); // Red
+		}
+	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HUDShield = Shield;
+		HUDMaxShield = MaxShield;
+	}
+}
+
 void ABlasterPlayerController::SetHUDScore(float Score)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -379,6 +417,7 @@ void ABlasterPlayerController::PollInit()
 			if (CharacterOverlay)
 			{
 				SetHUDHealth(HUDHealth, HUDMaxHealth);
+				SetHUDShield(HUDShield, HUDMaxShield);
 				SetHUDScore(HUDScore);
 				SetHUDDefeats(HUDDefeats);
 				//SetHUDWeaponType(HUDWeaponType);
