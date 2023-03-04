@@ -83,8 +83,11 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
 
+	/*UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GrenadeClass;*/
+
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> GrenadeClass;
+		TSubclassOf<class AProjectile> GrenadeClass;
 
 	//void ThrowSmokeGrenade();
 	//UFUNCTION(Server, Reliable)
