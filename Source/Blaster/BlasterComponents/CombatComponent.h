@@ -9,7 +9,6 @@
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "CombatComponent.generated.h"
 
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -43,6 +42,8 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
+
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 
 protected:
 	void SetAiming(bool bIsAiming);
@@ -179,6 +180,9 @@ private:
 	int32 StartingARAmmo = 30;
 
 	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 200;
+
+	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 0;
 
 	UPROPERTY(EditAnywhere)
@@ -209,16 +213,18 @@ private:
 
 	void UpdateShotgunAmmoValues();
 
-	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades, EditAnywhere)
 		int32 Grenades = 2;
 
 	UFUNCTION()
 		void OnRep_Grenades();
 
 	UPROPERTY(EditAnywhere)
-		int32 MaxGrenades = 2;
+		int32 MaxGrenades = 6;
 
 	void UpdateHUDGrenades();
+
+
 
 public:	
 
