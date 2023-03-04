@@ -15,15 +15,21 @@ public:
 
 	UBuffComponent();
 	friend class ABlasterCharacter;
+	void Heal(float HealAmount, float HealingTime);
 
 protected:
 
 	virtual void BeginPlay() override;
+	void healRampUp(float DeltaTime);
 
 private:
 
 	UPROPERTY()
 	class ABlasterCharacter* Character;
+
+	bool bHealing = false;
+	float HealingRate = 0;
+	float AmountToHeal = 0.f;
 
 public:	
 
