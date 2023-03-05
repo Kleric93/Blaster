@@ -167,7 +167,7 @@ private:
 		float MaxShield = 100.f;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Shield, EditAnywhere, Category = "PlayerStats")
-		float Shield = 100.f;
+		float Shield = 0.f;
 
 	UFUNCTION()
 		void OnRep_Shield(float LastShield);
@@ -249,8 +249,10 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }	
 	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
@@ -258,6 +260,5 @@ public:
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UBuffComponent* Getbuff() const { return Buff; }
-	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
  
 };
