@@ -638,7 +638,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	}
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ)
 	{
-		Character->ShowM4ScopeWidget(bIsAiming, CombatState);
+		Character->ShowM4ScopeWidget(bIsAiming);
 	}
 }
 

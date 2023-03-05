@@ -90,16 +90,25 @@ private:
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
 
-	bool bInitializeCharacterOverlay = false;
 
 	float HUDHealth;
+	bool bInitializeHealth = false;
 	float HUDMaxHealth;
 	float HUDShield;
+	bool bInitializeShield = false;
 	float HUDMaxShield;
 	float HUDScore;
+	bool bInitializeScore = false;
 	int32 HUDDefeats;
+	bool bInitializeDefeats = false;
 	EWeaponType HUDWeaponType;
+	bool bInitializeWeaponType = false;
 	int32 HUDGrenades;
+	bool bInitializeGrenades = false;
+	int32 HUDWeaponAmmo;
+	bool bInitializeWeaponAmmo = false;
+	int32 HUDCarriedAmmo;
+	bool bInitializeCarriedAmmo = false;
 
 	UPROPERTY(EditAnywhere)
 	class UTexture2D* DefaultWeaponIcon;

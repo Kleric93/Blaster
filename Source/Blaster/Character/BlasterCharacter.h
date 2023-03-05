@@ -41,7 +41,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 	UFUNCTION(BlueprintImplementableEvent)
-	void ShowM4ScopeWidget(bool bShowScope, ECombatState CombatState);
+	void ShowM4ScopeWidget(bool bShowScope);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
 
@@ -250,6 +250,8 @@ public:
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
