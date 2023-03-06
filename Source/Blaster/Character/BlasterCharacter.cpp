@@ -193,7 +193,8 @@ void ABlasterCharacter::MulticastElim_Implementation()
 		Combat &&
 		Combat->bAiming &&
 		Combat->EquippedWeapon &&
-		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle && 
+		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ;
 	if (bHideSniperScope)
 	{
 		ShowSniperScopeWidget(false);
