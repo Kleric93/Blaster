@@ -55,6 +55,7 @@ AWeapon::AWeapon()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);*/
 }
 
+
 void AWeapon::EnableCustomDepth(bool bEnable)
 {
 	if (WeaponMesh)
@@ -184,8 +185,19 @@ void AWeapon::SetWeaponState(EWeaponState State)
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
 		}
+		GetWorldTimerManager().ClearTimer(DestroyTimer);
+
 		EnableCustomDepth(false);
+		
+
+		// Call the OnWeaponStateChanged delegate
+		if (!bHasStateChanged)
+		{
+			OnWeaponStateChanged.Broadcast(State);
+			bHasStateChanged = true;
+		}
 		break;
 
 	case EWeaponState::EWS_Dropped:
@@ -200,9 +212,24 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->MarkRenderStateDirty();
+		StartDestroyTimer();
 		EnableCustomDepth(false);
+
+		
 		break;
 	}
+}
+
+void AWeapon::DestroyActor()
+{
+	// Call Destroy to remove the actor from the world
+	Destroy();
+}
+
+void AWeapon::StartDestroyTimer()
+{
+	// Create a timer that calls DestroyActor after 1 second
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AWeapon::DestroyActor, DestroyTime, false);
 }
 
 void AWeapon::OnRep_WeaponState()
@@ -221,7 +248,6 @@ void AWeapon::OnRep_WeaponState()
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
 		EnableCustomDepth(false);
-
 		break;
 
 	case EWeaponState::EWS_Dropped:
@@ -362,6 +388,8 @@ void AWeapon::Dropped()
 	SetWeaponState(EWeaponState::EWS_Dropped);
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DetachRules);
+	FVector Impulse = BlasterOwnerCharacter->GetActorForwardVector() * 500.f;
+	WeaponMesh->AddImpulse(Impulse, NAME_None, true);
 	SetOwner(nullptr);
 	BlasterOwnerCharacter = nullptr;
 	BlasterOwnerController = nullptr;

@@ -18,6 +18,9 @@ enum class EWeaponState : uint8
 
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponStateChanged, EWeaponState, NewState);
+
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -40,6 +43,8 @@ public:
 	UFUNCTION()
 	void SpawnCasing();
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+		FOnWeaponStateChanged OnWeaponStateChanged;
 	/*
 	* Textures for the weapon Crosshairs
 	*/
@@ -173,6 +178,17 @@ private:
 
 	class UBoxComponent* CollisionBox;
 
+	bool bHasStateChanged;
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime;
+
+	void StartDestroyTimer();
+
+	void DestroyActor();
+
 public:	
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -189,4 +205,5 @@ public:
 	//testing
 	FORCEINLINE UTexture2D* GetWeaponTypeIcon() const { return WeaponTypeIcon; }
 	FORCEINLINE UTexture2D* GetAmmoTypeIcon() const { return AmmoTypeIcon; }
+	FORCEINLINE EWeaponState GetWeaponState() const { return WeaponState; }
 };
