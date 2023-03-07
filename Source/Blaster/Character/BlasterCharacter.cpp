@@ -189,15 +189,26 @@ void ABlasterCharacter::MulticastElim_Implementation()
 			GetActorLocation()
 		);
 	}
+
 	bool bHideSniperScope = IsLocallyControlled() &&
 		Combat &&
 		Combat->bAiming &&
 		Combat->EquippedWeapon &&
-		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle && 
-		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ;
+		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+
 	if (bHideSniperScope)
 	{
 		ShowSniperScopeWidget(false);
+	}
+
+	bool bHideM4Scope = IsLocallyControlled() &&
+		Combat &&
+		Combat->bAiming &&
+		Combat->EquippedWeapon &&
+		Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ;
+
+	if (bHideM4Scope)
+	{
 		ShowM4ScopeWidget(false);
 	}
 }
