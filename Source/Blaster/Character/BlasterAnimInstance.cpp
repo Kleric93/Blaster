@@ -72,9 +72,9 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		if (BlasterCharacter->IsLocallyControlled()/* && EquippedWeapon->GetWeaponType() != EWeaponType::EWT_SniperRifle*/)
 		{
 			bLocallyControlled = true;
-			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);
+			/*FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);
 			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - BlasterCharacter->GetHitTarget()));
-			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 35.f);
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 35.f);*/
 		}
 		
 		/* debug lines to see the socket direction against the crosshair direction.
