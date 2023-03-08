@@ -110,19 +110,11 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 
     if (ElimmedController)
     {
+       if (MatchState == MatchState::Cooldown) return;
 
         // Find all available player starts
         TArray<AActor*> PlayerStarts;
         UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
-        if (MatchState != MatchState::InProgress)
-        {
-            ABlasterCharacter* Character = Cast<ABlasterCharacter>(ElimmedCharacter);
-           Character->bDisableGameplay = true;
-           Character->GetCharacterMovement()->DisableMovement();
-           Character->GetCharacterMovement()->StopMovementImmediately();
-          
-           UE_LOG(LogTemp, Warning, TEXT("Function called: MatchState != InProgress"));
-        }
 
         // Define maximum number of attempts to find a suitable spawn location
         const int32 MaxAttempts = 10;
@@ -156,22 +148,18 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
                 UE_LOG(LogTemp, Warning, TEXT("Respawn Successful for: %s"), *ElimmedController->GetName());
                 return;
             }
+
+            ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ElimmedController->GetPawn());
+
+            if (MatchState == MatchState::Cooldown && BlasterCharacter)
+            {
+                BlasterCharacter->bDisableGameplay = true;
+            }
         }
 
         // If no suitable spawn location is found, use a default location or return an error
         UE_LOG(LogTemp, Warning, TEXT("No suitable spawn location found for player %s"), *ElimmedController->GetName());
         FRotator DefaultRotation = FRotator(0.0f, 0.0f, 0.0f);
         RestartPlayerAtTransform(ElimmedController, FTransform(DefaultRotation, DefaultLocation));
-
-       
-    }
-    if (MatchState != MatchState::InProgress)
-    {
-        ABlasterCharacter* Character = Cast<ABlasterCharacter>(ElimmedCharacter);
-        Character->bDisableGameplay = true;
-        Character->GetCharacterMovement()->DisableMovement();
-        Character->GetCharacterMovement()->StopMovementImmediately();
-
-        UE_LOG(LogTemp, Warning, TEXT("Function called: MatchState != InProgress"));
     }
 }
