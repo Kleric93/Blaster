@@ -158,6 +158,8 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	}
 	StartDissolve();
 
+	bDisableGameplay = true;
+
 	// Disable character movement
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
@@ -269,6 +271,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 	RotateInPlace(DeltaTime);
 	HideCameraIfCharacterClose();
+	HideCharacterIfScope();
 	PollInit();
 }
 
@@ -755,6 +758,35 @@ void ABlasterCharacter::FireButtonReleased()
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);
+	}
+}
+
+void ABlasterCharacter::HideCharacterIfScope()
+{
+	if (!IsLocallyControlled()) return;
+	if (Combat && Combat->bAiming && GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_M4AZ)
+	{
+		GetMesh()->SetVisibility(false);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else if (Combat && Combat->bAiming && GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		GetMesh()->SetVisibility(false);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
 	}
 }
 

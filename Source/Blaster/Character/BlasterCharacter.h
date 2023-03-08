@@ -112,6 +112,8 @@ private:
 
 	void HideCameraIfCharacterClose();
 
+	void HideCharacterIfScope();
+
 	//
 	/// Animation Montages
 	//
