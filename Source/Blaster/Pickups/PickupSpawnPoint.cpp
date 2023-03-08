@@ -3,17 +3,67 @@
 
 #include "PickupSpawnPoint.h"
 #include "Pickup.h"
+#include "Components/StaticMeshComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Materials/MaterialInterface.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 APickupSpawnPoint::APickupSpawnPoint()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+
+	PedestalMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Pedestal Mesh"));
+	PedestalMesh->SetupAttachment(RootComponent);
 }
 
 void APickupSpawnPoint::BeginPlay()
 {
 	Super::BeginPlay();
 	StartSpawnPickupTimer((AActor*)nullptr);
+
+	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
+	if (PedestalParticlesComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Particles DEactivated BeginPlay"));
+
+		PedestalParticlesComponent->Deactivate();
+	}
+
+	// Check if the pedestal mesh is currently using the default material
+	if (PedestalMesh->GetMaterial(0) == DefaultPedestalMaterial)
+	{
+		// If it is, swap it to the special material
+		PedestalMesh->SetMaterial(0, DefaultPedestalMaterial);
+		MulticastSetPedestalDefaultMaterial();
+	}
+}
+
+void APickupSpawnPoint::MulticastSetPedestalDefaultMaterial_Implementation()
+{
+	// Set the material on the server and replicate it to clients
+	PedestalMesh->SetMaterial(0, DefaultPedestalMaterial);
+}
+
+void APickupSpawnPoint::MulticastSetPedestalOnMaterial_Implementation()
+{
+	// Set the material on the clients as well
+	PedestalMesh->SetMaterial(0, WeaponSpawnedPedestalMaterial);
+
+	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
+	if (PedestalParticlesComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Particles activated in SpawnWeaponTimerFInished"));
+		PedestalParticlesComponent->Activate();
+	}
+}
+
+void APickupSpawnPoint::MulticastPlaySpawnSound_Implementation(USoundCue* Sound, FVector Location)
+{
+	// Play the sound on all clients
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, Location);
 }
 
 void APickupSpawnPoint::SpawnPickup()
@@ -37,6 +87,8 @@ void APickupSpawnPoint::SpawnPickupTimerFinished()
 	{
 		SpawnPickup();
 	}
+	MulticastPlaySpawnSound(SpawnSound, GetActorLocation());
+	MulticastSetPedestalOnMaterial();
 }
 
 void APickupSpawnPoint::StartSpawnPickupTimer(AActor* DestroyedActor)
@@ -48,6 +100,7 @@ void APickupSpawnPoint::StartSpawnPickupTimer(AActor* DestroyedActor)
 		&APickupSpawnPoint::SpawnPickupTimerFinished,
 		SpawnTime
 	);
+	MulticastSetPedestalDefaultMaterial();
 }
 
 void APickupSpawnPoint::Tick(float DeltaTime)

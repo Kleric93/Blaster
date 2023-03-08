@@ -4,12 +4,21 @@
 #include "WeaponSpawnPoint.h"
 #include "Weapon.h"
 #include "Components/SkeletalMeshComponent.h"
-
+#include "Components/StaticMeshComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Materials/MaterialInterface.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 
 
 AWeaponSpawnPoint::AWeaponSpawnPoint()
 {
+	PedestalMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Pedestal Mesh"));
+	PedestalMesh->SetupAttachment(RootComponent);
+
+
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 }
@@ -17,7 +26,51 @@ AWeaponSpawnPoint::AWeaponSpawnPoint()
 void AWeaponSpawnPoint::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Replicate the pedestal mesh's material
+	PedestalMesh->SetIsReplicated(true);
 	StartSpawnWeaponTimer(EWeaponState::EWS_Initial);
+
+	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
+	if (PedestalParticlesComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Particles DEactivated BeginPlay"));
+
+		PedestalParticlesComponent->Deactivate();
+	}
+
+	// Check if the pedestal mesh is currently using the default material
+	if (PedestalMesh->GetMaterial(0) == DefaultPedestalMaterial)
+	{
+		// If it is, swap it to the special material
+		PedestalMesh->SetMaterial(0, DefaultPedestalMaterial);
+		MulticastSetPedestalDefaultMaterial();
+	}
+}
+
+void AWeaponSpawnPoint::MulticastSetPedestalDefaultMaterial_Implementation()
+{
+	// Set the material on the server and replicate it to clients
+	PedestalMesh->SetMaterial(0, DefaultPedestalMaterial);
+}
+
+void AWeaponSpawnPoint::MulticastSetPedestalOnMaterial_Implementation()
+{
+	// Set the material on the clients as well
+	PedestalMesh->SetMaterial(0, WeaponSpawnedPedestalMaterial);
+
+	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
+	if (PedestalParticlesComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Particles activated in SpawnWeaponTimerFInished"));
+		PedestalParticlesComponent->Activate();
+	}
+}
+
+void AWeaponSpawnPoint::MulticastPlaySpawnSound_Implementation(USoundCue* Sound, FVector Location)
+{
+	// Play the sound on all clients
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Sound, Location);
 }
 
 void AWeaponSpawnPoint::SpawnWeapon(EWeaponState State)
@@ -39,8 +92,10 @@ void AWeaponSpawnPoint::SpawnWeapon(EWeaponState State)
 		if (HasAuthority() && WeaponState == EWeaponState::EWS_Initial)
 		{
 			// Start timer for spawning a new weapon
-			UE_LOG(LogTemp, Warning, TEXT("SpawnWeapon() called. Starting SpawnWeaponTimer..."));
+			//UE_LOG(LogTemp, Warning, TEXT("SpawnWeapon() called. Starting SpawnWeaponTimer..."));
 			SpawnedWeapon->OnWeaponStateChanged.AddDynamic(this, &AWeaponSpawnPoint::StartSpawnWeaponTimer);
+			//MulticastSetPedestalOnMaterial();
+			//PedestalMesh->SetMaterial(0, WeaponSpawnedPedestalMaterial);
 		}
 	}
 }
@@ -53,6 +108,9 @@ void AWeaponSpawnPoint::SpawnWeaponTimerFinished()
 	{
 		SpawnWeapon(EWeaponState::EWS_Initial);
 	}
+	// Play the spawn sound on all clients using a multicast function
+	MulticastPlaySpawnSound(SpawnSound, GetActorLocation());
+	MulticastSetPedestalOnMaterial();
 }
 
 void AWeaponSpawnPoint::StartSpawnWeaponTimer(EWeaponState NewState)
@@ -64,6 +122,9 @@ void AWeaponSpawnPoint::StartSpawnWeaponTimer(EWeaponState NewState)
 		&AWeaponSpawnPoint::SpawnWeaponTimerFinished,
 		SpawnTime
 	);
+
+	PedestalMesh->SetMaterial(0, DefaultPedestalMaterial);
+	MulticastSetPedestalDefaultMaterial();
 }
 
 void AWeaponSpawnPoint::Tick(float DeltaTime)

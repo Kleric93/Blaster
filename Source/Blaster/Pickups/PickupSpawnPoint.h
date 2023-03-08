@@ -14,6 +14,15 @@ class BLASTER_API APickupSpawnPoint : public AActor
 public:	
 	APickupSpawnPoint();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSetPedestalDefaultMaterial();
+
+UFUNCTION(NetMulticast, Reliable)
+	void MulticastSetPedestalOnMaterial();
+
+UFUNCTION(NetMulticast, Reliable)
+	void MulticastPlaySpawnSound(USoundCue* Sound, FVector Location);
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -28,6 +37,24 @@ protected:
 
 	UFUNCTION()
 	void StartSpawnPickupTimer(AActor* DestroyedActor);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+		UMaterialInterface* DefaultPedestalMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+		UMaterialInterface* WeaponSpawnedPedestalMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UNiagaraComponent* PedestalParticlesComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UNiagaraSystem* NiagaraSystemParticles;
+
+	UPROPERTY(EditAnywhere)
+		class UStaticMeshComponent* PedestalMesh;
+
+	UPROPERTY(EditAnywhere)
+		class USoundCue* SpawnSound;
 private:
 	FTimerHandle SpawnPickupTimer;
 

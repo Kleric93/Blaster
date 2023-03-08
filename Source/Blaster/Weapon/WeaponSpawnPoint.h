@@ -15,6 +15,26 @@ class BLASTER_API AWeaponSpawnPoint : public AActor
 public:	
 	AWeaponSpawnPoint();
 
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastSetPedestalDefaultMaterial();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastSetPedestalOnMaterial();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastPlaySpawnSound(USoundCue* Sound, FVector Location);
+
+	UFUNCTION()
+		void StartSpawnWeaponTimer(EWeaponState NewState);
+
+	UFUNCTION()
+		void SpawnWeaponTimerFinished();
+
+	UFUNCTION()
+		void SpawnWeapon(EWeaponState State);
+
+	FORCEINLINE bool IsWeaponSpawned() const { return SpawnedWeapon != nullptr; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -24,13 +44,20 @@ protected:
 	UPROPERTY()
 		AWeapon* SpawnedWeapon;
 
-	void SpawnWeaponTimerFinished();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+		UMaterialInterface* DefaultPedestalMaterial;
 
-	void SpawnWeapon(EWeaponState NewState);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+		UMaterialInterface* WeaponSpawnedPedestalMaterial;
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* SpawnSound;
 
-	UFUNCTION()
-		void StartSpawnWeaponTimer(EWeaponState NewState);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UNiagaraComponent* PedestalParticlesComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		class UNiagaraSystem* NiagaraSystemParticles;
 
 private:
 	FTimerHandle SpawnWeaponTimer;
@@ -44,7 +71,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate = 45.f;
 
-
+	UPROPERTY(EditAnywhere)
+	class UStaticMeshComponent* PedestalMesh;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
