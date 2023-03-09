@@ -43,6 +43,8 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	UpdateHUDGrenades();
+
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
@@ -348,6 +350,7 @@ void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuant
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = Character;
 		SpawnParams.Instigator = Character;
+	
 		UWorld* World = GetWorld();
 		if (World)
 		{

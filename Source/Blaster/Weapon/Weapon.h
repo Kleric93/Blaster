@@ -69,6 +69,8 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* SniperReload;
 
+	bool bDestroyWeapon = false;
+
 	/*
 	*** Zoomed FOV while Aiming
 	*/

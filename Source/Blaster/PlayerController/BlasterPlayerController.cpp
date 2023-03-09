@@ -95,6 +95,9 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 		SetHUDShield(BlasterCharacter->GetShield(), BlasterCharacter->GetMaxShield());
+		SetHUDCarriedAmmo(HUDCarriedAmmo);
+		SetHUDWeaponAmmo(HUDWeaponAmmo);
+		SetHUDWeaponType(EWeaponType::EWT_Pistol);
 		SetHUDGrenades(BlasterCharacter->GetCombat()->GetGrenades());
 	}
 }
@@ -277,13 +280,7 @@ void ABlasterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
 			AmmoImageWidget->SetBrushFromTexture(AmmoIcon);
 			WeaponImageWidget->SetBrushFromTexture(WeaponIcon);
 		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("you ded bish"));
-			DefaultAmmoWidget->SetBrushFromTexture(DefaultAmmoIcon);
-			DefaultWeaponWidget->SetBrushFromTexture(DefaultAmmoIcon);
-		}
-		
+
 		FString EquippedWeaponType;
 		switch (WeaponType)
 		{

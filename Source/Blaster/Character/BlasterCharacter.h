@@ -44,6 +44,8 @@ public:
 	void ShowM4ScopeWidget(bool bShowScope);
 	void UpdateHUDHealth();
 	void UpdateHUDShield();
+	void UpdateHUDAmmo();
+	void SpawnDefaultWeapon();
 
 
 protected:
@@ -76,8 +78,7 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 	UFUNCTION(BlueprintCallable)
-	EPhysicalSurface GetSurfaceType();
-	
+	EPhysicalSurface GetSurfaceType();	
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -113,6 +114,8 @@ private:
 	void HideCameraIfCharacterClose();
 
 	void HideCharacterIfScope();
+
+	AWeapon* StartingWeapon;
 
 	//
 	/// Animation Montages
@@ -237,6 +240,14 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
+
+
+	//
+	/// Default Weapon
+	//
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);

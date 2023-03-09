@@ -19,14 +19,14 @@ void AAmmoPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 			Combat->PickupAmmo(WeaponType, AmmoAmount);
 		}
 	}
-
+	/* // test for grenade pickups, failed miserably
 	ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(BlasterCharacter->GetController());
 	if (PlayerController)
 	{
 		UCombatComponent* Combat = BlasterCharacter->GetCombat();
 		int32 CurrentGrenades = Combat->GetGrenades();
 		PlayerController->SetHUDGrenades(CurrentGrenades + 1);
-	}
+	}*/
 
 	Destroy();
 }
