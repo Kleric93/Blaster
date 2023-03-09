@@ -57,6 +57,7 @@ protected:
 	void Turn(float Value);
 	void Lookup(float Value);
 	void EquipButtonPressed();
+	void SwapButtonPressed();
 	void CrouchButtonPressed();
 	void ReloadButtonPressed();
 	void AimButtonPressed();
@@ -103,6 +104,9 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+
+	UFUNCTION(Server, Reliable)
+	void ServerSwapButtonPressed();
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
