@@ -187,6 +187,19 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::SwapWeapon()
 {
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (bAiming == true)
+	{
+		bAiming = false;
+	}
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		Character->ShowSniperScopeWidget(false);
+	}
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ)
+	{
+		Character->ShowM4ScopeWidget(false);
+	}
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;
