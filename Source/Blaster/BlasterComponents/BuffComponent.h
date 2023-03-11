@@ -21,6 +21,9 @@ public:
 	void SetInitialSpeeds(float BaseSpeed, float CrouchSpeed);
 	void SetInitialJumpVelocity(float Velocity);
 	void BuffJump(float BuffJumpVelocity, float BuffTime);
+	void BuffBerserk(float BuffFireDelay, float BuffTime);
+
+	void SetInitialFireRate(float FireDelay);
 
 
 protected:
@@ -72,6 +75,17 @@ private:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastJumpBuff(float JumpVelocity);
+
+	//
+	/// Berserk Buff
+	//
+
+	FTimerHandle BerserkBuffTimer;
+	void ResetBerserk();
+	float InitialFireDelay;
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastBerserkBuff(float BuffFireDelay);
 
 public:	
 

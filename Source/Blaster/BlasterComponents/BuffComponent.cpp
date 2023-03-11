@@ -3,6 +3,8 @@
 
 #include "BuffComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/Weapon/Weapon.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -161,6 +163,49 @@ void UBuffComponent::ResetJump()
 }
 
 #pragma endregion Jump
+
+void UBuffComponent::SetInitialFireRate(float FireDelay)
+{
+	InitialFireDelay = FireDelay;
+}
+
+void UBuffComponent::BuffBerserk(float BuffFireDelay, float BuffTime)
+{
+	if (Character == nullptr && Character->GetEquippedWeapon() == nullptr) return;
+
+	Character->GetWorldTimerManager().SetTimer(
+		BerserkBuffTimer,
+		this,
+		&UBuffComponent::ResetBerserk,
+		BuffTime
+	);
+
+	if (Character && Character->GetEquippedWeapon())
+	{
+		BuffFireDelay = Character->GetEquippedWeapon()->FireDelay /2;
+		GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+
+	}
+	MulticastBerserkBuff(BuffFireDelay);
+}
+
+
+void UBuffComponent::MulticastBerserkBuff_Implementation(float BuffFireDelay)
+{
+	if (Character && Character->GetEquippedWeapon())
+	{
+		Character->GetEquippedWeapon()->FireDelay = BuffFireDelay;
+	}
+}
+
+void UBuffComponent::ResetBerserk()
+{
+	if (Character && Character->GetEquippedWeapon())
+	{
+		Character->GetEquippedWeapon()->FireDelay = InitialFireDelay;
+	}
+	MulticastBerserkBuff(InitialFireDelay);
+}
 
 void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
