@@ -47,4 +47,10 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* GrenadeText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* HighPingImage;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* HighPingAnimation;
 };

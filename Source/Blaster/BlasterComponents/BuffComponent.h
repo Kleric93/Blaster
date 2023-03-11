@@ -90,6 +90,7 @@ private:
 public:	
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		
+	FORCEINLINE FTimerHandle GetSpeedBuffTimer() const { return SpeedBuffTimer; }
+	FORCEINLINE FTimerHandle GetJumpBuffTimer() const { return JumpBuffTimer; }
+	FORCEINLINE FTimerHandle GetberserkBuffTimer() const { return BerserkBuffTimer; }
 };

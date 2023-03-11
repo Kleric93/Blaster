@@ -183,8 +183,7 @@ void UBuffComponent::BuffBerserk(float BuffFireDelay, float BuffTime)
 	if (Character && Character->GetEquippedWeapon())
 	{
 		BuffFireDelay = Character->GetEquippedWeapon()->FireDelay /2;
-		GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
-
+		//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 	}
 	MulticastBerserkBuff(BuffFireDelay);
 }
