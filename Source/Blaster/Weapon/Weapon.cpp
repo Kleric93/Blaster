@@ -24,7 +24,7 @@
 
 
 AWeapon::AWeapon()
-	//ClipBoneName(TEXT("Clip_Bone"))
+//ClipBoneName(TEXT("Clip_Bone"))
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
@@ -67,7 +67,7 @@ void AWeapon::EnableCustomDepth(bool bEnable)
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (HasAuthority())
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -77,7 +77,7 @@ void AWeapon::BeginPlay()
 	}
 	if (WeaponMesh)
 	{
-		EnableCustomDepth(false);
+		EnableCustomDepth(true);
 	}
 	if (PickupWidget)
 	{
@@ -106,10 +106,6 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 	{
 		BlasterCharacter->SetOverlappingWeapon(this);
 	}
-	if (WeaponMesh && BlasterCharacter->IsLocallyControlled())
-	{
-		EnableCustomDepth(true);
-	}
 }
 
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
@@ -118,10 +114,6 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	if (BlasterCharacter)
 	{
 		BlasterCharacter->SetOverlappingWeapon(nullptr);
-	}
-	if (WeaponMesh && BlasterCharacter->IsLocallyControlled())
-	{
-		EnableCustomDepth(false);
 	}
 }
 
@@ -140,7 +132,7 @@ void AWeapon::SetHUDAmmo()
 
 void AWeapon::SpendRound()
 {
-	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
 	SetHUDAmmo();
 }
 
@@ -194,7 +186,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		GetWorldTimerManager().ClearTimer(DestroyTimer);
 
 		EnableCustomDepth(false);
-		
+
 
 		// Call the OnWeaponStateChanged delegate
 		if (!bHasStateChanged)
@@ -202,6 +194,34 @@ void AWeapon::SetWeaponState(EWeaponState State)
 			OnWeaponStateChanged.Broadcast(State);
 			bHasStateChanged = true;
 		}
+		break;
+
+	case EWeaponState::EWS_EquippedSecondary:
+
+		ShowPickupWidget(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (WeaponType == EWeaponType::EWT_SMG)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+		}
+		GetWorldTimerManager().ClearTimer(DestroyTimer);
+
+		EnableCustomDepth(false);
+
+
+		// Call the OnWeaponStateChanged delegate
+		if (!bHasStateChanged)
+		{
+			OnWeaponStateChanged.Broadcast(State);
+			bHasStateChanged = true;
+		}
+
 		break;
 
 	case EWeaponState::EWS_Dropped:
@@ -217,9 +237,9 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->MarkRenderStateDirty();
 		StartDestroyTimer();
-		EnableCustomDepth(false);
+		EnableCustomDepth(true);
 
-		
+
 		break;
 	}
 }
@@ -254,6 +274,23 @@ void AWeapon::OnRep_WeaponState()
 		EnableCustomDepth(false);
 		break;
 
+	case EWeaponState::EWS_EquippedSecondary:
+
+		ShowPickupWidget(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (WeaponType == EWeaponType::EWT_SMG)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+		}
+
+		EnableCustomDepth(false);
+
 	case EWeaponState::EWS_Dropped:
 		if (HasAuthority())
 		{
@@ -266,7 +303,7 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->MarkRenderStateDirty();
-		EnableCustomDepth(false);
+		EnableCustomDepth(true);
 		break;
 	}
 }
@@ -277,7 +314,7 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
 		UUserWidget* UserWidget = PickupWidget->GetUserWidgetObject();
-		
+
 		if (UserWidget)
 		{
 			UTextBlock* AmmoText = Cast<UTextBlock>(UserWidget->GetWidgetFromName(TEXT("AmmoText")));
@@ -389,14 +426,30 @@ void AWeapon::SpawnCasing()
 
 void AWeapon::Dropped()
 {
-	SetWeaponState(EWeaponState::EWS_Dropped);
-	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
-	WeaponMesh->DetachFromComponent(DetachRules);
-	FVector Impulse = BlasterOwnerCharacter->GetActorForwardVector() * 500.f;
-	WeaponMesh->AddImpulse(Impulse, NAME_None, true);
-	SetOwner(nullptr);
-	BlasterOwnerCharacter = nullptr;
-	BlasterOwnerController = nullptr;
+	if (WeaponState == EWeaponState::EWS_EquippedSecondary)
+	{
+		SetWeaponState(EWeaponState::EWS_Dropped);
+		FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
+		WeaponMesh->DetachFromComponent(DetachRules);
+	
+		SetOwner(nullptr);
+		BlasterOwnerCharacter = nullptr;
+		BlasterOwnerController = nullptr;
+	}
+	else
+	{
+		SetWeaponState(EWeaponState::EWS_Dropped);
+		FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
+		WeaponMesh->DetachFromComponent(DetachRules);
+		FVector Impulse = BlasterOwnerCharacter->GetActorForwardVector() * 500.f;
+
+		WeaponMesh->AddImpulse(Impulse, NAME_None, true);
+
+		SetOwner(nullptr);
+		BlasterOwnerCharacter = nullptr;
+		BlasterOwnerController = nullptr;
+	}
+
 }
 
 void AWeapon::AddAmmo(int32 AmmoToAdd)
@@ -429,10 +482,10 @@ AMagazine* AWeapon::EjectMagazine()
 		if (World)
 		{
 			AMagazine* SpawnedMagazine = World->SpawnActor<AMagazine>(
-			MagazineClass,
-			SocketTransform.GetLocation(),
-			SocketTransform.GetRotation().Rotator()
-			);
+				MagazineClass,
+				SocketTransform.GetLocation(),
+				SocketTransform.GetRotation().Rotator()
+				);
 
 			return SpawnedMagazine;
 		}

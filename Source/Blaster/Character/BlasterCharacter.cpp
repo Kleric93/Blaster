@@ -133,17 +133,16 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 void ABlasterCharacter::Elim()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Elim called on %s"), *GetName());
 
-	if (Combat && Combat->EquippedWeapon)
+	if (Combat)
 	{
-		if (Combat->EquippedWeapon->bDestroyWeapon)
+		if (Combat->EquippedWeapon)
 		{
-			Combat->EquippedWeapon->Destroy();
+			DropOrDestroyWeapon(Combat->EquippedWeapon);
 		}
-		else
+		if (Combat->SecondaryWeapon)
 		{
-			Combat->EquippedWeapon->Dropped();
+			DropOrDestroyWeapon(Combat->SecondaryWeapon);
 		}
 	}
 	MulticastElim();
@@ -238,6 +237,19 @@ void ABlasterCharacter::ElimTimerFinished()
 	if (BlasterGameMode)
 	{
 		BlasterGameMode->RequestRespawn(this, Controller);
+	}
+}
+
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon == nullptr) return;
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy();
+	}
+	else
+	{
+		Weapon->Dropped();
 	}
 }
 
@@ -592,18 +604,27 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
 	{
-		Combat->EquipWeapon(OverlappingWeapon);
+		if (OverlappingWeapon)
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
 	}
 }
 
 void ABlasterCharacter::SwapButtonPressed()
 {
-
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		ServerSwapButtonPressed();
+	}
 }
 
 void ABlasterCharacter::ServerSwapButtonPressed_Implementation()
 {
-
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		Combat->SwapWeapon();
+	}
 }
 
 void ABlasterCharacter::CrouchButtonPressed()
@@ -920,7 +941,6 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 	if (OverlappingWeapon)
 	{
 		OverlappingWeapon->ShowPickupWidget(false);
-		OverlappingWeapon->EnableCustomDepth(false);
 	}
 	OverlappingWeapon = Weapon;
 	if (IsLocallyControlled())
@@ -928,7 +948,6 @@ void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 		if (OverlappingWeapon)
 		{
 			OverlappingWeapon->ShowPickupWidget(true);
-			OverlappingWeapon->EnableCustomDepth(true);
 		}
 	}
 	
@@ -939,13 +958,11 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	if (OverlappingWeapon)
 	{
 		OverlappingWeapon->ShowPickupWidget(true);
-		OverlappingWeapon->EnableCustomDepth(true);
 
 	}
 	if (LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
-		LastWeapon->EnableCustomDepth(false);
 	}
 }
 

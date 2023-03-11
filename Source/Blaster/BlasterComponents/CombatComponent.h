@@ -22,7 +22,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
-	void SwapWeapon(class AWeapon* SecondaryWeapon);
+	void SwapWeapon();
 
 	void Reload();
 
@@ -245,5 +245,6 @@ public:
 
 	FORCEINLINE bool IsAiming() const { return bAiming; }
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+	bool ShouldSwapWeapons();
 
 };

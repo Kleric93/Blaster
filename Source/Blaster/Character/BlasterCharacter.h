@@ -75,6 +75,7 @@ protected:
 	void RotateInPlace(float DeltaTime);
 	void GrenadeButtonPressed();
 	//void SmokeGrenadeButtonPressed();
+	void DropOrDestroyWeapon(AWeapon* Weapon);
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);

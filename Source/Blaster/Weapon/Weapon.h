@@ -12,6 +12,7 @@ enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_EquippedSecondary UMETA(DisplayName = "Equipped Secondary"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 
 	EWS_MAX UMETA(DisplayName = "DefaultMAX"),
@@ -25,8 +26,8 @@ UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -38,10 +39,10 @@ public:
 	void AddAmmo(int32 AmmoToAdd);
 
 	UFUNCTION(BlueprintCallable)
-	class AMagazine* EjectMagazine();
+		class AMagazine* EjectMagazine();
 
 	UFUNCTION()
-	void SpawnCasing();
+		void SpawnCasing();
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FOnWeaponStateChanged OnWeaponStateChanged;
@@ -64,10 +65,10 @@ public:
 		UTexture2D* CrosshairsBottom;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* EquipSound;
+		class USoundCue* EquipSound;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* SniperReload;
+		class USoundCue* SniperReload;
 
 	bool bDestroyWeapon = false;
 
@@ -76,10 +77,10 @@ public:
 	*/
 
 	UPROPERTY(EditAnywhere)
-	float ZoomedFOV = 30.f;
+		float ZoomedFOV = 30.f;
 
 	UPROPERTY(EditAnywhere)
-	float ZoomInterpSpeed = 20.f;
+		float ZoomInterpSpeed = 20.f;
 
 	//
 	/// Automatic Fire
@@ -101,82 +102,82 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	virtual void OnSphereOverlap(
-		UPrimitiveComponent* OverlappedComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult);
+		virtual void OnSphereOverlap(
+			UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex,
+			bool bFromSweep,
+			const FHitResult& SweepResult);
 
 	UFUNCTION()
-	void OnSphereEndOverlap(
-		UPrimitiveComponent* OverlappedComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex);
+		void OnSphereEndOverlap(
+			UPrimitiveComponent* OverlappedComponent,
+			AActor* OtherActor,
+			UPrimitiveComponent* OtherComp,
+			int32 OtherBodyIndex);
 
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 Ammo;
+		int32 Ammo;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 		EWeaponState WeaponState;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	USkeletalMeshComponent* WeaponMesh;
+		USkeletalMeshComponent* WeaponMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	class USphereComponent* AreaSphere;
+		class USphereComponent* AreaSphere;
 
 	UFUNCTION()
-	void OnRep_WeaponState();
+		void OnRep_WeaponState();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties", meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* PickupWidget;
+		class UWidgetComponent* PickupWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-	class UAnimationAsset* FireAnimation;
+		class UAnimationAsset* FireAnimation;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-	class UAnimationAsset* MagazineAnimation;
+		class UAnimationAsset* MagazineAnimation;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class ACasing> CasingClass;
+		TSubclassOf<class ACasing> CasingClass;
 
 	UFUNCTION()
-	void OnRep_Ammo();
+		void OnRep_Ammo();
 
 	void SpendRound();
 
 	UPROPERTY(EditAnywhere)
-	int32 MagCapacity;
+		int32 MagCapacity;
 
 	UPROPERTY()
-	class ABlasterCharacter* BlasterOwnerCharacter;
+		class ABlasterCharacter* BlasterOwnerCharacter;
 
 	UPROPERTY()
-	class ABlasterPlayerController* BlasterOwnerController;
+		class ABlasterPlayerController* BlasterOwnerController;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	EWeaponType WeaponType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true")) 
-	UTexture2D* AmmoTypeIcon;
+		EWeaponType WeaponType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		UTexture2D* AmmoTypeIcon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	UTexture2D* WeaponTypeIcon;
+		UTexture2D* WeaponTypeIcon;
 
 	UPROPERTY(EditAnywhere, Category = MagazineEject)
-	TSubclassOf<class AMagazine> MagazineClass;
+		TSubclassOf<class AMagazine> MagazineClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"));
 	FTransform MagazineTransform;
 
 	UPROPERTY(EditAnywhere, Category = MagazineEject)
-	float MagSpawnDelay = 0.2f;
+		float MagSpawnDelay = 0.2f;
 
 	UPROPERTY(EditAnywhere, Category = MagazineEject)
-	FRotator MagazineSpawnRotation;
+		FRotator MagazineSpawnRotation;
 
 	class UBoxComponent* CollisionBox;
 
@@ -185,13 +186,13 @@ private:
 	FTimerHandle DestroyTimer;
 
 	UPROPERTY(EditAnywhere)
-	float DestroyTime;
+		float DestroyTime;
 
 	void StartDestroyTimer();
 
 	void DestroyActor();
 
-public:	
+public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
