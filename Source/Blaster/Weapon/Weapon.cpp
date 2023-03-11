@@ -402,7 +402,10 @@ void AWeapon::Fire(const FVector& HitTarget)
 		TimerCallback.BindUFunction(this, FName("SpawnCasing"));
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, .5f, false);
 	}
-	SpendRound();
+	if (HasAuthority())
+	{
+		SpendRound();
+	}
 }
 
 void AWeapon::SpawnCasing()
