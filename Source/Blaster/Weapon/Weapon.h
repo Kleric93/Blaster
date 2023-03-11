@@ -19,6 +19,15 @@ enum class EWeaponState : uint8
 
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun  Weapon"),
+	EFT_MAX UMETA(DisplayName = "DefaultMax")
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponStateChanged, EWeaponState, NewState);
 
 
@@ -37,6 +46,8 @@ public:
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	void AddAmmo(int32 AmmoToAdd);
+	FVector TraceEndWithScatter(const FVector& HitTarget);
+
 
 	UFUNCTION(BlueprintCallable)
 		class AMagazine* EjectMagazine();
@@ -98,6 +109,12 @@ public:
 
 	void EnableCustomDepth(bool bEnable);
 
+	UPROPERTY(EditAnywhere)
+		EFireType FireType;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+		bool bUseScatter = false;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -122,6 +139,18 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 		EWeaponState WeaponState;
+
+	///
+	/// Trace end with scatter
+	//
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+		float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+		float SphereRadius = 75.f;
+
+	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
+		float SphereRadiusWhenAimed = 0.f;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
