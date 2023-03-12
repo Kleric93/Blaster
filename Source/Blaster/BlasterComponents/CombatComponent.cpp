@@ -246,6 +246,14 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	SecondaryWeapon->SetOwner(Character);
 }
 
+void UCombatComponent::OnRep_Aiming()
+{
+	if (Character && Character->IsLocallyControlled())
+	{
+		bAiming = bAimButtonpressed;
+	}
+}
+
 void UCombatComponent::SwapWeapon()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
@@ -796,6 +804,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	{
 		Character->ShowM4ScopeWidget(bIsAiming);
 	}
+	if (Character->IsLocallyControlled()) bAimButtonpressed = bIsAiming;
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
