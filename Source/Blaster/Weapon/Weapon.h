@@ -134,8 +134,18 @@ protected:
 			UPrimitiveComponent* OtherComp,
 			int32 OtherBodyIndex);
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere)
 		int32 Ammo;
+
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+
+	// the number of unprocessed server requests for Ammo.
+	// incremented in spend round, decremented in client update ammo.
+	int32 Sequence = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 		EWeaponState WeaponState;
@@ -173,9 +183,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class ACasing> CasingClass;
-
-	UFUNCTION()
-		void OnRep_Ammo();
 
 	void SpendRound();
 
