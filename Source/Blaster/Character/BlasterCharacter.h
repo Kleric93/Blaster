@@ -47,6 +47,8 @@ public:
 	void UpdateHUDAmmo();
 	void SpawnDefaultWeapon();
 
+	UPROPERTY()
+	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
 
 protected:
 
@@ -88,7 +90,7 @@ protected:
 	#pragma region HitBoxes
 
 	UPROPERTY(EditAnywhere)
-	class UBoxComponent* head;
+		UBoxComponent* head;
 
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* pelvis;

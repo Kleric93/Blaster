@@ -11,7 +11,7 @@ struct FBoxInformation
 {
 	GENERATED_BODY()
 
-		UPROPERTY()
+	UPROPERTY()
 		FVector Location;
 
 	UPROPERTY()
@@ -43,10 +43,12 @@ public:
 	ULagCompensationComponent();
 	friend class ABlasterCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void ShowFramePackage(const FFramePackage& Package, const FColor Color);
 
 protected:
 
 	virtual void BeginPlay() override;
+	void SaveFramePackage(FFramePackage& Package);
 
 private:
 
