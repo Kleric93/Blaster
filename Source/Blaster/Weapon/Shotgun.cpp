@@ -8,6 +8,9 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/DecalComponent.h"
 #include "Sound/SoundCue.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
+
 /*
 void AShotgun::Fire(const FVector& HitTarget)
 {
@@ -179,4 +182,50 @@ void AShotgun::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+}
+
+void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector>& HitTargets)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr) return;
+
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
+
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
+	UCombatComponent* CombatComponent = GetOwner()->FindComponentByClass<UCombatComponent>();
+
+	for (uint32 i = 0; i < NumberOfPellets; i++)
+	{
+		if (CombatComponent && CombatComponent->IsAiming())
+		{
+			FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadiusWhenAimed);
+			FVector EndLoc = SphereCenter + RandVec;
+			FVector ToEndLoc = EndLoc - TraceStart;
+			ToEndLoc = (TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());
+
+			HitTargets.Add(ToEndLoc);
+		}
+		else
+		{
+			FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
+			FVector EndLoc = SphereCenter + RandVec;
+			FVector ToEndLoc = EndLoc - TraceStart;
+			ToEndLoc = (TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());
+
+			HitTargets.Add(ToEndLoc);
+		}
+	}
+
+	/*
+	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
+	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, true);
+	DrawDebugLine(
+		GetWorld(),
+		TraceStart,
+		FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()),
+		FColor::Cyan,
+		true
+	);*/
 }
