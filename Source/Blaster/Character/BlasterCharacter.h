@@ -278,5 +278,6 @@ public:
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UBuffComponent* Getbuff() const { return Buff; }
+	bool IsLocallyReloading();
  
 };

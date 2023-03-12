@@ -47,6 +47,8 @@ public:
 
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 
+	bool bLocallyReloading = false;
+
 protected:
 	void SetAiming(bool bIsAiming);
 
