@@ -56,6 +56,7 @@ protected:
 
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package);
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, FFramePackage& YoungerFrame, float HitTime);
 
 private:
 
