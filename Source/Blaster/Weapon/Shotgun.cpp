@@ -3,13 +3,16 @@
 
 #include "Shotgun.h"
 #include "Engine/SkeletalmeshSocket.h"
-#include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Components/DecalComponent.h"
 #include "Sound/SoundCue.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
+#include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
+
 
 /*void AShotgun::Fire(const FVector& HitTarget)
 {
@@ -128,30 +131,6 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				{
 					HitMap.Emplace(BlasterCharacter, 1);
 				}
-				// Calculate damage based on distance and update the hit result
-
-				float Distance = (FireHit.ImpactPoint - Start).Size() / 100.f;
-				float DamageMultiplier = 1.f;
-				if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
-				{
-					DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) / LeastDamageDistance);
-				}
-				else if (Distance > FullDamageDistance)
-				{
-					DamageMultiplier = 0.1f;
-				}
-				float FinalDamage = Damage * DamageMultiplier;
-
-				UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
-				UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
-
-				UGameplayStatics::ApplyDamage(
-					BlasterCharacter, // char that was hit
-					FinalDamage,
-					InstigatorController,
-					this,
-					UDamageType::StaticClass()
-				);
 			}
 			if (ImpactParticles)
 			{
@@ -174,11 +153,56 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				);
 			}
 		}
+
+		// Calculate damage based on distance and update the hit result
+
+		FHitResult FireHit;
+		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
+		float Distance = (FireHit.ImpactPoint - Start).Size() / 100.f;
+		float DamageMultiplier = 1.f;
+		if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		{
+			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) / LeastDamageDistance);
+		}
+		else if (Distance > FullDamageDistance)
+		{
+			DamageMultiplier = 0.1f;
+		}
+		float FinalDamage = Damage * DamageMultiplier;
+
+		TArray<ABlasterCharacter*> HitCharacters;
+
 		for (auto HitPair : HitMap)
 		{
-			if (InstigatorController)
+			if (HitPair.Key && InstigatorController)
 			{
-				// Do nothing here since damage was already applied in the previous loop
+				if (HasAuthority() && !bUseServerSideRewind)
+				{
+					UGameplayStatics::ApplyDamage(
+						BlasterCharacter, // char that was hit
+						FinalDamage,
+						InstigatorController,
+						this,
+						UDamageType::StaticClass()
+					);
+					UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
+					UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
+				}
+				HitCharacters.Add(HitPair.Key);
+			}
+		}
+		if (!HasAuthority() && bUseServerSideRewind)
+		{
+			BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
+			BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
+			if (BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetlagCompensation() && BlasterOwnerCharacter->IsLocallyControlled())
+			{
+				BlasterOwnerCharacter->GetlagCompensation()->ShotgunServerScoreRequest(
+					HitCharacters,
+					Start,
+					HitTargets,
+					BlasterOwnerController->GetServerTime() - BlasterOwnerController->SingleTripTime
+				);
 			}
 		}
 	}

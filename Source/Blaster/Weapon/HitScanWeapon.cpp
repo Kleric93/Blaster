@@ -4,6 +4,7 @@
 #include "HitScanWeapon.h"
 #include "Engine/SkeletalmeshSocket.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -19,7 +20,7 @@
 #include "NiagaraComponent.h"
 #include "Engine/SKeletalMeshSocket.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
-#include "Blaster/PlayerController/BlasterPlayerController.h"
+
 
 void AHitScanWeapon::BeginPlay()
 {
@@ -97,7 +98,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			{
 				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
-				if (BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetlagCompensation())
+				if (BlasterOwnerController && BlasterOwnerCharacter && BlasterOwnerCharacter->GetlagCompensation() && BlasterOwnerCharacter->IsLocallyControlled())
 				{
 					BlasterOwnerCharacter->GetlagCompensation()->ServerScoreRequest(
 						BlasterCharacter,
