@@ -12,6 +12,9 @@ AProjectileBullet::AProjectileBullet()
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
 	ProjectileMovementComponent->SetIsReplicated(true);
+    ProjectileMovementComponent->InitialSpeed = InitialSpeed;
+    ProjectileMovementComponent->MaxSpeed = InitialSpeed;
+
 }
 
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
@@ -53,4 +56,26 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
     /* Super:: goes last cause the original function will destroy the bullet,
     if we put it first, whatever comes after will never be reached.*/
     Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+}
+
+void AProjectileBullet::BeginPlay()
+{
+    Super::BeginPlay();
+
+    FPredictProjectilePathParams Pathparams;
+    Pathparams.bTraceWithChannel = true;
+    Pathparams.bTraceWithCollision = true;
+    Pathparams.DrawDebugTime = 5.f;
+    Pathparams.DrawDebugType = EDrawDebugTrace::ForDuration;
+    Pathparams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
+    Pathparams.MaxSimTime = 4.f;
+    Pathparams.ProjectileRadius = 5.f;
+    Pathparams.SimFrequency = 30.f;
+    Pathparams.StartLocation = GetActorLocation();
+    Pathparams.TraceChannel = ECollisionChannel::ECC_Visibility;
+    Pathparams.ActorsToIgnore.Add(this);
+
+    FPredictProjectilePathResult PathResult;
+
+    UGameplayStatics::PredictProjectilePath(this, Pathparams, PathResult);
 }

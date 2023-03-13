@@ -22,6 +22,17 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastSpawnBulletHoles(const FHitResult& Hit);
 
+	//
+	/// Used with SSR
+	//
+
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize TraceStart;
+	FVector_NetQuantize100 InitialVelocity;
+
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 20000;
+
 protected:
 	virtual void BeginPlay() override;
 	void StartDestroyTimer();
