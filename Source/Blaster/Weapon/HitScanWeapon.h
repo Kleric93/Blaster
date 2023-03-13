@@ -41,9 +41,6 @@ protected:
 	UMaterialInterface* ImpactHolesMaterial;
 
 	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
-	float Damage = 20.f;
-
-	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
 	float FullDamageDistance = 30.f;
 
 	UPROPERTY(EditAnywhere, Category = DamageMultipliers)

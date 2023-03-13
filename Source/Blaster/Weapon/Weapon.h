@@ -162,6 +162,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "WeaponScatter")
 		float SphereRadiusWhenAimed = 0.f;
 
+	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
+		float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere)
+		bool bUseServerSideRewind = false;
+
+	UPROPERTY()
+		class ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+		class ABlasterPlayerController* BlasterOwnerController;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 		USkeletalMeshComponent* WeaponMesh;
@@ -188,12 +200,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		int32 MagCapacity;
-
-	UPROPERTY()
-		class ABlasterCharacter* BlasterOwnerCharacter;
-
-	UPROPERTY()
-		class ABlasterPlayerController* BlasterOwnerController;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		EWeaponType WeaponType;
@@ -245,4 +251,5 @@ public:
 	FORCEINLINE UTexture2D* GetWeaponTypeIcon() const { return WeaponTypeIcon; }
 	FORCEINLINE UTexture2D* GetAmmoTypeIcon() const { return AmmoTypeIcon; }
 	FORCEINLINE EWeaponState GetWeaponState() const { return WeaponState; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 };
