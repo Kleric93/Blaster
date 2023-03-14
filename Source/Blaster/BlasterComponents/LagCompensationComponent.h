@@ -102,8 +102,7 @@ public:
 		const TArray<ABlasterCharacter*>& HitCharacters,
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations,
-		float HitTime
-	);
+		float HitTime);
 
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(
