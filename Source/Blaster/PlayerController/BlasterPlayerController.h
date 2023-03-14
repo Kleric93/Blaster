@@ -18,6 +18,7 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
@@ -43,8 +44,10 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
 	void SetHUDTime();
 	void PollInit();
+	virtual void SetupInputComponent() override;
 
 
 	//
@@ -79,7 +82,24 @@ protected:
 	void StopHighPingWarning();
 	void CheckPing(float DeltaTime);
 
+	void ShowReturnToMainMenu();
+
 private:
+
+	//
+	/// return to main menu
+	//
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidget;
+
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenu;
+
+	bool bReturnToMainMenuOpen = false;
+
+
+
+
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
