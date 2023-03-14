@@ -113,6 +113,13 @@ public:
 		class AWeapon* DamageCauser);
 
 	UFUNCTION(Server, Reliable)
+		void ProjectileServerScoreRequest(
+			class ABlasterCharacter* HitCharacter,
+			const FVector_NetQuantize& TraceStart,
+			const FVector_NetQuantize100& InitialVelocity,
+			float HitTime);
+
+	UFUNCTION(Server, Reliable)
 		void ShotgunServerScoreRequest(
 			const TArray<ABlasterCharacter*>& HitCharacters,
 			const FVector_NetQuantize& TraceStart,

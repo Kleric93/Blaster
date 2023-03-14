@@ -3,7 +3,9 @@
 
 #include "ProjectileBullet.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/Character.h"
+#include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 
@@ -36,40 +38,50 @@ void AProjectileBullet::PostEditChangeProperty(FPropertyChangedEvent& Event)
 
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-    ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+    ABlasterCharacter* OwnerCharacter = Cast<ABlasterCharacter>(GetOwner());
     if (OwnerCharacter)
     {
-        AController* OwnerController = OwnerCharacter->Controller;
+        ABlasterPlayerController* OwnerController = Cast<ABlasterPlayerController>(OwnerCharacter->Controller);
         if (OwnerController)
         {
             // Calculate the distance traveled by the bullet
             float DistanceTraveled = (Hit.Location - OwnerController->GetPawn()->GetActorLocation()).Size() / 100;
+
             // Reduce the damage based on the distance traveled
+            float DamageMultiplier = 1.f;
+            if (DistanceTraveled > FullDamageDistance && DistanceTraveled <= LeastDamageDistance)
+            {
+                DamageMultiplier = FMath::Lerp(1.f, 0.1f, (DistanceTraveled - FullDamageDistance) / LeastDamageDistance);
+            }
+            else if (DistanceTraveled > FullDamageDistance)
+            {
+                DamageMultiplier = 0.1f;
+            }
 
-			float DamageMultiplier = 1.f;
-			if (DistanceTraveled > FullDamageDistance && DistanceTraveled <= LeastDamageDistance)
-			{
-				DamageMultiplier = FMath::Lerp(1.f, 0.1f, (DistanceTraveled - FullDamageDistance) / LeastDamageDistance);
-			}
-			else if (DistanceTraveled > FullDamageDistance)
-			{
-				DamageMultiplier = 0.1f;
-			}
-
-			float FinalDamage = Damage * DamageMultiplier;
-
-            UGameplayStatics::ApplyDamage(
-                OtherActor,
-                FinalDamage,
-                OwnerController,
-                this,
-                UDamageType::StaticClass());
+            float FinalDamage = Damage * DamageMultiplier;
 
             UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
             UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), DistanceTraveled);
+
+            if (OwnerCharacter->HasAuthority() && !bUseServerSideRewind)
+            {
+                UGameplayStatics::ApplyDamage( OtherActor, FinalDamage, OwnerController, this, UDamageType::StaticClass());
+                Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+                return;
+            }
+
+            ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
+            if (bUseServerSideRewind && OwnerCharacter->GetlagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter)
+            {
+                OwnerCharacter->GetlagCompensation()->ProjectileServerScoreRequest(
+                    HitCharacter,
+                    TraceStart,
+                    InitialVelocity,
+                    OwnerController->GetServerTime() - OwnerController->SingleTripTime
+                );
+            }
         }
     }
-
     /* Super:: goes last cause the original function will destroy the bullet,
     if we put it first, whatever comes after will never be reached.*/
     Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
