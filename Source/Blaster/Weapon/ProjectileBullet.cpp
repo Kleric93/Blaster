@@ -60,8 +60,8 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 
             float FinalDamage = Damage * DamageMultiplier;
 
-            UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
-            UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), DistanceTraveled);
+            //UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
+            //UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), DistanceTraveled);
 
             if (OwnerCharacter->HasAuthority() && !bUseServerSideRewind)
             {

@@ -139,13 +139,13 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
                 FCollisionShape::MakeSphere(NearbyRadius),
                 QueryParams);
 
-            UE_LOG(LogTemp, Warning, TEXT("Number of overlapping actors found: %d"), Overlaps.Num());
+            //UE_LOG(LogTemp, Warning, TEXT("Number of overlapping actors found: %d"), Overlaps.Num());
 
             // If no nearby players are found, respawn at the current player start and exit the loop
             if (Overlaps.Num() == 0)
             {
                 RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
-                UE_LOG(LogTemp, Warning, TEXT("Respawn Successful for: %s"), *ElimmedController->GetName());
+               // UE_LOG(LogTemp, Warning, TEXT("Respawn Successful for: %s"), *ElimmedController->GetName());
                 return;
             }
 

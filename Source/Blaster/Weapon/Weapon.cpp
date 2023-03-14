@@ -591,7 +591,7 @@ bool AWeapon::IsFull()
 AMagazine* AWeapon::EjectMagazine()
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("Ejecting magazine..."));
+	//UE_LOG(LogTemp, Warning, TEXT("Ejecting magazine..."));
 
 	const USkeletalMeshSocket* MagazineEjectSocket = WeaponMesh->GetSocketByName(FName("MagazineEject"));
 	if (MagazineEjectSocket)

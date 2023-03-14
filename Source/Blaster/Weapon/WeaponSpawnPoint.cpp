@@ -34,7 +34,7 @@ void AWeaponSpawnPoint::BeginPlay()
 	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
 	if (PedestalParticlesComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Particles DEactivated BeginPlay"));
+		//UE_LOG(LogTemp, Warning, TEXT("Particles DEactivated BeginPlay"));
 
 		PedestalParticlesComponent->Deactivate();
 	}
@@ -62,7 +62,7 @@ void AWeaponSpawnPoint::MulticastSetPedestalOnMaterial_Implementation()
 	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
 	if (PedestalParticlesComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Particles activated in SpawnWeaponTimerFInished"));
+		//UE_LOG(LogTemp, Warning, TEXT("Particles activated in SpawnWeaponTimerFInished"));
 		PedestalParticlesComponent->Activate();
 	}
 }

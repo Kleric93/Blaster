@@ -186,8 +186,8 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 						this,
 						UDamageType::StaticClass()
 					);
-					UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
-					UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
+					//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
+					//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
 				}
 				HitCharacters.Add(HitPair.Key);
 			}
