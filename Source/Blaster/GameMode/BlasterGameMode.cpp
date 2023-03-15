@@ -96,7 +96,7 @@ void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacte
 
 	if (ElimmedCharacter)
 	{
-		ElimmedCharacter->Elim();
+		ElimmedCharacter->Elim(false);
 	}
 }
 
@@ -161,5 +161,20 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
         UE_LOG(LogTemp, Warning, TEXT("No suitable spawn location found for player %s"), *ElimmedController->GetName());
         FRotator DefaultRotation = FRotator(0.0f, 0.0f, 0.0f);
         RestartPlayerAtTransform(ElimmedController, FTransform(DefaultRotation, DefaultLocation));
+    }
+}
+
+void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
+{
+    if (PlayerLeaving == nullptr) return;
+    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+    if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(PlayerLeaving))
+    {
+        BlasterGameState->TopScoringPlayers.Remove(PlayerLeaving);
+    }
+    ABlasterCharacter* CharacterLeaving = Cast<ABlasterCharacter>(PlayerLeaving->GetPawn());
+    if (CharacterLeaving)
+    {
+        CharacterLeaving->Elim(true);
     }
 }
