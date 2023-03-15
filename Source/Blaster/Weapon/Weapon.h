@@ -258,5 +258,5 @@ public:
 	FORCEINLINE UTexture2D* GetAmmoTypeIcon() const { return AmmoTypeIcon; }
 	FORCEINLINE EWeaponState GetWeaponState() const { return WeaponState; }
 	FORCEINLINE float GetDamage() const { return Damage; }
-	FORCEINLINE float GetHeadshotDamage() const { return HeadshotDamage; }
+	FORCEINLINE float GetHeadShotDamage() const { return HeadshotDamage; }
 };
