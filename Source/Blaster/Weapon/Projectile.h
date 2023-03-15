@@ -30,8 +30,13 @@ public:
 	FVector_NetQuantize TraceStart;
 	FVector_NetQuantize100 InitialVelocity;
 
+	// Only Set this for grenades and rockets
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
+
+	// doesn't matter for Grenades and Rockets
+	UPROPERTY(EditAnywhere)
+	float HeadshotDamage = 40.f;
 
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 20000;

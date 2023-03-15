@@ -17,6 +17,7 @@
 #include "Components/Image.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/HUD/ReturnToMainMenu.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 
 void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
 {
@@ -26,6 +27,10 @@ void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerStat
 void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
 {
 	APlayerState* Self = GetPlayerState<APlayerState>();
+	ABlasterCharacter* AttackerCharacter = Cast<ABlasterCharacter>(Attacker->GetPawn());
+	AWeapon* Weapon = AttackerCharacter->GetEquippedWeapon();
+	UTexture2D* WeaponIcon = Weapon->GetWeaponTypeIcon();
+
 	if (Attacker && Victim && Self)
 	{
 		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -33,25 +38,25 @@ void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerStat
 		{
 			if (Attacker == Self && Victim != Self)
 			{
-				BlasterHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
+				BlasterHUD->AddElimAnnouncement("You", Victim->GetPlayerName(), WeaponIcon);
 				return;
 			}
 			if (Victim == Self && Attacker != Self)
 			{
-				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you");
+				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you", WeaponIcon);
 				return;
 			}
 			if (Attacker == Victim && Attacker == Self)
 			{
-				BlasterHUD->AddElimAnnouncement("You", "Yourself");
+				BlasterHUD->AddElimAnnouncement("You", "Yourself", WeaponIcon);
 				return;
 			}
 			if (Attacker == Victim && Attacker !=Self)
 			{
-				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves");
+				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves", WeaponIcon);
 				return;
 			}
-			BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
+			BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName(), WeaponIcon);
 		}
 	}
 }

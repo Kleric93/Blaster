@@ -47,7 +47,7 @@ public:
 
 	void AddAnnouncement();
 
-	void AddElimAnnouncement(FString Attacker, FString Victim);
+	void AddElimAnnouncement(FString Attacker, FString Victim, UTexture2D* WeaponIcon);
 
 protected:
 	virtual void BeginPlay() override;

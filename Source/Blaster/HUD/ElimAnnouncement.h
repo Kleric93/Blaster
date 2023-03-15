@@ -17,11 +17,15 @@ class BLASTER_API UElimAnnouncement : public UUserWidget
 public:
 
 	void SetElimAnnouncementText(FString AttackerName, FString VictimName);
+	void SetElimAnnouncementWeaponIcon(UTexture2D* ElimWeaponIcon);
 
 	UPROPERTY(meta = (BindWidget))
 	class UHorizontalBox* AnnouncementBox;
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* AnnouncementText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* WeaponIcon;
 	
 };

@@ -114,6 +114,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		
 		// maps hit character to number of times hit
 		TMap<ABlasterCharacter*, uint32> HitMap;
+		TMap<ABlasterCharacter*, uint32> HeadshotHitMap;
 
 		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
@@ -123,13 +124,17 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 			if (BlasterCharacter)
 			{
-				if (HitMap.Contains(BlasterCharacter))
+				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head");
+
+				if (bHeadShot)
 				{
-					HitMap[BlasterCharacter]++;
+					if (HeadshotHitMap.Contains(BlasterCharacter)) HeadshotHitMap[BlasterCharacter]++;
+					else HeadshotHitMap.Emplace(BlasterCharacter, 1);
 				}
 				else
 				{
-					HitMap.Emplace(BlasterCharacter, 1);
+					if (HitMap.Contains(BlasterCharacter)) HitMap[BlasterCharacter]++;
+					else HitMap.Emplace(BlasterCharacter, 1);
 				}
 			}
 			if (ImpactParticles)
@@ -172,16 +177,44 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 
 		TArray<ABlasterCharacter*> HitCharacters;
 
+		// maps character hit to total damage
+		TMap<ABlasterCharacter*, float> DamageMap;
+
+		// calculate bodyshot damage by multiplying times hit x damage - store in damagemap
 		for (auto HitPair : HitMap)
 		{
 			if (HitPair.Key && InstigatorController)
+			{
+				DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage);
+
+
+				HitCharacters.AddUnique(HitPair.Key);
+			}
+		}
+
+		// calculate headshot damage by multiplying times Hit x HeadshotDamage - store in DamageMap
+		for (auto HeadshotHitPair : HeadshotHitMap)
+		{
+			if (HeadshotHitPair.Key)
+			{
+				if (DamageMap.Contains(HeadshotHitPair.Key)) DamageMap[HeadshotHitPair.Key] += HeadshotHitPair.Value * HeadshotDamage;
+				else DamageMap.Emplace(HeadshotHitPair.Key, HeadshotHitPair.Value * HeadshotDamage);
+
+				HitCharacters.AddUnique(HeadshotHitPair.Key);
+			}
+		}
+
+		// Loop throgh damage map to get total damage for each character
+		for (auto DamagePair : DamageMap)
+		{
+			if (DamagePair.Key && InstigatorController)
 			{
 				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 				if (HasAuthority() && bCauseAuthDamage)
 				{
 					UGameplayStatics::ApplyDamage(
-						BlasterCharacter, // char that was hit
-						FinalDamage,
+						DamagePair.Key, // char that was hit
+						DamagePair.Value, // damage calculated in the two for loops above
 						InstigatorController,
 						this,
 						UDamageType::StaticClass()
@@ -189,9 +222,9 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 					//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
 					//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
 				}
-				HitCharacters.Add(HitPair.Key);
 			}
 		}
+
 		if (!HasAuthority() && bUseServerSideRewind)
 		{
 			BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
@@ -207,6 +240,22 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			}
 		}
 	}
+
+
+	/*
+	bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+	if (HasAuthority() && bCauseAuthDamage)
+	{
+		UGameplayStatics::ApplyDamage(
+			BlasterCharacter, // char that was hit
+			FinalDamage * HitPair.Value,
+			InstigatorController,
+			this,
+			UDamageType::StaticClass()
+		);
+		//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
+		//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
+	}*/
 }
 
 void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& HitTargets)

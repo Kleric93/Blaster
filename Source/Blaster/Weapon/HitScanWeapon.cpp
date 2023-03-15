@@ -73,29 +73,35 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		{
 			DamageMultiplier = 0.1f;
 		}
+		float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadshotDamage : Damage;
 
 		float FinalDamage = Damage * DamageMultiplier;
 
+
+
 		//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
 		//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
-		//UE_LOG(LogTemp, Warning, TEXT("ActorHit: %s"), *FireHit.GetActor()->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("BoneHit: %s"), *FireHit.GetActor()->GetName());
 
 
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
-		if (BlasterCharacter  && &InstigatorController)
+		if (BlasterCharacter  && InstigatorController)
 		{
 			bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 			if (HasAuthority() && bCauseAuthDamage)
 			{
+
 				UGameplayStatics::ApplyDamage(
 					BlasterCharacter,
-					FinalDamage,
+					DamageToCause,
 					InstigatorController,
 					this,
 					UDamageType::StaticClass()
 				);
+				UE_LOG(LogTemp, Warning, TEXT("BoneHit: %s"), *FireHit.BoneName.ToString());
+
 			}
-			else if (!HasAuthority() && bUseServerSideRewind)
+			if (!HasAuthority() && bUseServerSideRewind)
 			{
 				BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : BlasterOwnerCharacter;
 				BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(InstigatorController) : BlasterOwnerController;
@@ -169,6 +175,10 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		if (OutHit.bBlockingHit)
 		{
 			BeamEnd = OutHit.ImpactPoint;
+		}
+		else
+		{
+			OutHit.ImpactPoint = End;
 		}
 
 		//DrawDebugSphere(GetWorld(), BeamEnd, 16.f, 12, FColor::Orange, true);

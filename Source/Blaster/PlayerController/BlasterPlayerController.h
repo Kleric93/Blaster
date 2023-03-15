@@ -163,6 +163,6 @@ private:
 	float PingAnimationRunningTime = 0.f;
 
 	UPROPERTY(EditAnywhere)
-	class UTexture2D* DefaultWeaponIcon;
-	UTexture2D* DefaultAmmoIcon;
+	class UImage* DefaultWeaponIcon;
+	UImage* DefaultAmmoIcon;
 };
