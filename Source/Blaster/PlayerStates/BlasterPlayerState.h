@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "BlasterPlayerState.generated.h"
+#include "Blaster/BlasterTypes/Team.h"
 
 /**
  * 
@@ -15,6 +16,7 @@ class BLASTER_API ABlasterPlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
+
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 	//
@@ -30,6 +32,7 @@ public:
 	void AddToDefeats(int32 DefeatsAmount);
 
 private:
+
 	UPROPERTY()
 	class ABlasterCharacter* Character;
 	UPROPERTY()
@@ -37,4 +40,12 @@ private:
 	
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 	int32 Defeats;
+
+	UPROPERTY(Replicated)
+	ETeam Team = ETeam::ET_NoTeam;
+
+public:
+
+	FORCEINLINE	ETeam GetTeam() const { return Team; }
+	FORCEINLINE	void SetTeam(ETeam TeamToSet) { Team = TeamToSet; }
 };
