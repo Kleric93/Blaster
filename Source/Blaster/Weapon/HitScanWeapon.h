@@ -40,12 +40,6 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* ImpactHolesMaterial;
 
-	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
-	float FullDamageDistance = 30.f;
-
-	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
-	float LeastDamageDistance = 80.f;
-
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* ChargerSparksSystem;
 

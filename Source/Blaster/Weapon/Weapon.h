@@ -137,6 +137,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 		int32 Ammo;
 
+	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
+		float FullDamageDistance = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
+		float LeastDamageDistance = 80.f;
+
 	UFUNCTION(Client, Reliable)
 	void ClientUpdateAmmo(int32 ServerAmmo);
 
@@ -259,4 +265,8 @@ public:
 	FORCEINLINE EWeaponState GetWeaponState() const { return WeaponState; }
 	FORCEINLINE float GetDamage() const { return Damage; }
 	FORCEINLINE float GetHeadShotDamage() const { return HeadshotDamage; }
+	FORCEINLINE float GetFullDamageDistance() const { return FullDamageDistance; }
+	FORCEINLINE float GetLeastDamageDistance() const { return LeastDamageDistance; }
+
+
 };

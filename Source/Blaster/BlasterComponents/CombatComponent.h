@@ -83,7 +83,7 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
-	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay);
 
 	UFUNCTION(NetMulticast, Reliable)

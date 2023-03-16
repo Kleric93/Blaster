@@ -65,24 +65,25 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 		float Distance = (FireHit.ImpactPoint - Start).Size() / 100.f;
 		float DamageMultiplier = 1.f;
-		if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		if (Distance <= FullDamageDistance)
 		{
-			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) /  LeastDamageDistance);
+			DamageMultiplier = 1.f;
 		}
-		else if (Distance > FullDamageDistance)
+		else if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		{
+			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) / LeastDamageDistance);
+		}
+		else if (Distance > LeastDamageDistance)
 		{
 			DamageMultiplier = 0.1f;
 		}
 		float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadshotDamage : Damage;
 
-		float FinalDamage = Damage * DamageMultiplier;
-
-
+		float FinalDamage = DamageToCause * DamageMultiplier;
 
 		//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
 		//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
 		//UE_LOG(LogTemp, Warning, TEXT("BoneHit: %s"), *FireHit.GetActor()->GetName());
-
 
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 		if (BlasterCharacter  && InstigatorController)
@@ -93,12 +94,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 				UGameplayStatics::ApplyDamage(
 					BlasterCharacter,
-					DamageToCause,
+					FinalDamage,
 					InstigatorController,
 					this,
 					UDamageType::StaticClass()
 				);
-				UE_LOG(LogTemp, Warning, TEXT("BoneHit: %s"), *FireHit.BoneName.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("BoneHit: %s"), *FireHit.BoneName.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), DamageToCause);
+
 
 			}
 			if (!HasAuthority() && bUseServerSideRewind)

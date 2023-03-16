@@ -232,7 +232,8 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	for (auto& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
-		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.2f;
+
 		if (World)
 		{
 			World->LineTraceSingleByChannel(
@@ -241,6 +242,9 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 				TraceEnd,
 				ECC_HitBox
 			);
+			DrawDebugSphere(GetWorld(), TraceStart, 10.f, 10, FColor::Orange, false, 10.f);
+			DrawDebugSphere(GetWorld(), TraceEnd, 5000.f, 10, FColor::Blue, false, 10.f);
+
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
 			if (BlasterCharacter)
 			{
@@ -249,7 +253,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 					if (Box)
 					{
-						//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
+						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 					}
 				}
 				if (ShotgunResult.HeadShots.Contains(BlasterCharacter))
@@ -283,7 +287,9 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	for (auto& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
-		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.2f;
+		//UE_LOG(LogTemp, Error, TEXT("BS Distance: %f"), TraceEnd);
+
 		if (World)
 		{
 			World->LineTraceSingleByChannel(
@@ -300,7 +306,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 					if (Box)
 					{
-					//	DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
 					}
 				}
 				if (ShotgunResult.BodyShots.Contains(BlasterCharacter))
@@ -483,15 +489,45 @@ void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharac
 
 	if (Character && HitCharacter && Character->GetEquippedWeapon() && Confirm.bHitConfirmed)
 	{
+		float DamageMultiplier;
+		float Distance = (HitCharacter->GetTargetLocation() - TraceStart).Size() / 100.f;
+		float FullDamageDistance = Character->GetEquippedWeapon()->GetFullDamageDistance();
+		float LeastDamageDistance = Character->GetEquippedWeapon()->GetLeastDamageDistance();
+
+		if (Distance <= FullDamageDistance)
+		{
+			DamageMultiplier = 1.f;
+		}
+		else if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		{
+			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) / LeastDamageDistance);
+		}
+		else if (Distance > LeastDamageDistance)
+		{
+			DamageMultiplier = 0.1f;
+		}
+
 		const float Damage = Confirm.bHeadShot ? Character->GetEquippedWeapon()->GetHeadShotDamage() : Character->GetEquippedWeapon()->GetDamage();
+
+		float FinalDamage = Damage * DamageMultiplier;
 
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
-			Damage,
+			FinalDamage,
 			Character->Controller,
 			Character->GetEquippedWeapon(),
 			UDamageType::StaticClass()
 		);
+
+		//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
+		//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
+		//UE_LOG(LogTemp, Warning, TEXT("BoneHit: %s"), *FireHit.GetActor()->GetName());
+		// 
+		// Draw debug sphere for TraceStart
+		//DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
+
+		// Draw debug sphere for HitLocation
+		//DrawDebugSphere(GetWorld(), HitCharacter->GetTargetLocation(), 10.f, 16, FColor::Blue, false, 20.f);
 	}
 }
 
@@ -501,7 +537,28 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABla
 
 	if (Character && HitCharacter && Confirm.bHitConfirmed && Character->GetEquippedWeapon())
 	{
-		const float Damage = Confirm.bHeadShot ? Character->GetEquippedWeapon()->GetHeadShotDamage() : Character->GetEquippedWeapon()->GetDamage();
+		float Damage = Confirm.bHeadShot ? Character->GetEquippedWeapon()->GetHeadShotDamage() : Character->GetEquippedWeapon()->GetDamage();
+		FVector Location = Confirm.bHeadShot ? HitCharacter->GetActorLocation() : HitCharacter->GetActorLocation();
+
+		float DamageMultiplier;
+		float Distance = (Location - TraceStart).Size() / 100.f;
+		float FullDamageDistance = Character->GetEquippedWeapon()->GetFullDamageDistance();
+		float LeastDamageDistance = Character->GetEquippedWeapon()->GetLeastDamageDistance();
+
+		if (Distance <= FullDamageDistance)
+		{
+			DamageMultiplier = 1.f;
+		}
+		else if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		{
+			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) / LeastDamageDistance);
+		}
+		else if (Distance > LeastDamageDistance)
+		{
+			DamageMultiplier = 0.1f;
+		}
+		UE_LOG(LogTemp, Error, TEXT("Distance Traveled %f"), Distance);
+		Damage = Damage * DamageMultiplier;
 
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
@@ -510,6 +567,14 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABla
 			Character->GetEquippedWeapon(),
 			UDamageType::StaticClass()
 		);
+		UE_LOG(LogTemp, Error, TEXT("Damage Dealt %f"), Damage);
+
+
+		// Draw debug sphere for TraceStart
+		DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
+
+		// Draw debug sphere for HitLocation
+		DrawDebugSphere(GetWorld(), Location, 1000.f, 16, FColor::Blue, false, 20.f);
 	}
 }
 
@@ -526,19 +591,52 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 		{
 			float HeadShotDamage = Confirm.HeadShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetHeadShotDamage();
 			TotalDamage += HeadShotDamage;
+			UE_LOG(LogTemp, Error, TEXT("headshotdamage: %f"), HeadShotDamage);
+
 		}
 		if (Confirm.BodyShots.Contains(HitCharacter))
 		{
 			float BodyShotDamage = Confirm.BodyShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetDamage();
 			TotalDamage += BodyShotDamage;
+			UE_LOG(LogTemp, Error, TEXT("BodyShotDamage: %f"), BodyShotDamage);
+
 		}
+
+		float DamageMultiplier;
+		float Distance = (HitCharacter->GetTargetLocation() - TraceStart).Size() / 100.f;
+		float FullDamageDistance = Character->GetEquippedWeapon()->GetFullDamageDistance();
+		float LeastDamageDistance = Character->GetEquippedWeapon()->GetLeastDamageDistance();
+
+		if (Distance <= FullDamageDistance)
+		{
+			DamageMultiplier = 1.f;
+		}
+		else if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		{
+			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) / LeastDamageDistance);
+		}
+		else if (Distance > LeastDamageDistance)
+		{
+			DamageMultiplier = 0.1f;
+		}
+		float TotalDamageWithDist = (TotalDamage * 0.4f) * DamageMultiplier; // the damage has to be divided, cause the SSR version of the shotgun hits way harder due to head+bodyshot in 1 pellet
+
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
-			TotalDamage,
+			TotalDamageWithDist,
 			Character->Controller,
 			HitCharacter->GetEquippedWeapon(),
 			UDamageType::StaticClass()
 		);
+
+		UE_LOG(LogTemp, Error, TEXT("Distance: %f"), Distance);
+		UE_LOG(LogTemp, Error, TEXT("total damage applied final: %f"), TotalDamageWithDist);
+
+		// Draw debug sphere for TraceStart
+		DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
+
+		// Draw debug sphere for HitLocation
+		DrawDebugSphere(GetWorld(), HitCharacter->GetTargetLocation(), 30.f, 16, FColor::Blue, false, 20.f);
 	}
 }
 

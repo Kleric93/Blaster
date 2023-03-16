@@ -216,6 +216,7 @@ bool UCombatComponent::ServerShotgunFire_Validate(const TArray<FVector_NetQuanti
 void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
 {
 	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority()) return;
+
 	LocalShotgunFire(TraceHitTargets);
 }
 

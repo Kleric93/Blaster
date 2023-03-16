@@ -116,9 +116,10 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		TMap<ABlasterCharacter*, uint32> HitMap;
 		TMap<ABlasterCharacter*, uint32> HeadshotHitMap;
 
+		FHitResult FireHit;
 		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
-			FHitResult FireHit;
+			
 			WeaponTraceHit(Start, HitTarget, FireHit);
 
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
@@ -161,22 +162,26 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 
 		// Calculate damage based on distance and update the hit result
 
-		FHitResult FireHit;
 		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
 		float Distance = (FireHit.ImpactPoint - Start).Size() / 100.f;
-		float DamageMultiplier = 1.f;
-		if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
+		float DamageMultiplier;
+
+		if (Distance <= FullDamageDistance)
+		{
+			DamageMultiplier = 1.f;
+		}
+		else if (Distance > FullDamageDistance && Distance <= LeastDamageDistance)
 		{
 			DamageMultiplier = FMath::Lerp(1.f, 0.1f, (Distance - FullDamageDistance) / LeastDamageDistance);
 		}
-		else if (Distance > FullDamageDistance)
+		else if (Distance > LeastDamageDistance)
 		{
 			DamageMultiplier = 0.1f;
 		}
-		float FinalDamage = Damage * DamageMultiplier;
 
 		TArray<ABlasterCharacter*> HitCharacters;
 
+		//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
 		// maps character hit to total damage
 		TMap<ABlasterCharacter*, float> DamageMap;
 
@@ -203,7 +208,6 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				HitCharacters.AddUnique(HeadshotHitPair.Key);
 			}
 		}
-
 		// Loop throgh damage map to get total damage for each character
 		for (auto DamagePair : DamageMap)
 		{
@@ -212,15 +216,21 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 				if (HasAuthority() && bCauseAuthDamage)
 				{
+					float FinalDamage = DamagePair.Value * DamageMultiplier;
+
 					UGameplayStatics::ApplyDamage(
 						DamagePair.Key, // char that was hit
-						DamagePair.Value, // damage calculated in the two for loops above
+						FinalDamage, // damage calculated in the two for loops above // TODO, CHECK IF * DamageMultiplier is a valid argument in the function (should work, required playtesting)
 						InstigatorController,
 						this,
 						UDamageType::StaticClass()
 					);
 					//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), FinalDamage);
 					//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), Distance);
+					//DrawDebugSphere(GetWorld(), FireHit.ImpactPoint, 100.f, 30, FColor::Orange, false, 20.f);
+
+					// Draw debug sphere for HitLocation
+					//DrawDebugSphere(GetWorld(), Start, 10.f, 16, FColor::Blue, false, 20.f);
 				}
 			}
 		}
