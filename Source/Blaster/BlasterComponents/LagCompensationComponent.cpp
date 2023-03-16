@@ -81,7 +81,7 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 				UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 				if (Box)
 				{
-					//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
+					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 				}
 			}
 
@@ -112,7 +112,7 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 					if (Box)
 					{
-						//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
 					}
 				}
 				ResetHitBoxes(HitCharacter, CurrentFrame);
@@ -232,7 +232,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	for (auto& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
-		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.2f;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) + 5.f;
 
 		if (World)
 		{
@@ -287,7 +287,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	for (auto& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
-		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.2f;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) + 5.f;
 		//UE_LOG(LogTemp, Error, TEXT("BS Distance: %f"), TraceEnd);
 
 		if (World)
@@ -619,7 +619,8 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 		{
 			DamageMultiplier = 0.1f;
 		}
-		float TotalDamageWithDist = (TotalDamage * 0.4f) * DamageMultiplier; // the damage has to be divided, cause the SSR version of the shotgun hits way harder due to head+bodyshot in 1 pellet
+		//float TotalDamageWithDist = (TotalDamage * 0.4f) * DamageMultiplier; // the damage has to be divided, cause the SSR version of the shotgun hits way harder due to head+bodyshot in 1 pellet
+		float TotalDamageWithDist = (TotalDamage) * DamageMultiplier;
 
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
@@ -636,7 +637,7 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 		DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
 
 		// Draw debug sphere for HitLocation
-		DrawDebugSphere(GetWorld(), HitCharacter->GetTargetLocation(), 30.f, 16, FColor::Blue, false, 20.f);
+		DrawDebugSphere(GetWorld(), HitCharacter->GetTargetLocation(), 30.f, 16, FColor::Green, false, 20.f);
 	}
 }
 
