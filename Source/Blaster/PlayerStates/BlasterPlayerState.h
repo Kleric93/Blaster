@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
-#include "BlasterPlayerState.generated.h"
 #include "Blaster/BlasterTypes/Team.h"
+#include "BlasterPlayerState.generated.h"
 
 /**
  * 
