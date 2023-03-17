@@ -413,7 +413,7 @@ void ABlasterCharacter::MulticastGainedTheLead_Implementation()
 	{
 		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			CrownSystem,
-			GetCapsuleComponent(),
+			GetMesh(),
 			FName(),
 			GetActorLocation() + FVector(0.f, 0.f, 110.f),
 			GetActorRotation(),
@@ -1027,10 +1027,18 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 	if (!IsLocallyControlled()) return;
 	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Distance from camera to character: %f"), (FollowCamera->GetComponentLocation() - GetActorLocation()).Size());
+		UE_LOG(LogTemp, Warning, TEXT("Camera threshold: %f"), CameraThreshold);
+		UE_LOG(LogTemp, Warning, TEXT("Character and weapon visibility: %s"), GetMesh()->IsVisible() ? TEXT("Visible") : TEXT("Hidden"));
+
 		GetMesh()->SetVisibility(false);
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
 	}
 	else
@@ -1039,6 +1047,10 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
