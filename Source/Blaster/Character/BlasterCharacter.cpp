@@ -459,7 +459,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 	RotateInPlace(DeltaTime);
 	HideCameraIfCharacterClose();
-	HideCharacterIfScope();
+	//HideCharacterIfScope();
 	PollInit();
 }
 
@@ -994,7 +994,7 @@ void ABlasterCharacter::FireButtonReleased()
 }
 
 void ABlasterCharacter::HideCharacterIfScope()
-{
+{/*
 	if (!IsLocallyControlled()) return;
 	if (Combat && Combat->bAiming && GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_M4AZ)
 	{
@@ -1019,13 +1019,17 @@ void ABlasterCharacter::HideCharacterIfScope()
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
-	}
+	}*/
 }
 
 void ABlasterCharacter::HideCameraIfCharacterClose()
 {
 	if (!IsLocallyControlled()) return;
-	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	bool bSouldHideChar = ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold) || 
+		(Combat && Combat->bAiming && GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_M4AZ) ||
+		(Combat && Combat->bAiming && GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_SniperRifle);
+
+	if (bSouldHideChar)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Distance from camera to character: %f"), (FollowCamera->GetComponentLocation() - GetActorLocation()).Size());
 		UE_LOG(LogTemp, Warning, TEXT("Camera threshold: %f"), CameraThreshold);
@@ -1035,11 +1039,13 @@ void ABlasterCharacter::HideCameraIfCharacterClose()
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+
 		}
 		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
 		{
 			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
+
 	}
 	else
 	{
