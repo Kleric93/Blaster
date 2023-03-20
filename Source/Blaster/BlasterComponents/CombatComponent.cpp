@@ -19,6 +19,7 @@
 #include "Blaster/Weapon/Projectile.h"
 #include "Blaster/Grenade/Grenade.h"
 #include "Blaster/Weapon/Shotgun.h"
+#include "Blaster/Pickups/TeamsFlag.h"
 
 
 UCombatComponent::UCombatComponent()
@@ -321,6 +322,17 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->bUseControllerRotationYaw = true;
 }
 
+void UCombatComponent::EquipFlag(class ATeamsFlag* FlagToEquip)
+{
+	if (FlagToEquip == nullptr) return;
+	EquippedFlag = FlagToEquip;
+	EquippedFlag->SetFlagStateOD(EFlagState::EFS_Equipped);
+	AttachFlagToBackpack(EquippedFlag);
+	EquippedFlag->SetOwner(Character);
+	UE_LOG(LogTemp, Error, TEXT("Flag Was Equipped in UCOMBATCOMPONENT"));
+
+}
+
 bool UCombatComponent::ShouldSwapWeapons()
 {
 	return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr);
@@ -365,6 +377,25 @@ void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
 	if (BackPackSocket)
 	{
 		BackPackSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::AttachFlagToBackpack(AActor* ActorToAttach)
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
+	const USkeletalMeshSocket* BackPackSocket = Character->GetMesh()->GetSocketByName(FName("FlagSocket"));
+	if (BackPackSocket)
+	{
+		BackPackSocket->AttachActor(ActorToAttach, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::OnRep_EquippedFlag()
+{
+	if (EquippedFlag && Character)
+	{
+		EquippedFlag->SetFlagState(EFlagState::EFS_Equipped);
+		AttachFlagToBackpack(EquippedFlag);
 	}
 }
 
@@ -672,7 +703,6 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		SetWeaponTypeOnHUD();
 		PlayEquipWeaponSound(EquippedWeapon);
 		EquippedWeapon->SetHUDAmmo();
-		SetWeaponTypeOnHUD();
 	}
 }
 

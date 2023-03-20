@@ -30,6 +30,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/Pickups/TeamsFlag.h"
 
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -57,6 +58,7 @@ ABlasterCharacter::ABlasterCharacter()
 	Buff->SetIsReplicated(true);
 
 	LagCompensation = CreateAbstractDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
+
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -239,9 +241,15 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void ABlasterCharacter::Elim(bool bPlayerLeftGame)
+ETeam ABlasterCharacter::GetTeam()
 {
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if (BlasterPlayerState == nullptr) return ETeam::ET_NoTeam;
+	return BlasterPlayerState->GetTeam();
+}
 
+void ABlasterCharacter::Elim(bool bPlayerLeftGame)
+{		
 	if (Combat)
 	{
 		if (Combat->EquippedWeapon)
@@ -252,8 +260,19 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 		{
 			DropOrDestroyWeapon(Combat->SecondaryWeapon);
 		}
+		if (Combat->EquippedFlag)
+		{
+			Combat->EquippedFlag->ServerDetachfromBackpack();
+			UE_LOG(LogTemp, Error, TEXT("FLAG WAS DETACHED!!!"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("FlagIsNull"))
+		}
+
 	}
 	MulticastElim(bPlayerLeftGame);
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
@@ -337,7 +356,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	{
 		CrownComponent->DestroyComponent();
 	}
-
+	
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
 		this,
@@ -827,6 +846,15 @@ void ABlasterCharacter::SwapButtonPressed()
 			PlaySwapMontage();
 			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
 			bFinishedSwapping = false;
+		}
+		if (Combat->EquippedFlag)
+		{
+			Combat->EquippedFlag->ServerDetachfromBackpack();
+			UE_LOG(LogTemp, Error, TEXT("FLAG WAS DETACHED!!!"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("FlagIsNull"))
 		}
 	}
 }

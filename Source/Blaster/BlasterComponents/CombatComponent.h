@@ -22,6 +22,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void EquipFlag(class ATeamsFlag* FlagToEquip);
+	void AttachFlagToBackpack(AActor* ActorToAttach);
 	void SwapWeapon();
 
 	void Reload();
@@ -54,6 +56,9 @@ public:
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 
 	bool bLocallyReloading = false;
+
+	UFUNCTION()
+	void OnRep_EquippedFlag();
 
 protected:
 	void SetAiming(bool bIsAiming);
@@ -140,6 +145,9 @@ private:
 	UPROPERTY()
 	class ABlasterHUD* HUD;
 
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedFlag)
+	class ATeamsFlag* EquippedFlag;
+
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
@@ -161,6 +169,9 @@ private:
 	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* FlagPickupSound;
 
 	/*
 	** HUD and Crosshair
@@ -262,7 +273,6 @@ private:
 		int32 MaxGrenades = 6;
 
 	void UpdateHUDGrenades();
-
 
 
 public:	

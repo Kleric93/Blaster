@@ -182,6 +182,9 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
 
+	UPROPERTY()
+	class ATeamsFlag* Flag;
+
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
@@ -410,5 +413,6 @@ public:
 	FORCEINLINE UBuffComponent* Getbuff() const { return Buff; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetlagCompensation() const { return LagCompensation; }
- 
+	ETeam GetTeam();
+
 };

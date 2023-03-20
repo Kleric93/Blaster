@@ -32,13 +32,16 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate = 45.f;
 
-private:
-
 	UPROPERTY(EditAnywhere)
 	class USphereComponent* OverlapSphere;
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* PickupSound;
+private:
+
+
+
+
 
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* PickupMesh;
