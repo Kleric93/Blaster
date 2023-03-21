@@ -30,7 +30,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//void AttachToPlayerBackpack();
 	void FlagBehavior();
-	void flagrespawn();
+	void FlagRespawn();
 	void SetFlagState(EFlagState State);
 
 	UFUNCTION(Server, Reliable)
@@ -43,6 +43,9 @@ public:
 	FORCEINLINE EFlagState GetFlagState() const { return FlagState; }
 	FORCEINLINE void SetFlagStateOD(EFlagState State) { FlagState = State; }
 	FORCEINLINE UStaticMeshComponent* GetFlagMesh() const { return FlagMesh; }
+	FORCEINLINE EFlagType GetFlagType() const { return FlagType; }
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+
 protected:
 
 	virtual void BeginPlay() override;

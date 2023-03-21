@@ -29,6 +29,8 @@ ATeamsFlag::ATeamsFlag()
 
 	FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+
 	FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 
@@ -47,6 +49,8 @@ void ATeamsFlag::BeginPlay()
 	Super::BeginPlay();
 
 	FlagState = EFlagState::EFS_Initial;
+	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+
 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
@@ -81,11 +85,11 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	{
 		if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_RedTeam) 
 		{
-			flagrespawn();
+			FlagRespawn();
 		}
 		else if (FlagType == EFlagType::EFT_BlueFlag && BlasterCharacter->GetTeam() == ETeam::ET_BlueTeam)
 		{
-			flagrespawn();
+			FlagRespawn();
 		}
 		else if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_BlueTeam)
 		{
@@ -134,7 +138,7 @@ void ATeamsFlag::MulticastDetachfromBackpack_Implementation()
 		OwningController = nullptr;
 	}
 }
-
+/*
 void ATeamsFlag::FlagBehavior()
 {
 	if (OwningCharacter == nullptr || OwningCharacter->GetCombat() == nullptr) return;
@@ -177,9 +181,9 @@ void ATeamsFlag::FlagBehavior()
 
 	}
 
-}
+}*/
 
-void ATeamsFlag::flagrespawn()
+void ATeamsFlag::FlagRespawn()
 {
 	if (GetActorLocation() == InitialSpawnLocation) return;
 	SetActorLocation(InitialSpawnLocation);
@@ -195,6 +199,8 @@ void ATeamsFlag::SetFlagState(EFlagState State)
 		FlagMesh->SetEnableGravity(false);
 		FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+
 		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
@@ -203,13 +209,13 @@ void ATeamsFlag::SetFlagState(EFlagState State)
 	case EFlagState::EFS_Equipped:
 		FlagMesh->SetSimulatePhysics(false);
 		FlagMesh->SetEnableGravity(false);
-		UE_LOG(LogTemp, Error, TEXT("THE FLAG SHOULD NOT HAVE PHYSICS ENABLED!"));
 
-		FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
 		break;
 	case EFlagState::EFS_Dropped:
@@ -217,13 +223,18 @@ void ATeamsFlag::SetFlagState(EFlagState State)
 		{
 			OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
-		UE_LOG(LogTemp, Error, TEXT("THE FLAG SHOULD HAVE PHYSICS ENABLED!"));
-		FlagMesh->SetSimulatePhysics(true);
-		FlagMesh->SetEnableGravity(true);
+		FlagMesh->SetSimulatePhysics(false);
+		FlagMesh->SetEnableGravity(false);
 		FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+
+		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
 
 		break;
 	case EFlagState::EFS_MAX:
@@ -242,6 +253,8 @@ void ATeamsFlag::OnRep_FlagState()
 		FlagMesh->SetEnableGravity(false);
 		FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+
 		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
@@ -249,8 +262,10 @@ void ATeamsFlag::OnRep_FlagState()
 	case EFlagState::EFS_Equipped:
 		FlagMesh->SetSimulatePhysics(false);
 		FlagMesh->SetEnableGravity(false);
-		FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
@@ -261,12 +276,18 @@ void ATeamsFlag::OnRep_FlagState()
 		{
 			OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
-		FlagMesh->SetSimulatePhysics(true);
-		FlagMesh->SetEnableGravity(true);
+		FlagMesh->SetSimulatePhysics(false);
+		FlagMesh->SetEnableGravity(false);
 		FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Overlap);
+		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+
+		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
 
 		break;
 	case EFlagState::EFS_MAX:

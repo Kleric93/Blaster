@@ -329,6 +329,7 @@ void UCombatComponent::EquipFlag(class ATeamsFlag* FlagToEquip)
 	EquippedFlag->SetFlagStateOD(EFlagState::EFS_Equipped);
 	AttachFlagToBackpack(EquippedFlag);
 	EquippedFlag->SetOwner(Character);
+	EquippedFlag->GetFlagMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 	UE_LOG(LogTemp, Error, TEXT("Flag Was Equipped in UCOMBATCOMPONENT"));
 
 }
