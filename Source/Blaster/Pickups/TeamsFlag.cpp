@@ -48,6 +48,8 @@ void ATeamsFlag::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitialSpawnLocation = GetActorLocation();
+
 	FlagState = EFlagState::EFS_Initial;
 	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 
@@ -85,11 +87,11 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	{
 		if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_RedTeam) 
 		{
-			FlagRespawn();
+			MulticastFlagRespawn();
 		}
 		else if (FlagType == EFlagType::EFT_BlueFlag && BlasterCharacter->GetTeam() == ETeam::ET_BlueTeam)
 		{
-			FlagRespawn();
+			MulticastFlagRespawn();
 		}
 		else if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_BlueTeam)
 		{
@@ -111,9 +113,29 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
-void ATeamsFlag::ServerDetachfromBackpack_Implementation()
+void ATeamsFlag::ServerDetachfromBackpack()
 {
 	MulticastDetachfromBackpack();
+
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	if (FlagState == EFlagState::EFS_Equipped)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
+
+		FlagState = EFlagState::EFS_Dropped;
+
+
+		FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
+		FlagMesh->DetachFromComponent(DetachRules);
+
+		// Set the rotation to 0, 0, 0
+		FRotator NewRotation = FRotator::ZeroRotator;
+		FlagMesh->SetWorldRotation(NewRotation);
+
+		SetOwner(nullptr);
+		OwningCharacter = nullptr;
+		OwningController = nullptr;
+	}
 }
 
 void ATeamsFlag::MulticastDetachfromBackpack_Implementation()
@@ -183,7 +205,7 @@ void ATeamsFlag::FlagBehavior()
 
 }*/
 
-void ATeamsFlag::FlagRespawn()
+void ATeamsFlag::MulticastFlagRespawn_Implementation()
 {
 	if (GetActorLocation() == InitialSpawnLocation) return;
 	SetActorLocation(InitialSpawnLocation);

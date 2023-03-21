@@ -25,6 +25,8 @@ void AFlagZone::BeginPlay()
 
 void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Error, TEXT("Player is overlapping"));
+
 	ATeamsFlag* OverlappingFlag = Cast<ATeamsFlag>(OtherActor);
 	if (OverlappingFlag && OverlappingFlag->GetTeam() != Team)
 	{
@@ -38,8 +40,16 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 			GameMode->FlagCaptured(OverlappingFlag, this);
 			GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 		}
+
 		OverlappingFlag->ServerDetachfromBackpack();
-		OverlappingFlag->FlagRespawn();
+
+		if (OverlappingFlag)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Flag is respawning"));
+
+			OverlappingFlag->MulticastFlagRespawn();
+		}
+
 	}
 }
 

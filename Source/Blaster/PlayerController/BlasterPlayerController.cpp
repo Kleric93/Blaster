@@ -752,12 +752,15 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD)
 	{
-		if(BlasterHUD->CharacterOverlay == nullptr) BlasterHUD->AddCharacterOverlay();
+		if (BlasterHUD->CharacterOverlay == nullptr)
+		{
+			BlasterHUD->AddCharacterOverlay();
+		}
 		if (BlasterHUD->Announcement)
 		{
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
-		if (!HasAuthority()) return;
+		//if (!HasAuthority()) return;
 		if (bShowTeamScores)
 		{
 			InitTeamScores();

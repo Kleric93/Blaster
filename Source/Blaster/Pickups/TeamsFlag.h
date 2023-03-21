@@ -30,10 +30,13 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//void AttachToPlayerBackpack();
 	void FlagBehavior();
-	void FlagRespawn();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFlagRespawn();
+
 	void SetFlagState(EFlagState State);
 
-	UFUNCTION(Server, Reliable)
+	//UFUNCTION(Server, Reliable)
 	void ServerDetachfromBackpack();
 
 
@@ -88,7 +91,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	ETeam Team;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	FVector InitialSpawnLocation;
 
 	FTimerHandle BindOverlapTimer;
