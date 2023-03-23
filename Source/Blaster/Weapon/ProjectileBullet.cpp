@@ -44,6 +44,18 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
         ABlasterPlayerController* OwnerController = Cast<ABlasterPlayerController>(OwnerCharacter->Controller);
         if (OwnerController)
         {
+            ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
+
+            if (HitCharacter && HitCharacter != GetOwner() && OwnerCharacter->IsLocallyControlled())
+            {
+                if (Damage)
+                {
+                    UGameplayStatics::PlaySound2D(
+                        GetWorld(),
+                        PlayerHitSound
+                    );
+                }
+            }
             // Calculate the distance traveled by the bullet
             float DistanceTraveled = (Hit.Location - OwnerController->GetPawn()->GetActorLocation()).Size() / 100;
 
@@ -73,7 +85,6 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
                 return;
             }
 
-            ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
             if (bUseServerSideRewind && OwnerCharacter->GetlagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter)
             {
                 OwnerCharacter->GetlagCompensation()->ProjectileServerScoreRequest(

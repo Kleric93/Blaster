@@ -4,6 +4,7 @@
 #include "ProjectileWeapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Projectile.h"
+#include "Sound/SoundCue.h"
 
 void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
@@ -18,6 +19,8 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		// from muzzle flash socket to hit location from TraceUnderCrosshairs
 		FVector ToTarget = HitTarget - SocketTransform.GetLocation();
 		FRotator TargetRotation = ToTarget.Rotation();
+
+
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = GetOwner();

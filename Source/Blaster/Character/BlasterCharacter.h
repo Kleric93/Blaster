@@ -149,7 +149,7 @@ protected:
 		UBoxComponent* backpack;
 
 	UPROPERTY(EditAnywhere)
-		UBoxComponent* blanket;
+		UBoxComponent* blankett;
 
 	UPROPERTY(EditAnywhere)
 		UBoxComponent* thigh_l;

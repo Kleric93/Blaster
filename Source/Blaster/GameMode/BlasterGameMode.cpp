@@ -150,7 +150,7 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 
     if (ElimmedController)
     {
-       if (MatchState == MatchState::Cooldown) return;
+      // if (MatchState == MatchState::Cooldown) return;
 
         // Find all available player starts
         TArray<AActor*> PlayerStarts;

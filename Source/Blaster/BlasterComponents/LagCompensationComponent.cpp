@@ -611,7 +611,6 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 			float BodyShotDamage = Confirm.BodyShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetDamage();
 			TotalDamage += BodyShotDamage;
 			UE_LOG(LogTemp, Error, TEXT("BodyShotDamage: %f"), BodyShotDamage);
-
 		}
 
 		float DamageMultiplier;
@@ -705,7 +704,7 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 			else
 			{
 				return;
-				//UE_LOG(LogTemp, Error, TEXT("BOXES ARE FUCKING NULL!!!"))
+				UE_LOG(LogTemp, Error, TEXT("BOXES ARE NULL!!!"))
 			}
 		}
 	}

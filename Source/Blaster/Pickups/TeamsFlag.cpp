@@ -23,8 +23,8 @@ ATeamsFlag::ATeamsFlag()
 	SetReplicateMovement(true);
 
 	FlagMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Flagmesh"));
-	FlagMesh->SetupAttachment(FlagMesh);
-	SetRootComponent(FlagMesh);
+	FlagMesh->SetupAttachment(RootComponent);
+	SetRootComponent(RootComponent);
 	FlagMesh->SetRelativeScale3D(FVector(.4f, .4f, .4f));
 
 	FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);

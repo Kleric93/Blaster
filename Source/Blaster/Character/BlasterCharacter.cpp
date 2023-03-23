@@ -129,9 +129,9 @@ ABlasterCharacter::ABlasterCharacter()
 	hand_r->SetupAttachment(GetMesh(), FName("hand_r"));
 	HitCollisionBoxes.Add(FName("hand_r"), hand_r);
 
-	blanket = CreateDefaultSubobject<UBoxComponent>(TEXT("blanket"));
-	blanket->SetupAttachment(GetMesh(), FName("backpack"));
-	HitCollisionBoxes.Add(FName("blanket"), blanket);
+	blankett = CreateDefaultSubobject<UBoxComponent>(TEXT("blankett"));
+	blankett->SetupAttachment(GetMesh(), FName("backpack"));
+	HitCollisionBoxes.Add(FName("blankett"), blankett);
 
 	backpack = CreateDefaultSubobject<UBoxComponent>(TEXT("backpack"));
 	backpack->SetupAttachment(GetMesh(), FName("backpack"));

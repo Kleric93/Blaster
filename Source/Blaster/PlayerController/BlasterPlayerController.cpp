@@ -572,11 +572,27 @@ void ABlasterPlayerController::SetHUDMatchCountdown(float CountdownTime)
 			BlasterHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
 			return;
 		}
-		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
-		int32 Seconds = CountdownTime - Minutes * 60;
 
-		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
-		BlasterHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
+		int32 Minutes = FMath::FloorToInt((CountdownTime - 5.f) / 60.f);
+		int32 Seconds = FMath::Max(0, FMath::FloorToInt((CountdownTime - 5.f) - Minutes * 60.f));
+
+
+		if (Minutes == 0 && Seconds <= 0)
+		{
+			FString CountdownText = FString::Printf(TEXT("00:00"));
+
+			BlasterHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
+
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+			if (BlasterCharacter) BlasterCharacter->bDisableGameplay = true;
+
+		}
+		else if (Minutes >= 0 && Seconds >= 0)
+		{
+			FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+
+			BlasterHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
+		}
 	}
 }
 
