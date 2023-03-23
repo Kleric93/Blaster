@@ -253,7 +253,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenadeLauncherAmmo = 0;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState, VisibleAnywhere)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
 	UFUNCTION()
@@ -278,7 +278,9 @@ private:
 public:	
 
 	FORCEINLINE bool IsAiming() const { return bAiming; }
+
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	bool ShouldSwapWeapons();
+	
 
 };

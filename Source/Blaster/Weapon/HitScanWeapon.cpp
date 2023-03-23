@@ -127,7 +127,6 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				FireHit.ImpactPoint,
 				FireHit.ImpactNormal.Rotation()
 			);
-			ServerSpawnBulletHoles(FireHit);
 		}
 		if (HitSound)
 		{
@@ -173,10 +172,28 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			ECollisionChannel::ECC_Visibility,
 			TraceParams
 		);
+		if (OutHit.bBlockingHit)
+		{
+			End = OutHit.ImpactPoint;
+		}
 		FVector BeamEnd = End;
 		if (OutHit.bBlockingHit)
 		{
 			BeamEnd = OutHit.ImpactPoint;
+
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OutHit.GetActor());
+			if (HitCharacter && HitCharacter != GetOwner() && BlasterOwnerCharacter->IsLocallyControlled())
+			{
+				UGameplayStatics::PlaySound2D(
+					World,
+					PlayerHitSound
+				);
+			}
+			if (HasAuthority())
+			{
+				ServerSpawnBulletHoles(OutHit);
+
+			}
 		}
 		else
 		{
@@ -203,9 +220,10 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 	}
 }
 
-void AHitScanWeapon::ServerSpawnBulletHoles_Implementation(const FHitResult& Hit)
+void AHitScanWeapon::ServerSpawnBulletHoles(const FHitResult& Hit)
 {
 	MulticastSpawnBulletHoles(Hit);
+
 }
 
 void AHitScanWeapon::MulticastSpawnBulletHoles_Implementation(const FHitResult& Hit)
@@ -231,5 +249,6 @@ void AHitScanWeapon::MulticastSpawnBulletHoles_Implementation(const FHitResult& 
 		{
 			DecalBullets->SetFadeScreenSize(0.001f); // Set the screen size at which the decal will begin to fade out
 		}
+
 	}
 }

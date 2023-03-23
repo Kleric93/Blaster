@@ -362,6 +362,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* RespawnSentences;
 
+	UPROPERTY(EditAnywhere)
+	USoundCue* DroppedFlag;
+
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 

@@ -48,6 +48,7 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetFlagMesh() const { return FlagMesh; }
 	FORCEINLINE EFlagType GetFlagType() const { return FlagType; }
 	FORCEINLINE ETeam GetTeam() const { return Team; }
+	FORCEINLINE FVector GetInitialSpawnLocation() const { return InitialSpawnLocation; }
 
 protected:
 
@@ -84,6 +85,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Flagproperties")
 	class UStaticMeshComponent* FlagMesh;
+
+	UPROPERTY(EditAnywhere)
+	class USoundBase* FlagReset;
 
 	UPROPERTY(EditAnywhere)
 	EFlagType FlagType;

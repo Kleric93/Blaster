@@ -224,6 +224,9 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
 		HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
+		/*UBoxComponent* BlanketBox = Frame.Character->HitCollisionBoxes[FName("blanket")];
+		BlanketBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		BlanketBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Ignore);*/
 	}
 
 	UWorld* World = GetWorld();
@@ -232,7 +235,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	for (auto& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
-		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) + 5.f;
+		FVector TraceEnd = TraceStart + (HitLocation - TraceStart) + 5.f;
 
 		if (World)
 		{
@@ -242,6 +245,9 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 				TraceEnd,
 				ECC_HitBox
 			);
+
+			if (ConfirmHitResult.bBlockingHit) TraceEnd = ConfirmHitResult.ImpactPoint;
+
 			DrawDebugSphere(GetWorld(), TraceStart, 10.f, 10, FColor::Orange, false, 10.f);
 			DrawDebugSphere(GetWorld(), TraceEnd, 5000.f, 10, FColor::Blue, false, 10.f);
 
@@ -281,13 +287,16 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		}
 		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
 		HeadBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		/*UBoxComponent* BlanketBox = Frame.Character->HitCollisionBoxes[FName("blanket")];
+		BlanketBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		BlanketBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Ignore);*/
 	}
 
 	// check for BodyShots
 	for (auto& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
-		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) + 5.f;
+		FVector TraceEnd = TraceStart + (HitLocation - TraceStart) + 5.f;
 		//UE_LOG(LogTemp, Error, TEXT("BS Distance: %f"), TraceEnd);
 
 		if (World)
@@ -298,6 +307,9 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 				TraceEnd,
 				ECC_HitBox
 			);
+
+			if (ConfirmHitResult.bBlockingHit) TraceEnd = ConfirmHitResult.ImpactPoint;
+
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
 			if (BlasterCharacter)
 			{
@@ -682,11 +694,19 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 		Package.Character = Character;
 		for (auto& BoxPair : Character->HitCollisionBoxes)
 		{
-			FBoxInformation BoxInformation;
-			BoxInformation.Location = BoxPair.Value->GetComponentLocation();
-			BoxInformation.Rotation = BoxPair.Value->GetComponentRotation();
-			BoxInformation.BoxExtent = BoxPair.Value->GetScaledBoxExtent();
-			Package.HitBoxInfo.Add(BoxPair.Key, BoxInformation);
+			if (BoxPair.Value != nullptr)
+			{
+				FBoxInformation BoxInformation;
+				BoxInformation.Location = BoxPair.Value->GetComponentLocation();
+				BoxInformation.Rotation = BoxPair.Value->GetComponentRotation();
+				BoxInformation.BoxExtent = BoxPair.Value->GetScaledBoxExtent();
+				Package.HitBoxInfo.Add(BoxPair.Key, BoxInformation);
+			}
+			else
+			{
+				return;
+				//UE_LOG(LogTemp, Error, TEXT("BOXES ARE FUCKING NULL!!!"))
+			}
 		}
 	}
 }

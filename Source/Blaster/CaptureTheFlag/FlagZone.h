@@ -18,6 +18,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	ETeam Team;
 
+	UPROPERTY()
+	class ATeamsFlag* Flag;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -34,5 +37,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USphereComponent* ZoneSphere;
+
+	UPROPERTY(EditAnywhere)
+	class USoundBase* CaptureSound;
 
 };

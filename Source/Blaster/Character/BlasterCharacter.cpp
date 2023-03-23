@@ -129,13 +129,13 @@ ABlasterCharacter::ABlasterCharacter()
 	hand_r->SetupAttachment(GetMesh(), FName("hand_r"));
 	HitCollisionBoxes.Add(FName("hand_r"), hand_r);
 
-	backpack = CreateDefaultSubobject<UBoxComponent>(TEXT("backpack"));
-	backpack->SetupAttachment(GetMesh(), FName("backpack"));
-	HitCollisionBoxes.Add(FName("backpack"), backpack);
-
 	blanket = CreateDefaultSubobject<UBoxComponent>(TEXT("blanket"));
 	blanket->SetupAttachment(GetMesh(), FName("backpack"));
 	HitCollisionBoxes.Add(FName("blanket"), blanket);
+
+	backpack = CreateDefaultSubobject<UBoxComponent>(TEXT("backpack"));
+	backpack->SetupAttachment(GetMesh(), FName("backpack"));
+	HitCollisionBoxes.Add(FName("backpack"), backpack);
 
 	thigh_l = CreateDefaultSubobject<UBoxComponent>(TEXT("thigh_l"));
 	thigh_l->SetupAttachment(GetMesh(), FName("thigh_l"));
@@ -261,16 +261,19 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 		if (Combat->EquippedFlag)
 		{
 			Combat->EquippedFlag->ServerDetachfromBackpack();
-			UE_LOG(LogTemp, Error, TEXT("FLAG WAS DETACHED!!!"));
+			UGameplayStatics::PlaySound2D(
+				GetWorld(),
+				DroppedFlag
+			);
+
+			//UE_LOG(LogTemp, Error, TEXT("FLAG WAS DETACHED!!!"));
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("FlagIsNull"))
+			UE_LOG(LogTemp, Error, TEXT("FlagIsNull"));
 		}
-
 	}
 	MulticastElim(bPlayerLeftGame);
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
@@ -714,21 +717,22 @@ void ABlasterCharacter::PlayReloadMontage()
 
 		case EWeaponType::EWT_Shotgun:
 			SectionName = FName("Shotgun");
-			ARMagazineAnimation();
+			//ARMagazineAnimation();
 			break;
 
 		case EWeaponType::EWT_SniperRifle:
 			SectionName = FName("Sniper");
-			ARMagazineAnimation();
+			//ARMagazineAnimation();
 			break;
 
 		case EWeaponType::EWT_GrenadeLauncher:
 			SectionName = FName("GrenadeLauncher");
-			ARMagazineAnimation();
+			//ARMagazineAnimation();
 			break;
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName);
+		GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 	}
 }
 
@@ -879,15 +883,6 @@ void ABlasterCharacter::SwapButtonPressed()
 			PlaySwapMontage();
 			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
 			bFinishedSwapping = false;
-		}
-		if (Combat->EquippedFlag)
-		{
-			Combat->EquippedFlag->ServerDetachfromBackpack();
-			UE_LOG(LogTemp, Error, TEXT("FLAG WAS DETACHED!!!"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("FlagIsNull"))
 		}
 	}
 }

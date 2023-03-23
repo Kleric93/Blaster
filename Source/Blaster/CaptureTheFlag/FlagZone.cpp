@@ -6,6 +6,9 @@
 #include "Blaster/Pickups/TeamsFlag.h"
 #include "Blaster/GameMode/CaptureTheFlagGameMode.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
+
 
 AFlagZone::AFlagZone()
 {
@@ -25,32 +28,42 @@ void AFlagZone::BeginPlay()
 
 void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Error, TEXT("Player is overlapping"));
+	//UE_LOG(LogTemp, Error, TEXT("Player is overlapping"));
 
 	ATeamsFlag* OverlappingFlag = Cast<ATeamsFlag>(OtherActor);
+
 	if (OverlappingFlag && OverlappingFlag->GetTeam() != Team)
 	{
-		UE_LOG(LogTemp, Error, TEXT("OverlappingFlag IS VALID IN THE ZONE"));
+		//UE_LOG(LogTemp, Error, TEXT("OverlappingFlag IS VALID IN THE ZONE"));
 
 		ACaptureTheFlagGameMode* GameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagGameMode>();
 		if (GameMode)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Game Mode is valid in overlap zone"));
+			//UE_LOG(LogTemp, Error, TEXT("Game Mode is valid in overlap zone"));
 
 			GameMode->FlagCaptured(OverlappingFlag, this);
-			GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 		}
 
 		OverlappingFlag->ServerDetachfromBackpack();
 
 		if (OverlappingFlag)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Flag is respawning"));
+			//UE_LOG(LogTemp, Error, TEXT("Flag is respawning"));
 
 			OverlappingFlag->MulticastFlagRespawn();
 		}
-
+		if (CaptureSound)
+		{
+			UGameplayStatics::PlaySound2D(
+				GetWorld(),
+				CaptureSound);
+		}
+	}
+	else
+	{
+		return;
 	}
 }
+
 
 

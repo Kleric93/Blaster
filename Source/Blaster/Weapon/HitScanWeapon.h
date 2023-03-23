@@ -18,8 +18,7 @@ class BLASTER_API AHitScanWeapon : public AWeapon
 public:
 	virtual void Fire(const FVector& HitTarget) override;
 
-	UFUNCTION(Server, Reliable)
-		void ServerSpawnBulletHoles(const FHitResult& Hit);
+	void ServerSpawnBulletHoles(const FHitResult& Hit);
 
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastSpawnBulletHoles(const FHitResult& Hit);
@@ -38,6 +37,9 @@ protected:
 	USoundCue* HitSound;
 
 	UPROPERTY(EditAnywhere)
+	USoundCue* PlayerHitSound;
+
+	UPROPERTY(EditAnywhere)
 	UMaterialInterface* ImpactHolesMaterial;
 
 	UPROPERTY(EditAnywhere)
@@ -45,7 +47,6 @@ protected:
 
 	UPROPERTY()
 	class UNiagaraComponent* ChargerSparksSystemComponent;
-
 
 private:
 

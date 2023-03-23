@@ -117,7 +117,6 @@ void ATeamsFlag::ServerDetachfromBackpack()
 {
 	MulticastDetachfromBackpack();
 
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 	if (FlagState == EFlagState::EFS_Equipped)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
@@ -140,7 +139,6 @@ void ATeamsFlag::ServerDetachfromBackpack()
 
 void ATeamsFlag::MulticastDetachfromBackpack_Implementation()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 	if (FlagState == EFlagState::EFS_Equipped)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
@@ -210,10 +208,15 @@ void ATeamsFlag::MulticastFlagRespawn_Implementation()
 	if (GetActorLocation() == InitialSpawnLocation) return;
 	SetActorLocation(InitialSpawnLocation);
 	FlagState = EFlagState::EFS_Initial;
+	UGameplayStatics::PlaySound2D(
+		GetWorld(),
+		FlagReset
+	);
 }
 
 void ATeamsFlag::SetFlagState(EFlagState State)
 {
+	FlagState = State;
 	switch (FlagState)
 	{
 	case EFlagState::EFS_Initial:
@@ -245,8 +248,8 @@ void ATeamsFlag::SetFlagState(EFlagState State)
 		{
 			OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
-		FlagMesh->SetSimulatePhysics(false);
-		FlagMesh->SetEnableGravity(false);
+		FlagMesh->SetSimulatePhysics(true);
+		FlagMesh->SetEnableGravity(true);
 		FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
@@ -298,8 +301,8 @@ void ATeamsFlag::OnRep_FlagState()
 		{
 			OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
-		FlagMesh->SetSimulatePhysics(false);
-		FlagMesh->SetEnableGravity(false);
+		FlagMesh->SetSimulatePhysics(true);
+		FlagMesh->SetEnableGravity(true);
 		FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);

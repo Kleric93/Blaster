@@ -21,12 +21,10 @@ void ACaptureTheFlagGameMode::FlagCaptured(ATeamsFlag* Flag, AFlagZone* Zone)
 		if (Zone->Team == ETeam::ET_BlueTeam)
 		{
 			BGameState->BlueTeamScores();
-			GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 		}
 		if (Zone->Team == ETeam::ET_RedTeam)
 		{
 			BGameState->RedTeamScores();
-			GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 		}
 	}
 

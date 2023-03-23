@@ -146,7 +146,10 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 					FireHit.ImpactPoint,
 					FireHit.ImpactNormal.Rotation()
 				);
-				ServerSpawnBulletHoles(FireHit);
+				if (HasAuthority())
+				{
+					ServerSpawnBulletHoles(FireHit);
+				}
 			}
 			if (HitSound)
 			{
