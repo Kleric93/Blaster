@@ -24,7 +24,7 @@ ATeamsFlag::ATeamsFlag()
 
 	FlagMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Flagmesh"));
 	FlagMesh->SetupAttachment(RootComponent);
-	SetRootComponent(RootComponent);
+	SetRootComponent(FlagMesh);
 	FlagMesh->SetRelativeScale3D(FVector(.4f, .4f, .4f));
 
 	FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
@@ -35,7 +35,7 @@ ATeamsFlag::ATeamsFlag()
 
 
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapSphere"));
-	OverlapSphere->SetupAttachment(RootComponent);
+	OverlapSphere->SetupAttachment(FlagMesh);
 	OverlapSphere->SetSphereRadius(150.f);
 	OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
@@ -51,6 +51,7 @@ void ATeamsFlag::BeginPlay()
 	InitialSpawnLocation = GetActorLocation();
 
 	FlagState = EFlagState::EFS_Initial;
+
 	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 
 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -85,6 +86,7 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	if (FlagState == EFlagState::EFS_Equipped) return;
 	if (BlasterCharacter)
 	{
+
 		if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_RedTeam) 
 		{
 			MulticastFlagRespawn();
@@ -96,14 +98,13 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 		else if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_BlueTeam)
 		{
 			BlasterCharacter->GetCombat()->EquipFlag(this);
-			UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
+			//UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
 		}
 		else if (FlagType == EFlagType::EFT_BlueFlag && BlasterCharacter->GetTeam() == ETeam::ET_RedTeam)
 		{
 			BlasterCharacter->GetCombat()->EquipFlag(this);
-			UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
+			//UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
 		}
-
 		//FlagBehavior();
 		UE_LOG(LogTemp, Warning, TEXT("Overlapping"));
 	}
@@ -123,7 +124,6 @@ void ATeamsFlag::ServerDetachfromBackpack()
 
 		FlagState = EFlagState::EFS_Dropped;
 
-
 		FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 		FlagMesh->DetachFromComponent(DetachRules);
 
@@ -134,6 +134,8 @@ void ATeamsFlag::ServerDetachfromBackpack()
 		SetOwner(nullptr);
 		OwningCharacter = nullptr;
 		OwningController = nullptr;
+
+
 	}
 }
 
@@ -216,6 +218,7 @@ void ATeamsFlag::MulticastFlagRespawn_Implementation()
 
 void ATeamsFlag::SetFlagState(EFlagState State)
 {
+
 	FlagState = State;
 	switch (FlagState)
 	{
@@ -259,7 +262,6 @@ void ATeamsFlag::SetFlagState(EFlagState State)
 		OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		OverlapSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-
 
 		break;
 	case EFlagState::EFS_MAX:

@@ -5,19 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "FlagTypes.h"
+#include "FlagStates.h"
 #include "Blaster/BlasterTypes/Team.h"
 #include "TeamsFlag.generated.h"
-
-UENUM(BlueprintType)
-enum class EFlagState : uint8
-{
-	EFS_Initial UMETA(DisplayName = "Initial State"),
-	EFS_Equipped UMETA(DisplayName = "Equipped"),
-	EFS_Dropped UMETA(DisplayName = "Dropped"),
-
-	EFS_MAX UMETA(DisplayName = "DefaultMAX"),
-
-};
 
 UCLASS()
 class BLASTER_API ATeamsFlag : public AActor

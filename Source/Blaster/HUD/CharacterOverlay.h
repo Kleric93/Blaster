@@ -36,6 +36,8 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* BlueTeamScore;
 
+
+
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* TeamScoresText;
 

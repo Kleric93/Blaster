@@ -19,6 +19,9 @@
 #include "Blaster/HUD/ReturnToMainMenu.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Blaster/BlasterTypes/Announcement.h"
+#include "Blaster/Pickups/TeamsFlag.h"
+#include "Blaster/Pickups/FlagTypes.h"
+#include "Blaster/BlasterTypes/Team.h"
 
 void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
 {

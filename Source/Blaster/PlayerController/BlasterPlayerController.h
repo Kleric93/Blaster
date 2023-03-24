@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Blaster/Weapon/WeaponTypes.h"
+#include "Blaster/Pickups/FlagStates.h"
 #include "BlasterPlayerController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
@@ -153,6 +154,7 @@ private:
 	int32 HUDDefeats;
 	bool bInitializeDefeats = false;
 	EWeaponType HUDWeaponType;
+	EFlagState FlagState;
 	bool bInitializeWeaponType = false;
 	int32 HUDGrenades;
 	bool bInitializeGrenades = false;
@@ -180,4 +182,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	class UImage* DefaultWeaponIcon;
 	UImage* DefaultAmmoIcon;
+
+	UPROPERTY(EditAnywhere)
+		class UTexture2D* BlueFlagInitial;
+
+	UPROPERTY(EditAnywhere)
+		class UTexture2D* BlueFlagStolen;
+
+	UPROPERTY(EditAnywhere)
+		class UTexture2D* BlueFlagDropped;
+
 };
