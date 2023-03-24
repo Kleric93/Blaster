@@ -117,6 +117,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void PollInit();
 
 	UFUNCTION()
 		virtual void OnSphereOverlap(
@@ -245,6 +246,11 @@ private:
 	void StartDestroyTimer();
 
 	void DestroyActor();
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewindDefault = false;
+
+	bool bHasSetController = false;
 
 public:
 	void SetWeaponState(EWeaponState State);

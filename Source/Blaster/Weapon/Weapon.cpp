@@ -49,6 +49,12 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
+
+	if (WeaponType == EWeaponType::EWT_RocketLauncher || WeaponType == EWeaponType::EWT_GrenadeLauncher)
+	{
+		bUseServerSideRewindDefault = false;
+		bUseServerSideRewind = false;
+	}
 	/*
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
 	CollisionBox->SetupAttachment(WeaponMesh);
@@ -81,6 +87,19 @@ void AWeapon::BeginPlay()
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(false);
+	}
+}
+
+void AWeapon::PollInit()
+{
+	if (!bHasSetController && HasAuthority() && BlasterOwnerCharacter && BlasterOwnerCharacter->Controller)
+	{
+		BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+		if (BlasterOwnerController && bUseServerSideRewindDefault && !BlasterOwnerController->HighPingDelegate.IsBound())
+		{
+			BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
+			bHasSetController = true;
+		}
 	}
 }
 
@@ -212,10 +231,10 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		EnableCustomDepth(false);
 
 		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
-		if (BlasterOwnerCharacter && bUseServerSideRewind)
+		if (BlasterOwnerCharacter)
 		{
 			BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
-			if (BlasterOwnerController && HasAuthority() && !BlasterOwnerController->HighPingDelegate.IsBound())
+			if (BlasterOwnerController && HasAuthority() && bUseServerSideRewindDefault && !BlasterOwnerCharacter->IsLocallyControlled() && !BlasterOwnerController->HighPingDelegate.IsBound())
 			{
 				BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
 			}
@@ -330,10 +349,10 @@ void AWeapon::OnRep_WeaponState()
 		EnableCustomDepth(false);
 
 		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
-		if (BlasterOwnerCharacter && bUseServerSideRewind)
+		if (BlasterOwnerCharacter)
 		{
 			BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
-			if (BlasterOwnerController && HasAuthority() && !BlasterOwnerController->HighPingDelegate.IsBound())
+			if (BlasterOwnerController && HasAuthority() && bUseServerSideRewindDefault && !BlasterOwnerCharacter->IsLocallyControlled() && !BlasterOwnerController->HighPingDelegate.IsBound())
 			{
 				BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
 			}

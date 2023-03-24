@@ -55,6 +55,10 @@ public:
 
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
 
+	UFUNCTION()
+	void OnRep_HandleReload();
+
+	UPROPERTY(ReplicatedUsing = OnRep_HandleReload)
 	bool bLocallyReloading = false;
 
 	UFUNCTION()

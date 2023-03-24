@@ -40,6 +40,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
+	DOREPLIFETIME(UCombatComponent, bLocallyReloading);
 }
 
 void UCombatComponent::BeginPlay()
@@ -249,13 +250,13 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 	if (WeaponToEquip == nullptr) return;
 	DropEquippedWeapon();
 	EquippedWeapon = WeaponToEquip;
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	AttachActorToRighthand(EquippedWeapon);
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
 	SetWeaponTypeOnHUD();
 	UpdateCarriedAmmo();
 	PlayEquipWeaponSound(WeaponToEquip);
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	ReloadEmptyWeapon();
 }
 
@@ -263,10 +264,11 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr) return;
 	SecondaryWeapon = WeaponToEquip;
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBackpack(WeaponToEquip);
 	PlayEquipWeaponSound(WeaponToEquip);
 	SecondaryWeapon->SetOwner(Character);
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+
 }
 
 void UCombatComponent::OnRep_Aiming()
@@ -443,7 +445,12 @@ void UCombatComponent::ReloadEmptyWeapon()
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull() && !bLocallyReloading) //&& bAiming == false)
+	bool bCanReload = CarriedAmmo > 0 && 
+		CombatState == ECombatState::ECS_Unoccupied &&
+		EquippedWeapon && !EquippedWeapon->IsFull() && 
+		!bLocallyReloading;
+
+	if (bCanReload)
 	{
 		ServerReload();
 		HandleReload();
@@ -458,6 +465,25 @@ void UCombatComponent::ServerReload_Implementation()
 	CombatState = ECombatState::ECS_Reloading;
 	//if (bAiming) bAiming = false;
 	if (!Character->IsLocallyControlled()) HandleReload();
+}
+
+void UCombatComponent::HandleReload()
+{
+	if (Character)
+	{
+		Character->PlayReloadMontage();
+	}
+}
+
+void UCombatComponent::OnRep_HandleReload()
+{
+	if (EquippedWeapon->IsEmpty())
+	{
+		if (Character)
+		{
+			Character->PlayReloadMontage();
+		}
+	}
 }
 
 void UCombatComponent::FinishReloading()
@@ -487,15 +513,16 @@ void UCombatComponent::FinishSwap()
 
 void UCombatComponent::FinishSwapAttachWeapons()
 {
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackpack(SecondaryWeapon);
+
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	AttachActorToRighthand(EquippedWeapon);
 	EquippedWeapon->SetHUDAmmo();
 	PlayEquipWeaponSound(EquippedWeapon);
 	SetWeaponTypeOnHUD();
 	UpdateCarriedAmmo();
-
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
-	AttachActorToBackpack(SecondaryWeapon);
 }
 
 void UCombatComponent::UpdateAmmoValues()
@@ -621,14 +648,6 @@ void UCombatComponent::OnRep_CombatState()
 		break;
 	case ECombatState::ECS_MAX:
 		break;
-	}
-}
-
-void UCombatComponent::HandleReload()
-{
-	if (Character)
-	{
-		Character->PlayReloadMontage();
 	}
 }
 
