@@ -31,8 +31,37 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	//UE_LOG(LogTemp, Error, TEXT("Player is overlapping"));
 
 	ATeamsFlag* OverlappingFlag = Cast<ATeamsFlag>(OtherActor);
+	bool bCanScoreRedFlag = this->ActorHasTag("BlueZoneTag") && OverlappingFlag && OverlappingFlag->ActorHasTag("RedFlagTag");
+	bool bCanScoreBlueFlag = this->ActorHasTag("RedZoneTag") && OverlappingFlag && OverlappingFlag->ActorHasTag("BlueFlagTag");
 
-	if (OverlappingFlag && OverlappingFlag->GetTeam() != Team)
+	if (IsFlagInBase(ETeam::ET_BlueTeam) && bCanScoreRedFlag)
+	{
+		//UE_LOG(LogTemp, Error, TEXT("OverlappingFlag IS VALID IN THE ZONE"));
+
+		ACaptureTheFlagGameMode* GameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagGameMode>();
+		if (GameMode)
+		{
+			//UE_LOG(LogTemp, Error, TEXT("Game Mode is valid in overlap zone"));
+
+			GameMode->FlagCaptured(OverlappingFlag, this);
+		}
+
+		OverlappingFlag->ServerDetachfromBackpack();
+
+		if (OverlappingFlag)
+		{
+			//UE_LOG(LogTemp, Error, TEXT("Flag is respawning"));
+
+			OverlappingFlag->MulticastFlagRespawn();
+		}
+		if (CaptureSound)
+		{
+			UGameplayStatics::PlaySound2D(
+				GetWorld(),
+				CaptureSound);
+		}
+	}
+	else if (IsFlagInBase(ETeam::ET_RedTeam)&& bCanScoreBlueFlag)
 	{
 		//UE_LOG(LogTemp, Error, TEXT("OverlappingFlag IS VALID IN THE ZONE"));
 
@@ -64,6 +93,45 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		return;
 	}
 }
+
+bool AFlagZone::IsFlagInBase(ETeam ScoringTeam) const
+{
+	FName FlagTag = (ScoringTeam == ETeam::ET_RedTeam) ? "RedFlagTag" : "BlueFlagTag";
+	TArray<AActor*> FlagActors;
+	UGameplayStatics::GetAllActorsWithTag(GetWorld(), FlagTag, FlagActors);
+	for (AActor* FlagActor : FlagActors)
+	{
+		ATeamsFlag* BaseFlag = Cast<ATeamsFlag>(FlagActor);
+		if (BaseFlag && BaseFlag->GetTeam() == ScoringTeam && BaseFlag->GetFlagState() == EFlagState::EFS_Initial)
+		{
+			return true;
+		}
+	}
+	return false;
+
+}
+
+
+
+/*
+void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	ATeamsFlag* OverlappingFlag = Cast<ATeamsFlag>(OtherActor);
+	bool bCanScoreRedFlag = this->ActorHasTag("BlueZoneTag") && OverlappingFlag && OverlappingFlag->ActorHasTag("RedFlagTag");
+	bool bCanScoreBlueFlag = this->ActorHasTag("RedZoneTag") && OverlappingFlag && OverlappingFlag->ActorHasTag("BlueFlagTag");
+
+	if (bCanScoreRedFlag)
+	{
+		UE_LOG(LogTemp, Error, TEXT("OverlappingFlag BlueTeamShouldScore"));
+
+		FlagScore(OverlappingFlag);
+	}
+	else if (bCanScoreBlueFlag)
+	{
+		FlagScore(OverlappingFlag);
+	}
+}*/
+
 
 
 

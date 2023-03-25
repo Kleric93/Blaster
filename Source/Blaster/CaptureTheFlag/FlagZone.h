@@ -33,6 +33,9 @@ protected:
 		bool bFromSweep,
 		const FHitResult& SweepResult);
 
+	UFUNCTION(BlueprintPure, Category = "Flag")
+		bool IsFlagInBase(ETeam ScoringTeam) const;
+
 private:
 
 	UPROPERTY(EditAnywhere)
