@@ -34,8 +34,8 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual float GetServerTime(); // synced with server world clock
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible.
-	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
-	void HandleMatchHasStarted(bool bTeamsMatch = false);
+	void OnMatchStateSet(FName State, bool bTeamsMatch = false, bool bCaptureTheFlagMatch = false);
+	void HandleMatchHasStarted(bool bTeamsMatch = false, bool bCaptureTheFlagMatch = false);
 	void HandleCooldown();
 
 	float SingleTripTime = 0;
@@ -45,7 +45,9 @@ public:
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 
 	void HideTeamScores();
+	void HideTeamFlagIcons();
 	void InitTeamScores();
+	void InitFlagIcons();
 	void SetHUDRedTeamScore(int32 RedScore);
 	void SetHUDBlueTeamScore(int32 BlueScore);
 
@@ -105,8 +107,14 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
 	bool bShowTeamScores = false;
 
+	UPROPERTY(ReplicatedUsing = OnRep_ShowFlagIcons)
+	bool bShowFlagIcons = false;
+
 	UFUNCTION()
 	void OnRep_ShowTeamScores();
+
+	UFUNCTION()
+	void OnRep_ShowFlagIcons();
 
 	FString GetInfoText(const TArray<class ABlasterPlayerState*>& Players);
 	FString GetTeamsInfoText(class ABlasterGameState* BlasterGameState);

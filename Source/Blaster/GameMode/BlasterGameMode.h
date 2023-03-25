@@ -41,6 +41,8 @@ public:
 
 	bool bTeamsMatch = false;
 
+	bool bCaptureTheFlagMatch = false;
+
 protected:
 
 	virtual void BeginPlay() override;

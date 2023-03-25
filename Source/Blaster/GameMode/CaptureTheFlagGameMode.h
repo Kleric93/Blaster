@@ -15,6 +15,8 @@ class BLASTER_API ACaptureTheFlagGameMode : public ATeamsGameMode
 	GENERATED_BODY()
 	
 public:
+	ACaptureTheFlagGameMode();
+
 	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController) override;
 	void FlagCaptured(class ATeamsFlag* Flag, class AFlagZone* Zone);
 };

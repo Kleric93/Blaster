@@ -48,6 +48,22 @@ void ABlasterPlayerController::HideTeamScores()
 	}
 }
 
+void ABlasterPlayerController::HideTeamFlagIcons()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BlueFlagState &&
+		BlasterHUD->CharacterOverlay->RedFlagState;
+
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->BlueFlagState->SetRenderOpacity(0.f);
+		BlasterHUD->CharacterOverlay->RedFlagState->SetRenderOpacity(0.f);
+	}
+}
+
 void ABlasterPlayerController::InitTeamScores()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -68,6 +84,22 @@ void ABlasterPlayerController::InitTeamScores()
 		BlasterHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(Zero));
 		BlasterHUD->CharacterOverlay->Spacer->SetText(FText::FromString(Spacer));
 		BlasterHUD->CharacterOverlay->TeamScoresText->SetText(FText::FromString(TeamsText));
+	}
+}
+
+void ABlasterPlayerController::InitFlagIcons()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BlueFlagState &&
+		BlasterHUD->CharacterOverlay->RedFlagState;
+
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->BlueFlagState->SetRenderOpacity(1.f);
+		BlasterHUD->CharacterOverlay->RedFlagState->SetRenderOpacity(1.f);
 	}
 }
 
@@ -231,6 +263,7 @@ void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 
 	DOREPLIFETIME(ABlasterPlayerController, MatchState);
 	DOREPLIFETIME(ABlasterPlayerController, bShowTeamScores);
+	DOREPLIFETIME(ABlasterPlayerController, bShowFlagIcons);
 }
 
 void ABlasterPlayerController::Tick(float DeltaTime)
@@ -309,6 +342,18 @@ void ABlasterPlayerController::OnRep_ShowTeamScores()
 	else
 	{
 		HideTeamScores();
+	}
+}
+
+void ABlasterPlayerController::OnRep_ShowFlagIcons()
+{
+	if (bShowFlagIcons)
+	{
+		InitFlagIcons();
+	}
+	else
+	{
+		HideTeamFlagIcons();
 	}
 }
 
@@ -767,6 +812,7 @@ void ABlasterPlayerController::PollInit()
 				if (bInitializeCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);
 				if (bInitializeWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
 				if (bShowTeamScores) InitTeamScores();
+				if (bShowFlagIcons) InitFlagIcons();
 				ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
 				if (BlasterCharacter && BlasterCharacter->GetCombat())
 				{
@@ -816,13 +862,13 @@ void ABlasterPlayerController::ReceivedPlayer()
 	}
 }
 
-void ABlasterPlayerController::OnMatchStateSet(FName State, bool bTeamsMatch)
+void ABlasterPlayerController::OnMatchStateSet(FName State, bool bTeamsMatch, bool bCaptureTheFlagMatch)
 {
 	MatchState = State;
 
 	if (MatchState == MatchState::InProgress)
 	{
-		HandleMatchHasStarted(bTeamsMatch);
+		HandleMatchHasStarted(bTeamsMatch, bCaptureTheFlagMatch);
 	}
 	else if (MatchState == MatchState::Cooldown)
 	{
@@ -842,9 +888,10 @@ void ABlasterPlayerController::OnRep_MatchState()
 	}
 }
 
-void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
+void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCaptureTheFlagMatch)
 {
 	if (HasAuthority()) bShowTeamScores = bTeamsMatch;
+	if (HasAuthority()) bShowFlagIcons = bCaptureTheFlagMatch;
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD)
 	{
@@ -857,13 +904,20 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
 		//if (!HasAuthority()) return;
-		if (bShowTeamScores)
+		if (bShowFlagIcons)
 		{
 			InitTeamScores();
+			InitFlagIcons();
+		}
+		else if (bShowTeamScores)
+		{
+			InitTeamScores();
+			HideTeamFlagIcons();
 		}
 		else
 		{
 			HideTeamScores();
+			HideTeamFlagIcons();
 		}
 	}
 }

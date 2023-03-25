@@ -7,6 +7,12 @@
 #include "Blaster/GameState/BlasterGameState.h"
 
 
+ACaptureTheFlagGameMode::ACaptureTheFlagGameMode()
+{
+	bTeamsMatch = false;
+	bCaptureTheFlagMatch = true;
+}
+
 void ACaptureTheFlagGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
 {
 	ABlasterGameMode::PlayerEliminated(ElimmedCharacter, VictimController, AttackerController);
