@@ -31,7 +31,6 @@ public:
 	void SetHUDAnnouncementCountdown(float CountdownTime);
 	void SetHUDGrenades(int32 Grenades);
 	virtual void Tick(float DeltaTime) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual float GetServerTime(); // synced with server world clock
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible.
@@ -50,9 +49,16 @@ public:
 	void SetHUDRedTeamScore(int32 RedScore);
 	void SetHUDBlueTeamScore(int32 BlueScore);
 
+	void SetHUDBlueFlagState(AActor* Flag, EFlagState NewFlagState);
+	void SetHUDRedFlagState(AActor* Flag, EFlagState NewFlagState);
+
+	void UpdateBlueFlagStateInHUD(EFlagState NewFlagState);
+	void UpdateRedFlagStateInHUD(EFlagState NewFlagState);
+
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 	void SetHUDTime();
 	void PollInit();
@@ -154,7 +160,9 @@ private:
 	int32 HUDDefeats;
 	bool bInitializeDefeats = false;
 	EWeaponType HUDWeaponType;
+
 	EFlagState FlagState;
+
 	bool bInitializeWeaponType = false;
 	int32 HUDGrenades;
 	bool bInitializeGrenades = false;
@@ -191,5 +199,14 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		class UTexture2D* BlueFlagDropped;
+
+	UPROPERTY(EditAnywhere)
+		class UTexture2D* RedFlagInitial;
+
+	UPROPERTY(EditAnywhere)
+		class UTexture2D* RedFlagStolen;
+
+	UPROPERTY(EditAnywhere)
+		class UTexture2D* RedFlagDropped;
 
 };

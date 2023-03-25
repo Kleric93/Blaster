@@ -86,6 +86,45 @@ void ABlasterPlayerController::SetHUDRedTeamScore(int32 RedScore)
 	}
 }
 
+void ABlasterPlayerController::SetHUDRedFlagState(AActor* Flag, EFlagState NewFlagState)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BlueFlagState;
+
+	if (bHUDValid)
+	{
+		ATeamsFlag* TheFlag = Cast<ATeamsFlag>(Flag);
+
+		TheFlag->OnRedFlagStateChanged.AddDynamic(this, &ABlasterPlayerController::UpdateRedFlagStateInHUD);
+		UpdateRedFlagStateInHUD(NewFlagState);
+	}
+}
+
+void ABlasterPlayerController::UpdateRedFlagStateInHUD(EFlagState NewFlagState)
+{
+	// Get the BlueFlagState image widget from the HUD
+	UImage* RedFlagState = BlasterHUD->CharacterOverlay->RedFlagState;
+
+	// Set the image based on the new flag state
+	switch (NewFlagState)
+	{
+	case EFlagState::EFS_Initial:
+		RedFlagState->SetBrushFromTexture(RedFlagInitial);
+		break;
+	case EFlagState::EFS_Equipped:
+		RedFlagState->SetBrushFromTexture(RedFlagStolen);
+		break;
+	case EFlagState::EFS_Dropped:
+		RedFlagState->SetBrushFromTexture(RedFlagDropped);
+		break;
+	default:
+		break;
+	}
+}
+
 void ABlasterPlayerController::SetHUDBlueTeamScore(int32 BlueScore)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -98,6 +137,45 @@ void ABlasterPlayerController::SetHUDBlueTeamScore(int32 BlueScore)
 	{
 		FString ScoreText = FString::Printf(TEXT("%d"), BlueScore);
 		BlasterHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDBlueFlagState(AActor* Flag, EFlagState NewFlagState)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BlueFlagState;
+
+	if (bHUDValid)
+	{
+		ATeamsFlag* TheFlag = Cast<ATeamsFlag>(Flag);
+
+		TheFlag->OnBlueFlagStateChanged.AddDynamic(this, &ABlasterPlayerController::UpdateBlueFlagStateInHUD);
+		UpdateBlueFlagStateInHUD(NewFlagState);
+	}
+}
+
+void ABlasterPlayerController::UpdateBlueFlagStateInHUD(EFlagState NewFlagState)
+{
+	// Get the BlueFlagState image widget from the HUD
+	UImage* BlueFlagState = BlasterHUD->CharacterOverlay->BlueFlagState;
+
+	// Set the image based on the new flag state
+	switch (NewFlagState)
+	{
+	case EFlagState::EFS_Initial:
+		BlueFlagState->SetBrushFromTexture(BlueFlagInitial);
+		break;
+	case EFlagState::EFS_Equipped:
+		BlueFlagState->SetBrushFromTexture(BlueFlagStolen);
+		break;
+	case EFlagState::EFS_Dropped:
+		BlueFlagState->SetBrushFromTexture(BlueFlagDropped);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -153,7 +231,6 @@ void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 
 	DOREPLIFETIME(ABlasterPlayerController, MatchState);
 	DOREPLIFETIME(ABlasterPlayerController, bShowTeamScores);
-
 }
 
 void ABlasterPlayerController::Tick(float DeltaTime)

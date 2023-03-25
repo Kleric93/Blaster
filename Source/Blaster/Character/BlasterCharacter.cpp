@@ -204,6 +204,26 @@ void ABlasterCharacter::PollInit()
 	}
 }
 
+void ABlasterCharacter::UpdateHUDFlag()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	TArray<AActor*> FoundFlags;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATeamsFlag::StaticClass(), FoundFlags);
+	for (AActor* Actor : FoundFlags)
+	{
+		ATeamsFlag* TheFlag = Cast<ATeamsFlag>(Actor);
+
+		if (BlasterPlayerController && Combat && TheFlag && TheFlag->ActorHasTag("BlueFlagTag"))
+		{
+			BlasterPlayerController->SetHUDBlueFlagState(TheFlag, TheFlag->GetFlagState());
+		}
+		if (BlasterPlayerController && Combat && TheFlag && TheFlag->ActorHasTag("RedFlagTag"))
+		{
+			BlasterPlayerController->SetHUDRedFlagState(TheFlag, TheFlag->GetFlagState());
+		}
+	}
+}
+
 EPhysicalSurface ABlasterCharacter::GetSurfaceType()
 {
 	FHitResult HitResult;
@@ -540,6 +560,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	RotateInPlace(DeltaTime);
 	HideCharacterAndWeaponsIfScopingOrCameraClose();
 	PollInit();
+	UpdateHUDFlag();
 }
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)

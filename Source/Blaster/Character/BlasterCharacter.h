@@ -56,6 +56,11 @@ public:
 	void UpdateHUDAmmo();
 	void SpawnDefaultWeapon();
 
+	void UpdateHUDFlag();
+
+	UPROPERTY()
+	class ATeamsFlag* Flag;
+
 	UPROPERTY()
 	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
 
@@ -184,9 +189,6 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
 
-	UPROPERTY()
-	class ATeamsFlag* Flag;
-
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
@@ -282,8 +284,6 @@ private:
 
 	UFUNCTION()
 		void OnRep_Shield(float LastShield);
-
-
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;

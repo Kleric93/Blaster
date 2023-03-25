@@ -22,7 +22,9 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+
 	void EquipFlag(class ATeamsFlag* FlagToEquip);
+
 	void AttachFlagToBackpack(AActor* ActorToAttach);
 	void SwapWeapon();
 

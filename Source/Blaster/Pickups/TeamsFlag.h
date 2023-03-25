@@ -9,6 +9,9 @@
 #include "Blaster/BlasterTypes/Team.h"
 #include "TeamsFlag.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBlueFlagStateChanged, EFlagState, NewFlagStateBlue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRedFlagStateChanged, EFlagState, NewFlagStateRed);
+
 UCLASS()
 class BLASTER_API ATeamsFlag : public AActor
 {
@@ -29,9 +32,14 @@ public:
 	//UFUNCTION(Server, Reliable)
 	void ServerDetachfromBackpack();
 
-
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastDetachfromBackpack();
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+		FOnBlueFlagStateChanged OnBlueFlagStateChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+		FOnRedFlagStateChanged OnRedFlagStateChanged;
 
 	FORCEINLINE EFlagState GetFlagState() const { return FlagState; }
 	FORCEINLINE void SetFlagStateOD(EFlagState State) { FlagState = State; }

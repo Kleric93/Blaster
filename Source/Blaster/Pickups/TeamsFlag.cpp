@@ -52,6 +52,20 @@ void ATeamsFlag::BeginPlay()
 
 	FlagState = EFlagState::EFS_Initial;
 
+	if (this->ActorHasTag("BlueFlagTag"))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN BEGINPLAY"));
+
+		OnBlueFlagStateChanged.Broadcast(EFlagState::EFS_Initial);
+	}
+
+	if (this->ActorHasTag("RedFlagTag"))
+	{
+		//UE_LOG(LogTemp, Error, TEXT("Red delegate being called IN Detach DROPPED"));
+
+		OnRedFlagStateChanged.Broadcast(EFlagState::EFS_Initial);
+	}
+
 	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 
 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -89,19 +103,43 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 
 		if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_RedTeam) 
 		{
+			if (this->ActorHasTag("RedFlagTag"))
+			{
+				//UE_LOG(LogTemp, Error, TEXT("Red delegate being called IN Detach DROPPED"));
+
+				OnRedFlagStateChanged.Broadcast(EFlagState::EFS_Initial);
+			}
 			MulticastFlagRespawn();
 		}
 		else if (FlagType == EFlagType::EFT_BlueFlag && BlasterCharacter->GetTeam() == ETeam::ET_BlueTeam)
 		{
+			if (this->ActorHasTag("BlueFlagTag"))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN OverlapSphere Initial state"));
+
+				OnBlueFlagStateChanged.Broadcast(EFlagState::EFS_Initial);
+			}
 			MulticastFlagRespawn();
 		}
 		else if (FlagType == EFlagType::EFT_RedFlag && BlasterCharacter->GetTeam() == ETeam::ET_BlueTeam)
 		{
+			if (this->ActorHasTag("RedFlagTag"))
+			{
+				//UE_LOG(LogTemp, Error, TEXT("Red delegate being called IN Detach DROPPED"));
+
+				OnRedFlagStateChanged.Broadcast(EFlagState::EFS_Equipped);
+			}
 			BlasterCharacter->GetCombat()->EquipFlag(this);
 			//UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
 		}
 		else if (FlagType == EFlagType::EFT_BlueFlag && BlasterCharacter->GetTeam() == ETeam::ET_RedTeam)
 		{
+			if (this->ActorHasTag("BlueFlagTag"))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN OverlapSphere Equipped State"));
+
+				OnBlueFlagStateChanged.Broadcast(EFlagState::EFS_Equipped);
+			}
 			BlasterCharacter->GetCombat()->EquipFlag(this);
 			//UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
 		}
@@ -141,6 +179,18 @@ void ATeamsFlag::ServerDetachfromBackpack()
 
 void ATeamsFlag::MulticastDetachfromBackpack_Implementation()
 {
+	if (this->ActorHasTag("BlueFlagTag"))
+	{
+		//UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN Detach DROPPED"));
+
+		OnBlueFlagStateChanged.Broadcast(EFlagState::EFS_Dropped);
+	}
+	if (this->ActorHasTag("RedFlagTag"))
+	{
+		//UE_LOG(LogTemp, Error, TEXT("Red delegate being called IN Detach DROPPED"));
+
+		OnRedFlagStateChanged.Broadcast(EFlagState::EFS_Dropped);
+	}
 	if (FlagState == EFlagState::EFS_Equipped)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
