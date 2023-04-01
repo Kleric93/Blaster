@@ -6,6 +6,8 @@
 #include "GameFramework/HUD.h"
 #include "BlasterHUD.generated.h"
 
+class UTexture2D;
+
 USTRUCT(BlueprintType)
 struct FHUDPackage
 {

@@ -155,3 +155,4 @@ void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, F
 		CrosshairColor
 		);
 }
+
