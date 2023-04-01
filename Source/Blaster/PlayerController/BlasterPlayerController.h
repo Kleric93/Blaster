@@ -20,6 +20,7 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 
 public:
 
+
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
@@ -138,6 +139,7 @@ private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
+
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
 
@@ -153,7 +155,7 @@ private:
 	UFUNCTION()
 	void OnRep_MatchState();
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "True"))
 	class UCharacterOverlay* CharacterOverlay;
 
 
@@ -203,18 +205,18 @@ private:
 		class UTexture2D* BlueFlagInitial;
 
 	UPROPERTY(EditAnywhere)
-		class UTexture2D* BlueFlagStolen;
+		 UTexture2D* BlueFlagStolen;
 
 	UPROPERTY(EditAnywhere)
-		class UTexture2D* BlueFlagDropped;
+		 UTexture2D* BlueFlagDropped;
 
 	UPROPERTY(EditAnywhere)
-		class UTexture2D* RedFlagInitial;
+		 UTexture2D* RedFlagInitial;
 
 	UPROPERTY(EditAnywhere)
-		class UTexture2D* RedFlagStolen;
+		 UTexture2D* RedFlagStolen;
 
 	UPROPERTY(EditAnywhere)
-		class UTexture2D* RedFlagDropped;
+		 UTexture2D* RedFlagDropped;
 
 };

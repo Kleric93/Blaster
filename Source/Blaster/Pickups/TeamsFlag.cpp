@@ -4,6 +4,7 @@
 #include "TeamsFlag.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Sound/SoundCue.h"
@@ -18,7 +19,7 @@
 // Sets default values
 ATeamsFlag::ATeamsFlag()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 	SetReplicateMovement(true);
 
@@ -30,9 +31,7 @@ ATeamsFlag::ATeamsFlag()
 	FlagMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
-
 	FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
 
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapSphere"));
 	OverlapSphere->SetupAttachment(FlagMesh);
@@ -41,6 +40,8 @@ ATeamsFlag::ATeamsFlag()
 	OverlapSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 	OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ATeamsFlag::OnSphereOverlap);
 
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
+	CapsuleComponent->SetupAttachment(FlagMesh);
 }
 
 // Called when the game starts or when spawned
@@ -80,6 +81,13 @@ void ATeamsFlag::BeginPlay()
 			BindOverlapTime
 		);
 	}
+}
+
+void ATeamsFlag::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	CapsuleComponent->SetWorldRotation(FRotator::ZeroRotator);
 }
 
 void ATeamsFlag::BindOverlapTimerFinished()

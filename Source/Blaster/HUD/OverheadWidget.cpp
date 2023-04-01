@@ -13,6 +13,24 @@ void UOverheadWidget::SetDisplayText(FString TextToDisplay)
 	}
 }
 
+void UOverheadWidget::ShowPlayerName(APawn* InPawn)
+{
+	APlayerState* PlayerState = InPawn->GetPlayerState();
+
+	if (PlayerState != nullptr)
+	{
+		FString PlayerName = PlayerState->GetPlayerName();
+		FString PlayerNameToDisplay = FString::Printf(TEXT("%s"), *PlayerName);
+		SetDisplayText(PlayerNameToDisplay);
+	}
+}
+
+void UOverheadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
+{
+	RemoveFromParent();
+	Super::NativeDestruct();
+}
+
 void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 {
 	ENetRole RemoteRole = InPawn->GetRemoteRole();
@@ -34,23 +52,4 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 	}
 	FString RemoteRoleString = FString::Printf(TEXT("Remote Role: %s"), *Role);
 	SetDisplayText(RemoteRoleString);
-}
-
-/* to be reviewed, crashes everything */
-void UOverheadWidget::ShowPlayerName(APawn* InPawn)
-{
-	APlayerState* PlayerState = InPawn->GetPlayerState();
-
-	if (PlayerState != nullptr)
-	{
-		FString PlayerName = PlayerState->GetPlayerName();
-		FString PlayerNameToDisplay = FString::Printf(TEXT("%s"), *PlayerName);
-		SetDisplayText(PlayerNameToDisplay);
-	}
-}
-
-void UOverheadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
-{
-	RemoveFromParent();
-	Super::NativeDestruct();
 }

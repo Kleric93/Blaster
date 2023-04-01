@@ -32,6 +32,15 @@
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Pickups/TeamsFlag.h"
 #include "Blaster/PlayerStart/TeamPlayerStart.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Components/BillboardComponent.h"
+#include "PaperSpriteComponent.h"
+#include "PaperSprite.h"
+#include "Materials/MaterialInstanceDynamic.h"
+
+
+
 
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -45,6 +54,21 @@ ABlasterCharacter::ABlasterCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	OverheadBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("OverheadBoom"));
+	OverheadBoom->SetupAttachment(GetCapsuleComponent());
+	OverheadBoom->TargetArmLength = 600.f;
+	OverheadBoom->bUsePawnControlRotation = true;
+	OverheadBoom->bDoCollisionTest = false;
+
+	HeadIconSpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("HeadIcon"));
+	HeadIconSpriteComponent->SetupAttachment(GetCapsuleComponent());
+	HeadIconSpriteComponent->SetRelativeLocation(HeadIconLocation);
+
+	MinimapCamera = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("MinimapCamera"));
+	MinimapCamera->SetupAttachment(GetCapsuleComponent());
+
+	MinimapRenderTarget = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("MinimapRenderTarget"));
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -81,6 +105,7 @@ ABlasterCharacter::ABlasterCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 
 	//
 	/// Hit Boxes for Server-side Rewind
@@ -204,6 +229,14 @@ void ABlasterCharacter::PollInit()
 	}
 }
 
+void ABlasterCharacter::UpdateMinimapRenderTarget()
+{
+	if (MinimapRenderTarget && IsLocallyControlled())
+	{
+		MinimapCamera->TextureTarget = MinimapRenderTarget;
+	}
+}
+
 void ABlasterCharacter::UpdateHUDFlag()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -249,6 +282,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterCharacter, Health);
 	DOREPLIFETIME(ABlasterCharacter, Shield);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
+
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -429,6 +463,8 @@ void ABlasterCharacter::OnPlayerStateInitialized()
 
 	SetTeamColor(BlasterPlayerState->GetTeam());
 	SetSpawnPoint();
+	SetHeadIcon();
+
 }
 
 void ABlasterCharacter::SetSpawnPoint()
@@ -535,6 +571,31 @@ void ABlasterCharacter::SetTeamColor(ETeam Team)
 	}
 }
 
+void ABlasterCharacter::SetHeadIcon()
+{
+	if (GetTeam() == ETeam::ET_NoTeam)
+	{
+		if (HeadIconSpriteComponent && DefaultPlayerIcon)
+		{
+			HeadIconSpriteComponent->SetSprite(DefaultPlayerIcon);
+		}
+	}
+	if (GetTeam() == ETeam::ET_RedTeam)
+	{
+		if (HeadIconSpriteComponent && DefaultPlayerIcon)
+		{
+			HeadIconSpriteComponent->SetSprite(RedTeamPlayerIcon);
+		}
+	}
+	if (GetTeam() == ETeam::ET_BlueTeam)
+	{
+		if (HeadIconSpriteComponent && DefaultPlayerIcon)
+		{
+			HeadIconSpriteComponent->SetSprite(BlueTeamPlayerIcon);
+		}
+	}
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -550,6 +611,14 @@ void ABlasterCharacter::BeginPlay()
 	if (AttachedGrenade)
 	{
 		AttachedGrenade->SetVisibility(false);
+	}
+
+	if (MinimapRenderTarget)
+	{
+		if (IsLocallyControlled())
+		{
+			MinimapCamera->TextureTarget = MinimapRenderTarget;
+		}
 	}
 }
 

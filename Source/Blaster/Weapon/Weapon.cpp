@@ -23,7 +23,6 @@
 #include "Blaster/BlasterComponents/CombatComponent.h"
 
 
-
 AWeapon::AWeapon()
 //ClipBoneName(TEXT("Clip_Bone"))
 {

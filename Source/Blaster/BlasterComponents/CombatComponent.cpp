@@ -20,6 +20,9 @@
 #include "Blaster/Grenade/Grenade.h"
 #include "Blaster/Weapon/Shotgun.h"
 #include "Blaster/Pickups/TeamsFlag.h"
+#include "Blaster/HUD/OverheadWidget.h"
+#include "Components/WidgetComponent.h"
+
 
 
 UCombatComponent::UCombatComponent()
@@ -249,10 +252,10 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr) return;
 	DropEquippedWeapon();
-	SetWeaponTypeOnHUD();
 	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	SetWeaponTypeOnHUD();
 	AttachActorToRighthand(EquippedWeapon);
 	EquippedWeapon->SetHUDAmmo();
 	UpdateCarriedAmmo();

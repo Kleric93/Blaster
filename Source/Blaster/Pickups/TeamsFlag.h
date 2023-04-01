@@ -51,6 +51,7 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	virtual void OnSphereOverlap(
@@ -72,6 +73,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Flagproperties")
 	class USphereComponent* OverlapSphere;
+
+	UPROPERTY(VisibleAnywhere, Category = "Flagproperties")
+	class UCapsuleComponent* CapsuleComponent;
 
 private:
 

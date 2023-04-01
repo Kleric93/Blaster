@@ -79,6 +79,27 @@ public:
 
 	void SetTeamColor(ETeam Team);
 
+	UFUNCTION()
+	void UpdateMinimapRenderTarget();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UPaperSpriteComponent* HeadIconSpriteComponent;
+
+	UPROPERTY(EditAnywhere)
+	FVector HeadIconLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sprite")
+	class UPaperSprite* DefaultPlayerIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sprite")
+		class UPaperSprite* RedTeamPlayerIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sprite")
+		class UPaperSprite* BlueTeamPlayerIcon;
+	
+
+	void SetHeadIcon();
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -112,8 +133,12 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
+
+	UPROPERTY(EditAnywhere)
+	class UTextureRenderTarget2D* MinimapRenderTarget;
 
 	//
 	/// Hit boxes used for Server Side Rewind
@@ -181,7 +206,13 @@ private:
 	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
+	USpringArmComponent* OverheadBoom;
+
+	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+	class USceneCaptureComponent2D* MinimapCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UWidgetComponent* OverheadWidget;

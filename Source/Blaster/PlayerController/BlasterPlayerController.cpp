@@ -460,6 +460,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		SetHUDWeaponAmmo(HUDWeaponAmmo);
 		SetHUDWeaponType(EWeaponType::EWT_Pistol);
 		SetHUDGrenades(BlasterCharacter->GetCombat()->GetGrenades());
+		BlasterCharacter->UpdateMinimapRenderTarget();
 	}
 }
 

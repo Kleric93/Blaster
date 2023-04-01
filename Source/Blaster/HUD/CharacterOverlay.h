@@ -40,7 +40,7 @@ public:
 	class UImage* BlueFlagState;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* RedFlagState;
+	UImage* RedFlagState;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* TeamScoresText;
