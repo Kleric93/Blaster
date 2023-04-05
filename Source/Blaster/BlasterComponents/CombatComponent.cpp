@@ -457,6 +457,23 @@ void UCombatComponent::Reload()
 		ServerReload();
 		HandleReload();
 		bLocallyReloading = true;
+
+		FTimerHandle ReloadStuckTimer;
+		GetWorld()->GetTimerManager().SetTimer(
+			ReloadStuckTimer, 
+			this, 
+			&UCombatComponent::DoubleCheckReloadingStateChange, 
+			5.f, 
+			false);
+	}
+}
+
+void UCombatComponent::DoubleCheckReloadingStateChange()
+{
+	if (bLocallyReloading && CombatState == ECombatState::ECS_Reloading)
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+		bLocallyReloading = false;
 	}
 }
 

@@ -117,6 +117,9 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
 
+	UFUNCTION()
+	void DoubleCheckReloadingStateChange();
+
 	/*UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> GrenadeClass;*/
 

@@ -82,7 +82,7 @@ ABlasterCharacter::ABlasterCharacter()
 	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
 	Buff->SetIsReplicated(true);
 
-	LagCompensation = CreateAbstractDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
 
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
@@ -634,6 +634,11 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
+	if (Combat && Combat->EquippedWeapon)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+	}
 	if (bDisableGameplay)
 	{
 		bUseControllerRotationYaw = false;
@@ -907,7 +912,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 void ABlasterCharacter::MoveForward(float Value)
 {
 	if (bDisableGameplay) return;
-	if (Controller != nullptr && Value != 0.f)
+	if (Controller && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));
@@ -918,7 +923,7 @@ void ABlasterCharacter::MoveForward(float Value)
 void ABlasterCharacter::MoveRight(float Value)
 {
 	if (bDisableGameplay) return;
-	if (Controller != nullptr && Value != 0.f)
+	if (Controller && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y));
@@ -1117,7 +1122,7 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
 	}
-	if (AO_Yaw < -90.f)
+	else if (AO_Yaw < -90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Left;
 	}
