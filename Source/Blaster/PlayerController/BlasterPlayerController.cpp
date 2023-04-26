@@ -22,6 +22,11 @@
 #include "Blaster/Pickups/TeamsFlag.h"
 #include "Blaster/Pickups/FlagTypes.h"
 #include "Blaster/BlasterTypes/Team.h"
+#include "Blaster/HUD/ChatSystemOverlay.h"
+#include "Components/EditableText.h"
+#include "Blaster/HUD/PlayerStats.h"
+#include "Blaster/HUD/ScoresOverview.h"
+
 
 void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
 {
@@ -157,6 +162,110 @@ void ABlasterPlayerController::UpdateRedFlagStateInHUD(EFlagState NewFlagState)
 	}
 }
 
+void ABlasterPlayerController::AddChatBox()
+{
+	if (!IsLocalPlayerController()) return;
+	UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from !islocalplayercontroller IF"));
+
+	if (ChatSystemOverlayClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from 1st IF"));
+
+		ChatSystemWidget = ChatSystemWidget == nullptr ? CreateWidget<UChatSystemOverlay>(this, ChatSystemOverlayClass) : ChatSystemWidget;
+		if (ChatSystemWidget)
+		{
+			ChatSystemWidget->AddToViewport();
+			ChatSystemWidget->InputTextBox->SetVisibility(ESlateVisibility::Collapsed);
+			ChatSystemWidget->InputTextBox->OnTextCommitted.AddDynamic(this, &ABlasterPlayerController::OnTextCommitted);
+			UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from 2nd IF"));
+
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("class is null"));
+
+	}
+
+}
+
+void ABlasterPlayerController::ToggleInputChatBox()
+{
+	if (ChatSystemWidget && ChatSystemWidget->InputTextBox)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox"));
+		if (ChatSystemWidget->InputTextBox->GetVisibility() == ESlateVisibility::Collapsed)
+		{
+			ChatSystemWidget->InputTextBox->SetVisibility(ESlateVisibility::Visible);
+			FInputModeGameAndUI InputMode;
+			InputMode.SetWidgetToFocus(ChatSystemWidget->InputTextBox->TakeWidget());
+			SetInputMode(InputMode);
+			SetShowMouseCursor(true);
+			UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox"));
+
+		}
+		else
+		{
+			ChatSystemWidget->InputTextBox->SetVisibility(ESlateVisibility::Collapsed);
+			FInputModeGameOnly InputMode;
+			SetInputMode(InputMode);
+			SetShowMouseCursor(false);
+			UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox else"));
+
+		}
+	}
+}
+
+void ABlasterPlayerController::OnTextCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+{
+	if (CommitMethod != ETextCommit::OnEnter) return;
+
+	PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+	FString PlayerName("");
+	if (PlayerState)
+	{
+		PlayerName = PlayerState->GetPlayerName();
+	}
+	if (ChatSystemWidget)
+	{
+		// UE_LOG(LogTemp, Warning, TEXT("Here"));
+		if (!Text.IsEmpty())
+		{
+			ServerSetText(Text.ToString(), PlayerName);
+		}
+		ChatSystemWidget->InputTextBox->SetText(FText());
+		ChatSystemWidget->InputTextBox->SetVisibility(ESlateVisibility::Collapsed);
+		FInputModeGameOnly InputMode;
+		SetInputMode(InputMode);
+		SetShowMouseCursor(false);
+	}
+}
+
+void ABlasterPlayerController::ClientSetText_Implementation(const FString& Text, const FString& PlayerName)
+{
+	PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+	if (ChatSystemWidget && PlayerState)
+	{
+		if (PlayerName == PlayerState->GetPlayerName())
+		{
+			ChatSystemWidget->SetChatText(Text, "You");
+		}
+		else
+		{
+			ChatSystemWidget->SetChatText(Text, PlayerName);
+		}
+	}
+}
+
+void ABlasterPlayerController::ServerSetText_Implementation(const FString& Text, const FString& PlayerName)
+{
+	BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
+	if (BlasterGameMode)
+	{
+		BlasterGameMode->SendChat(Text, PlayerName);
+	}
+}
+
 void ABlasterPlayerController::SetHUDBlueTeamScore(int32 BlueScore)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -252,9 +361,11 @@ void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AddChatBox();
+
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckmatchState();
-	
+	//HideMatchStats();
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -551,6 +662,7 @@ void ABlasterPlayerController::SetHUDScore(float Score)
 	{
 		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
 		BlasterHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
+		//BlasterHUD->PlayerStats->SetStatKills(ScoreText);
 	}
 	else
 	{
@@ -570,6 +682,8 @@ void ABlasterPlayerController::SetHUDDefeats(int32 Defeats)
 	{
 		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
 		BlasterHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+		//BlasterHUD->PlayerStats->Deaths->SetText(FText::FromString(DefeatsText));
+
 	}
 	else
 	{
@@ -830,6 +944,10 @@ void ABlasterPlayerController::SetupInputComponent()
 	if (InputComponent == nullptr) return;
 
 	InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMainMenu);
+	InputComponent->BindAction("Chat", IE_Pressed, this, &ABlasterPlayerController::ToggleInputChatBox);
+
+	InputComponent->BindAction("Stats", IE_Pressed, this, &ABlasterPlayerController::ShowMatchStats);
+	InputComponent->BindAction("Stats", IE_Released, this, &ABlasterPlayerController::HideMatchStats);
 }
 	
 
@@ -894,6 +1012,7 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 	if (HasAuthority()) bShowTeamScores = bTeamsMatch;
 	if (HasAuthority()) bShowFlagIcons = bCaptureTheFlagMatch;
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
 	if (BlasterHUD)
 	{
 		if (BlasterHUD->CharacterOverlay == nullptr)
@@ -903,6 +1022,11 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 		if (BlasterHUD->Announcement)
 		{
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+		if (BlasterHUD->PlayerStats == nullptr)
+		{
+			//BlasterHUD->AddPlayerStats(this->GetPawn());
+			AddPlayerStats();
 		}
 		//if (!HasAuthority()) return;
 		if (bShowFlagIcons)
@@ -920,6 +1044,17 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 			HideTeamScores();
 			HideTeamFlagIcons();
 		}
+	}
+}
+
+void ABlasterPlayerController::AddPlayerStats()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD)
+	{
+		BlasterHUD->AddPlayerStats();
+		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Hidden);
+		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 
@@ -1026,4 +1161,41 @@ FString ABlasterPlayerController::GetTeamsInfoText(ABlasterGameState* BlasterGam
 	}
 
 	return InfoTextString;
+}
+
+void ABlasterPlayerController::ShowMatchStats()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->ScoresOverview &&
+		BlasterHUD->ScoresOverview->PlayerStats;
+	if (bHUDValid)
+	{
+		//BlasterHUD->AddPlayerStats();
+		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Visible);
+		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Visible);
+
+
+		UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE VISIBLE!!!"));
+	}
+}
+
+void ABlasterPlayerController::HideMatchStats()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->ScoresOverview &&
+		BlasterHUD->ScoresOverview->PlayerStats;
+
+
+	if (bHUDValid)
+	{
+		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Hidden);
+		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Hidden);
+
+		UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE HIDDEN!!!"));
+
+	}
 }

@@ -697,6 +697,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ABlasterCharacter::GrenadeButtonPressed);
 	//PlayerInputComponent->BindAction("ThrowSmokeGrenade", IE_Pressed, this, &ABlasterCharacter::SmokeGrenadeButtonPressed);
+
 }
 
 void ABlasterCharacter::PostInitializeComponents()

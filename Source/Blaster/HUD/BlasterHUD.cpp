@@ -3,12 +3,18 @@
 
 #include "BlasterHUD.h"
 #include "GameFramework/PlayerController.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "CharacterOverlay.h"
 #include "Announcement.h"
 #include "ElimAnnouncement.h"
+#include "PlayerStats.h"
 #include "Components/HorizontalBox.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CanvasPanelSlot.h"
+#include "PlayerStats.h"
+#include "ScoresOverview.h"
+#include "EngineUtils.h"
 
 void ABlasterHUD::BeginPlay()
 {
@@ -77,6 +83,40 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim, UTexture
 			);
 		}
 	}
+}
+
+void ABlasterHUD::AddPlayerStats()
+{
+	if (ScoresOverviewWidget == nullptr) { return; }
+	APlayerController* Controller = GetOwningPlayerController();
+
+	if (ScoresOverview == nullptr)
+	{
+		ScoresOverview = CreateWidget<UScoresOverview>(Controller, ScoresOverviewWidget);
+		ScoresOverview->AddToViewport();
+		UE_LOG(LogTemp, Warning, TEXT("ABlasterHUDcalled AddPlayerStats() and created scores overview widget"));
+
+	}
+
+	ScoresOverview->StatsSetup();
+
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void ABlasterHUD::AddAllPlayerStats()
+{
+	/*
+	ABlasterGameState* BlasterGameState = GetWorld()->GetGameState<ABlasterGameState>();
+	if (BlasterGameState)
+	{
+		for (APlayerState* State : BlasterGameState->PlayerArray)
+		{
+			ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(State);
+			if (BlasterPlayerState)
+			{
+			}
+		}
+	}*/
 }
 
 void ABlasterHUD::ElimAnnouncementTimerFinished(UElimAnnouncement* MsgToRemove)

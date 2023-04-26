@@ -37,6 +37,9 @@ public:
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible.
 	void OnMatchStateSet(FName State, bool bTeamsMatch = false, bool bCaptureTheFlagMatch = false);
 	void HandleMatchHasStarted(bool bTeamsMatch = false, bool bCaptureTheFlagMatch = false);
+
+	void AddPlayerStats();
+
 	void HandleCooldown();
 
 	float SingleTripTime = 0;
@@ -57,6 +60,30 @@ public:
 
 	void UpdateBlueFlagStateInHUD(EFlagState NewFlagState);
 	void UpdateRedFlagStateInHUD(EFlagState NewFlagState);
+
+	//
+	/// chat box
+	//
+
+	void AddChatBox();
+
+	UFUNCTION()
+	void ToggleInputChatBox();
+
+	UFUNCTION()
+	void OnTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetText(const FString& Text, const FString& PlayerName);
+
+	UFUNCTION(Client, Reliable)
+	void ClientSetText(const FString& Text, const FString& PlayerName);
+	
+private:
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UChatSystemOverlay> ChatSystemOverlayClass;
+	UPROPERTY()
+	UChatSystemOverlay* ChatSystemWidget;
 
 
 protected:
@@ -120,6 +147,10 @@ protected:
 	FString GetInfoText(const TArray<class ABlasterPlayerState*>& Players);
 	FString GetTeamsInfoText(class ABlasterGameState* BlasterGameState);
 
+	void ShowMatchStats();
+
+	void HideMatchStats();
+
 private:
 
 	//
@@ -132,9 +163,6 @@ private:
 	class UReturnToMainMenu* ReturnToMainMenu;
 
 	bool bReturnToMainMenuOpen = false;
-
-
-
 
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;

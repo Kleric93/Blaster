@@ -637,7 +637,7 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 			HitCharacter,
 			TotalDamageWithDist,
 			Character->Controller,
-			HitCharacter->GetEquippedWeapon(),
+			Character->GetEquippedWeapon(),
 			UDamageType::StaticClass()
 		);
 

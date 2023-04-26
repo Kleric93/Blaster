@@ -41,6 +41,15 @@ public:
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
 
+	UPROPERTY()
+	class UPlayerStats* PlayerStats;
+
+	UPROPERTY()
+	class UScoresOverview* ScoresOverview;
+
+	UPROPERTY(EditAnywhere, Category = "PlayerStats")
+	TSubclassOf<UScoresOverview> ScoresOverviewWidget;
+
 	UPROPERTY(EditAnywhere, Category = "Announcements")
 	TSubclassOf<UUserWidget> AnnouncementClass;
 
@@ -50,6 +59,11 @@ public:
 	void AddAnnouncement();
 
 	void AddElimAnnouncement(FString Attacker, FString Victim, UTexture2D* WeaponIcon);
+
+	void AddPlayerStats();
+
+	void AddAllPlayerStats();
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -68,6 +82,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UPlayerStats> PlayerStatsClass;
+
+	UPROPERTY(EditAnywhere)
+	TArray<UPlayerStats*> PlayerStatsArray;
 
 	UPROPERTY(EditAnywhere)
 	float ElimAnnouncementTime = 3;

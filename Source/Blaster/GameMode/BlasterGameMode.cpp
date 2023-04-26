@@ -218,3 +218,15 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
         CharacterLeaving->Elim(true);
     }
 }
+
+void ABlasterGameMode::SendChat(const FString& Text, const FString& PlayerName)
+{
+    for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+    {
+        ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+        if (BlasterPlayerController)
+        {
+            BlasterPlayerController->ClientSetText(Text, PlayerName);
+        }
+    }
+}
