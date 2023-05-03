@@ -4,35 +4,45 @@
 #include "ScoresOverview.h"
 #include "PlayerStats.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/ScrollBox.h"
 
-
 void UScoresOverview::StatsSetup()
 {
-	if (TeamsDataScrollbox)
-	{
-		PlayerStats = CreateWidget<UPlayerStats>(GetWorld(), PlayerStatsWidget);
+    if (TeamsDataScrollbox)
+    {
+        PlayerStats = CreateWidget<UPlayerStats>(GetWorld(), PlayerStatsWidget);
 
-		if (PlayerStats != nullptr)
-		{
-			ABlasterGameState* MyGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+        if (PlayerStats != nullptr)
+        {
+            ABlasterGameState* MyGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 
-			if (MyGameState != nullptr)
-			{
-				PlayerStats->WidgetSetup(MyGameState->PlayerArray);
-				PlayerStats->AddToViewport();
+            if (MyGameState != nullptr)
+            {
+                TArray<ABlasterPlayerState*> PlayerStatesArray;
+                for (APlayerState* PlayerState : MyGameState->PlayerArray)
+                {
+                    ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(PlayerState);
+                    if (BlasterPlayerState)
+                    {
+                        PlayerStatesArray.Add(BlasterPlayerState);
+                    }
+                }
 
-				UE_LOG(LogTemp, Warning, TEXT("UScoresOverview created the scrollbox"));
-				GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
-			}
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("scrollbox is null in ScoresOverview"));
+                PlayerStats->WidgetSetup(PlayerStatesArray);
+                PlayerStats->AddToViewport();
 
-	}
+                UE_LOG(LogTemp, Warning, TEXT("UScoresOverview created the scrollbox"));
+                GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+            }
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("scrollbox is null in ScoresOverview"));
+    }
 }
 
 void UScoresOverview::StatsTeardown()

@@ -98,6 +98,8 @@ private:
 	UPROPERTY()
 	TArray<UElimAnnouncement*> ElimMessages;
 
+	FTimerHandle WidgetCreationDelayHandle;
+
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
 	

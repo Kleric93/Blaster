@@ -28,6 +28,7 @@ public:
 
 protected:
 
+	FTimerHandle SetupTimerHandle;
 
 
 private:

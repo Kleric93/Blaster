@@ -7,6 +7,9 @@
 #include "Blaster/BlasterTypes/Team.h"
 #include "BlasterPlayerState.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerScoredKill, const FString&, PlayerName, int32, NewKills);
+
 /**
  * 
  */
@@ -30,6 +33,12 @@ public:
 
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdatePlayerKills(const FString& PlayerName, int32 NewKills);
+
+	UPROPERTY(BlueprintAssignable, Category = "Score")
+		FOnPlayerScoredKill OnPlayerScoredKill;
 
 private:
 

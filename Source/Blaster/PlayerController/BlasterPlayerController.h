@@ -10,6 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 
+
 /**
  * 
  */
@@ -37,9 +38,6 @@ public:
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible.
 	void OnMatchStateSet(FName State, bool bTeamsMatch = false, bool bCaptureTheFlagMatch = false);
 	void HandleMatchHasStarted(bool bTeamsMatch = false, bool bCaptureTheFlagMatch = false);
-
-	void AddPlayerStats();
-
 	void HandleCooldown();
 
 	float SingleTripTime = 0;
@@ -78,7 +76,9 @@ public:
 
 	UFUNCTION(Client, Reliable)
 	void ClientSetText(const FString& Text, const FString& PlayerName);
-	
+
+	FORCEINLINE float GetHUDScore() const {	return HUDScore; }
+
 private:
 	UPROPERTY(EditAnywhere, Category = HUD)
 	TSubclassOf<class UChatSystemOverlay> ChatSystemOverlayClass;
@@ -167,6 +167,8 @@ private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
+	UPROPERTY()
+	class UPlayerStats* PlayerStats;
 
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;

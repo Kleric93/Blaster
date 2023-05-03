@@ -24,6 +24,10 @@ void ABlasterPlayerState::AddToScore(float ScoreAmount)
 		if (Controller)
 		{
 			Controller->SetHUDScore(Score);
+			FString PlayerName = this->GetPlayerName();
+			int32 NewKills = FMath::FloorToInt(Score);
+			Multicast_UpdatePlayerKills(PlayerName, NewKills);
+			UE_LOG(LogTemp, Error, TEXT("Server_UpdatePlayerKills_Implementation called for player: %s, kills: %d"), *PlayerName, NewKills);
 		}
 	}
 }
@@ -87,4 +91,9 @@ void ABlasterPlayerState::OnRep_Team()
 	{
 		BCharacter->SetTeamColor(Team);
 	}
+}
+
+void ABlasterPlayerState::Multicast_UpdatePlayerKills_Implementation(const FString& PlayerName, int32 NewKills)
+{
+	OnPlayerScoredKill.Broadcast(PlayerName, NewKills);
 }

@@ -6,6 +6,7 @@
 #include "GameFramework/GameState.h"
 #include "BlasterGameState.generated.h"
 
+
 /**
  * 
  */
@@ -43,6 +44,15 @@ public:
 
 	UFUNCTION()
 	void OnRep_BlueTeamScore();
+
+	UFUNCTION(BlueprintCallable, Category = "PlayerControllers")
+	TArray<class ABlasterPlayerController*> GetAllPlayerControllers();
+
+	UPROPERTY()
+	TArray<ABlasterPlayerController*> PlayerControllersArray;
+
+	UPROPERTY()
+	class UPlayerStats* PlayerStats;
 
 private:
 

@@ -5,6 +5,10 @@
 #include "Net/UnrealNetwork.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/HUD/PlayerStats.h"
+#include "Kismet/GamePlayStatics.h"
+#include "Blaster/HUD/ScoresOverview.h"
+#include "Blaster/HUD/BlasterHUD.h"
 
 void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -12,8 +16,7 @@ void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME(ABlasterGameState, TopScoringPlayers);
 	DOREPLIFETIME(ABlasterGameState, RedTeamScore);
-	DOREPLIFETIME(ABlasterGameState, BlueTeamScore);
-}
+	DOREPLIFETIME(ABlasterGameState, BlueTeamScore);}
 
 void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
 {
@@ -72,3 +75,31 @@ void ABlasterGameState::OnRep_BlueTeamScore()
 		BPlayer->SetHUDBlueTeamScore(BlueTeamScore);
 	}
 }
+
+TArray<class ABlasterPlayerController*> ABlasterGameState::GetAllPlayerControllers()
+{
+	TArray<ABlasterPlayerController*> Result;
+	for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+		if (BlasterPlayerController)
+		{
+			Result.Add(BlasterPlayerController);
+		}
+	}
+
+	if (HasAuthority())
+	{
+		PlayerControllersArray = Result;
+	}
+
+	// Log the number of player controllers in the array
+	UE_LOG(LogTemp, Warning, TEXT("GetAllPlayerControllers - PlayerControllersArray size: %d"), PlayerControllersArray.Num());
+
+	// Display the number of player controllers on the screen for all clients
+	FString DebugMessage = FString::Printf(TEXT("PlayerControllersArray size: %d"), PlayerControllersArray.Num());
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, DebugMessage);
+
+	return Result;
+}
+

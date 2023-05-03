@@ -26,6 +26,7 @@
 #include "Components/EditableText.h"
 #include "Blaster/HUD/PlayerStats.h"
 #include "Blaster/HUD/ScoresOverview.h"
+#include "Blaster/HUD/PlayerStatsLine.h"
 
 
 void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
@@ -365,7 +366,6 @@ void ABlasterPlayerController::BeginPlay()
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckmatchState();
-	//HideMatchStats();
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -662,7 +662,6 @@ void ABlasterPlayerController::SetHUDScore(float Score)
 	{
 		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
 		BlasterHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
-		//BlasterHUD->PlayerStats->SetStatKills(ScoreText);
 	}
 	else
 	{
@@ -682,8 +681,6 @@ void ABlasterPlayerController::SetHUDDefeats(int32 Defeats)
 	{
 		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
 		BlasterHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
-		//BlasterHUD->PlayerStats->Deaths->SetText(FText::FromString(DefeatsText));
-
 	}
 	else
 	{
@@ -1025,8 +1022,7 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 		}
 		if (BlasterHUD->PlayerStats == nullptr)
 		{
-			//BlasterHUD->AddPlayerStats(this->GetPawn());
-			AddPlayerStats();
+			BlasterHUD->AddPlayerStats();
 		}
 		//if (!HasAuthority()) return;
 		if (bShowFlagIcons)
@@ -1044,17 +1040,6 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 			HideTeamScores();
 			HideTeamFlagIcons();
 		}
-	}
-}
-
-void ABlasterPlayerController::AddPlayerStats()
-{
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if (BlasterHUD)
-	{
-		BlasterHUD->AddPlayerStats();
-		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Hidden);
-		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
 

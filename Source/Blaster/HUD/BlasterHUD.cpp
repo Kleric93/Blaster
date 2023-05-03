@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "CharacterOverlay.h"
 #include "Announcement.h"
 #include "ElimAnnouncement.h"
@@ -87,20 +88,40 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim, UTexture
 
 void ABlasterHUD::AddPlayerStats()
 {
-	if (ScoresOverviewWidget == nullptr) { return; }
-	APlayerController* Controller = GetOwningPlayerController();
-
-	if (ScoresOverview == nullptr)
+	ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(GetOwningPlayerController());
+	if (BlasterPlayerController)
 	{
-		ScoresOverview = CreateWidget<UScoresOverview>(Controller, ScoresOverviewWidget);
-		ScoresOverview->AddToViewport();
-		UE_LOG(LogTemp, Warning, TEXT("ABlasterHUDcalled AddPlayerStats() and created scores overview widget"));
+		UE_LOG(LogTemp, Warning, TEXT("BlasterPlayerController is valid"));
 
+		ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(BlasterPlayerController->GetWorld()->GetGameState());
+		if (BlasterGameState)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("BlasterGameState is valid"));
+			UE_LOG(LogTemp, Warning, TEXT("ABlasterHUD called AddPlayerStats() and created scores overview widget"));
+
+			if (ScoresOverview == nullptr)
+			{
+				ScoresOverview = CreateWidget<UScoresOverview>(GetWorld(), ScoresOverviewWidget);
+				if (ScoresOverview)
+				{
+					ScoresOverview->AddToViewport();
+					ScoresOverview->SetVisibility(ESlateVisibility::Hidden);
+					ScoresOverview->StatsSetup();
+					ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Hidden);
+				}
+			}
+
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PlayerControllersArray is empty"));
+			GetWorld()->GetTimerManager().SetTimer(WidgetCreationDelayHandle, this, &ABlasterHUD::AddPlayerStats, 0.5f, false);
+		}
 	}
-
-	ScoresOverview->StatsSetup();
-
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BlasterPlayerController is NOT valid"));
+	}
 }
 
 void ABlasterHUD::AddAllPlayerStats()

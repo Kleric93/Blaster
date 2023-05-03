@@ -17,11 +17,21 @@ class BLASTER_API UPlayerStats : public UUserWidget
 
 public:
 
-	void WidgetSetup(TArray<APlayerState*> PlayerStatesArray);
 
 	UPROPERTY(meta = (BindWidget))
 	class UScrollBox* PlayerStatsScrollBox;
 
 	UPROPERTY(EditAnywhere)
 		TSubclassOf<class UPlayerStatsLine> PlayerStatLine;
+
+	UPROPERTY()
+	UPlayerStatsLine* PlayerStatsLineWidget;
+
+	UPROPERTY()
+		class ABlasterPlayerController* Controller;
+
+	void WidgetSetup(TArray<class ABlasterPlayerState*> BlasterPlayerStateArray);
+
+	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
+		void UpdateKills(const FString& PlayerName, int32 NewKills);
 };
