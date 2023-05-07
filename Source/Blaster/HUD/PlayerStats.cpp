@@ -34,18 +34,6 @@ void UPlayerStats::WidgetSetup(TArray<class ABlasterPlayerState*> BlasterPlayerS
                 APlayerState* InGamePlayer = BlasterPlayerState;
                 if (InGamePlayer == nullptr) continue;
 
-                // Get character and check if it's valid
-                ABlasterCharacter* Character = Cast<ABlasterCharacter>(BlasterPlayerState->GetPawn());
-                if (Character == nullptr) continue;
-
-                // Get combat component and check if it's valid
-                UCombatComponent* CombatComponent = Character->GetCombat();
-                if (CombatComponent == nullptr) continue;
-
-                // Get equipped weapon and check if it's valid
-                AWeapon* Weapon = CombatComponent->GetEquippedWeapon();
-                if (Weapon == nullptr) continue;
-
                 PlayerStatsLineWidget = CreateWidget<UPlayerStatsLine>(GetWorld(), PlayerStatLine);
                 if (PlayerStatsLineWidget == nullptr) continue;
 
@@ -114,15 +102,6 @@ void UPlayerStats::WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPl
 
 void UPlayerStats::SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayerState, APlayerState* InGamePlayer)
 {
-    // Get character and check if it's valid
-    ABlasterCharacter* Character = Cast<ABlasterCharacter>(BlasterPlayerState->GetPawn());
-
-    // Get combat component and check if it's valid
-    UCombatComponent* CombatComponent = Character->GetCombat();
-
-    // Get equipped weapon and check if it's valid
-    AWeapon* Weapon = CombatComponent->GetEquippedWeapon();
-
     ABlasterGameState* GameState = Cast<ABlasterGameState>(GetWorld()->GetGameState());
     if (!GameState)
     {
@@ -141,8 +120,7 @@ void UPlayerStats::SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayer
     {
         GameState->OnPlayerScoredPoint.AddDynamic(this, &UPlayerStats::UpdateTeamScorePoints);
         GameState->OnTeamScoredPoint.AddDynamic(this, &UPlayerStats::UpdateOverallScores);
-    }    
-    Weapon->OnHitscanDamage.AddDynamic(this, &UPlayerStats::UpdateHitscanDamage);
+    }   
 }
 
 
@@ -195,17 +173,6 @@ void UPlayerStats::UpdateKD(const FString& PlayerName, int32 Kills, int32 Deaths
     }
 }
 
-void UPlayerStats::UpdateHitscanDamage(const FString& PlayerName, int32 Damage)
-{
-    UPlayerStatsLine* StatsLine = FindPlayerStatsLine(PlayerName);
-    if (StatsLine)
-    {
-        int32 CurrentDamage = FCString::Atoi(*StatsLine->Damage->GetText().ToString());
-        int32 UpdatedDamage = CurrentDamage + Damage;
-        StatsLine->Damage->SetText(FText::AsNumber(UpdatedDamage));
-    }
-}
-
 void UPlayerStats::UpdateTeam(const FString& PlayerName, ETeam TeamToAssign)
 {
     UPlayerStatsLine* StatsLine = FindPlayerStatsLine(PlayerName);
@@ -221,12 +188,25 @@ void UPlayerStats::UpdateTeam(const FString& PlayerName, ETeam TeamToAssign)
         if (Team == ETeam::ET_RedTeam)
         {
             StatsLine->TeamIcon->SetBrushFromTexture(RedTeamIcon);
-            StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::Red));
+            StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+            StatsLine->IconBorder->SetColorAndOpacity(FLinearColor::Red);
+            StatsLine->NameBorder->SetColorAndOpacity(FLinearColor::Red);
+            StatsLine->ScoreBorder->SetColorAndOpacity(FLinearColor::Red);
+            StatsLine->KillsBorder->SetColorAndOpacity(FLinearColor::Red);
+            StatsLine->DeathsBorder->SetColorAndOpacity(FLinearColor::Red);
+            StatsLine->KDBorder->SetColorAndOpacity(FLinearColor::Red);
+
         }
         if (Team == ETeam::ET_BlueTeam)
         {
             StatsLine->TeamIcon->SetBrushFromTexture(BlueTeamIcon);
-            StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::Blue));
+            StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+            StatsLine->IconBorder->SetColorAndOpacity(FLinearColor::Blue);
+            StatsLine->NameBorder->SetColorAndOpacity(FLinearColor::Blue);
+            StatsLine->ScoreBorder->SetColorAndOpacity(FLinearColor::Blue);
+            StatsLine->KillsBorder->SetColorAndOpacity(FLinearColor::Blue);
+            StatsLine->DeathsBorder->SetColorAndOpacity(FLinearColor::Blue);
+            StatsLine->KDBorder->SetColorAndOpacity(FLinearColor::Blue);
         }
     }
 }
@@ -253,11 +233,3 @@ void UPlayerStats::UpdateOverallScores(ETeam TeamThatScored, int32 PointScored)
         BlueTeamScore->SetText(FText::AsNumber(PointScored));
     }
 }
-
-
-
-
-
-
-
-

@@ -8,7 +8,10 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/Weapon/HitScanWeapon.h"
 #include "Blaster/Blaster.h"
+#include "GameFramework/PlayerState.h"
+
 
 ULagCompensationComponent::ULagCompensationComponent()
 {
@@ -499,12 +502,14 @@ void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharac
 {
 	FServerSideRewindResult Confirm = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
 
-	if (Character && HitCharacter && Character->GetEquippedWeapon() && Confirm.bHitConfirmed)
+	AWeapon* Weapon = Character->GetEquippedWeapon();
+
+	if (Character && HitCharacter && Weapon && Confirm.bHitConfirmed)
 	{
 		float DamageMultiplier;
 		float Distance = (HitCharacter->GetTargetLocation() - TraceStart).Size() / 100.f;
-		float FullDamageDistance = Character->GetEquippedWeapon()->GetFullDamageDistance();
-		float LeastDamageDistance = Character->GetEquippedWeapon()->GetLeastDamageDistance();
+		float FullDamageDistance = Weapon->GetFullDamageDistance();
+		float LeastDamageDistance = Weapon->GetLeastDamageDistance();
 
 		if (Distance <= FullDamageDistance)
 		{

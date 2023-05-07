@@ -68,6 +68,7 @@ void UCombatComponent::BeginPlay()
 	}
 }
 
+
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -319,7 +320,6 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	else
 	{
 		EquipPrimaryWeapon(WeaponToEquip);
-
 	}
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
@@ -985,4 +985,3 @@ void UCombatComponent::SetWeaponTypeOnHUD()
 		Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
 	}
 }
-

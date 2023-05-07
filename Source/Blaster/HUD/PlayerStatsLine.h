@@ -26,9 +26,6 @@ public:
 		class UTextBlock* Deaths;
 
 	UPROPERTY(meta = (BindWidget))
-		class UTextBlock* Damage;
-
-	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* KD;
 
 	UPROPERTY(meta = (BindWidget))
@@ -36,5 +33,25 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 		class UImage* TeamIcon;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* IconBorder;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* NameBorder;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* ScoreBorder;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* KillsBorder;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* DeathsBorder;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* KDBorder;
+
+
 	
 };

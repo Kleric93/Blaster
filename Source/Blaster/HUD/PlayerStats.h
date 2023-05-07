@@ -52,9 +52,6 @@ public:
 	void UpdateKD(const FString& PlayerName, int32 Kills, int32 Deaths);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void UpdateHitscanDamage(const FString& PlayerName, int32 Damage);
-
-	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
 	void UpdateTeam(const FString& PlayerName, ETeam TeamToAssign);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
