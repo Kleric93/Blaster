@@ -18,5 +18,5 @@ public:
 	ACaptureTheFlagGameMode();
 
 	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController) override;
-	void FlagCaptured(class ATeamsFlag* Flag, class AFlagZone* Zone);
+	void FlagCaptured(class ATeamsFlag* Flag, class AFlagZone* Zone, ABlasterPlayerState* ScoringPlayer);
 };

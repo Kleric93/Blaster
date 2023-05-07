@@ -7,6 +7,7 @@
 #include "Blaster/Blaster.h"
 #include "HitScanWeapon.generated.h"
 
+
 /**
  * 
  */
@@ -22,6 +23,10 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 		void MulticastSpawnBulletHoles(const FHitResult& Hit);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastHitscanDamage(const FString& PlayerName, int32 HitscanDamage);
+
 
 protected:
 

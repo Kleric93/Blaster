@@ -6,6 +6,7 @@
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
+#include "Blaster/GameMode/CaptureTheFlagGameMode.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/ScrollBox.h"
 
@@ -24,14 +25,22 @@ void UScoresOverview::StatsSetup()
                 TArray<ABlasterPlayerState*> PlayerStatesArray;
                 for (APlayerState* PlayerState : MyGameState->PlayerArray)
                 {
-                    ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(PlayerState);
+                    BlasterPlayerState = Cast<ABlasterPlayerState>(PlayerState);
                     if (BlasterPlayerState)
                     {
                         PlayerStatesArray.Add(BlasterPlayerState);
                     }
                 }
 
-                PlayerStats->WidgetSetup(PlayerStatesArray);
+                if (BlasterPlayerState->GetTeam() == ETeam::ET_NoTeam)
+                {
+                    PlayerStats->WidgetSetup(PlayerStatesArray);
+                }
+                else
+                {
+                    PlayerStats->WidgetSetupTeams(PlayerStatesArray);
+                }
+
                 PlayerStats->AddToViewport();
 
                 UE_LOG(LogTemp, Warning, TEXT("UScoresOverview created the scrollbox"));

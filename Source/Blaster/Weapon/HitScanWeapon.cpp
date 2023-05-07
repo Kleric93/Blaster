@@ -20,7 +20,7 @@
 #include "NiagaraComponent.h"
 #include "Engine/SKeletalMeshSocket.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
-
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 
 void AHitScanWeapon::BeginPlay()
 {
@@ -101,7 +101,11 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				);
 				//UE_LOG(LogTemp, Warning, TEXT("BoneHit: %s"), *FireHit.BoneName.ToString());
 				//UE_LOG(LogTemp, Warning, TEXT("Final Damage Dealt: %f"), DamageToCause);
+				ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(InstigatorController->PlayerState);
+				FString PlayerName = BlasterPlayerState->GetPlayerName();
 
+				MulticastHitscanDamage(PlayerName, FinalDamage);
+				UE_LOG(LogTemp, Error, TEXT("player: %s, Dealt: %d damage"), *PlayerName, FinalDamage);
 
 			}
 			if (!HasAuthority() && bUseServerSideRewind)
@@ -251,4 +255,9 @@ void AHitScanWeapon::MulticastSpawnBulletHoles_Implementation(const FHitResult& 
 		}
 
 	}
+}
+
+void AHitScanWeapon::MulticastHitscanDamage_Implementation(const FString& PlayerName, int32 HitscanDamage)
+{
+	OnHitscanDamage.Broadcast(PlayerName, HitscanDamage);
 }

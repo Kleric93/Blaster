@@ -6,10 +6,10 @@
 #include "GameFramework/PlayerController.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Blaster/Pickups/FlagStates.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "BlasterPlayerController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
-
 
 /**
  * 
@@ -42,6 +42,7 @@ public:
 
 	float SingleTripTime = 0;
 
+	UPROPERTY(BlueprintAssignable, Category = "Score")
 	FHighPingDelegate HighPingDelegate;
 
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);

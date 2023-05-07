@@ -30,6 +30,9 @@ protected:
 
 	FTimerHandle SetupTimerHandle;
 
+	UPROPERTY()
+	class ABlasterPlayerState* BlasterPlayerState;
+
 
 private:
 

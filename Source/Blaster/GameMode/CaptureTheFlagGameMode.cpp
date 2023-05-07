@@ -18,7 +18,7 @@ void ACaptureTheFlagGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharact
 	ABlasterGameMode::PlayerEliminated(ElimmedCharacter, VictimController, AttackerController);
 }
 
-void ACaptureTheFlagGameMode::FlagCaptured(ATeamsFlag* Flag, AFlagZone* Zone)
+void ACaptureTheFlagGameMode::FlagCaptured(ATeamsFlag* Flag, AFlagZone* Zone, ABlasterPlayerState* ScoringPlayer)
 {
 	bool bValidCapture = Flag->GetTeam() != Zone->Team;
 	ABlasterGameState* BGameState = Cast <ABlasterGameState>(GameState);
@@ -26,11 +26,11 @@ void ACaptureTheFlagGameMode::FlagCaptured(ATeamsFlag* Flag, AFlagZone* Zone)
 	{
 		if (Zone->Team == ETeam::ET_BlueTeam)
 		{
-			BGameState->BlueTeamScores();
+			BGameState->BlueTeamScores(ScoringPlayer);
 		}
 		if (Zone->Team == ETeam::ET_RedTeam)
 		{
-			BGameState->RedTeamScores();
+			BGameState->RedTeamScores(ScoringPlayer);
 		}
 	}
 

@@ -96,7 +96,7 @@ void ABlasterPlayerController::InitTeamScores()
 void ABlasterPlayerController::InitFlagIcons()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-
+	
 	bool bHUDValid = BlasterHUD &&
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->BlueFlagState &&
@@ -1022,7 +1022,12 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 		}
 		if (BlasterHUD->PlayerStats == nullptr)
 		{
-			BlasterHUD->AddPlayerStats();
+			//BlasterHUD->AddPlayerStats();
+
+			FTimerHandle TimerHandle;
+			GetWorldTimerManager().SetTimer(TimerHandle, [this]() {
+				BlasterHUD->AddPlayerStats();
+				}, 1.f, false);
 		}
 		//if (!HasAuthority()) return;
 		if (bShowFlagIcons)

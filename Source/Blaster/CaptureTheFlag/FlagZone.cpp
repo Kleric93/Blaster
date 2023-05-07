@@ -8,6 +8,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundBase.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 
 
 AFlagZone::AFlagZone()
@@ -28,11 +29,21 @@ void AFlagZone::BeginPlay()
 
 void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//UE_LOG(LogTemp, Error, TEXT("Player is overlapping"));
+	if (!OtherActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OtherActor is nullptr"));
+		return;
+	}
 
 	ATeamsFlag* OverlappingFlag = Cast<ATeamsFlag>(OtherActor);
+	if (!OverlappingFlag)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OverlappingFlag is nullptr"));
+		return;
+	}
 	bool bCanScoreRedFlag = this->ActorHasTag("BlueZoneTag") && OverlappingFlag && OverlappingFlag->ActorHasTag("RedFlagTag");
 	bool bCanScoreBlueFlag = this->ActorHasTag("RedZoneTag") && OverlappingFlag && OverlappingFlag->ActorHasTag("BlueFlagTag");
+
 
 	if (IsFlagInBase(ETeam::ET_BlueTeam) && bCanScoreRedFlag)
 	{
@@ -41,9 +52,22 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		ACaptureTheFlagGameMode* GameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagGameMode>();
 		if (GameMode)
 		{
-			//UE_LOG(LogTemp, Error, TEXT("Game Mode is valid in overlap zone"));
+			ABlasterCharacter* Character = Cast<ABlasterCharacter>(OverlappingFlag->GetOwner());
+			ABlasterPlayerState* BPlayerState = Cast<ABlasterPlayerState>(Character->GetPlayerState());
 
-			GameMode->FlagCaptured(OverlappingFlag, this);
+			if (BPlayerState)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is valid. PlayerName: %s"), *BPlayerState->GetPlayerName());
+				GameMode->FlagCaptured(OverlappingFlag, this, BPlayerState);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is nullptr"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GameMode is nullptr"));
 		}
 
 		OverlappingFlag->ServerDetachfromBackpack();
@@ -68,9 +92,22 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		ACaptureTheFlagGameMode* GameMode = GetWorld()->GetAuthGameMode<ACaptureTheFlagGameMode>();
 		if (GameMode)
 		{
-			//UE_LOG(LogTemp, Error, TEXT("Game Mode is valid in overlap zone"));
+			ABlasterCharacter* Character = Cast<ABlasterCharacter>(OverlappingFlag->GetOwner());
+			ABlasterPlayerState* BPlayerState = Cast<ABlasterPlayerState>(Character->GetPlayerState());			
 
-			GameMode->FlagCaptured(OverlappingFlag, this);
+			if (BPlayerState)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is valid. PlayerName: %s"), *BPlayerState->GetPlayerName());
+				GameMode->FlagCaptured(OverlappingFlag, this, BPlayerState);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is nullptr"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GameMode is nullptr"));
 		}
 
 		OverlappingFlag->ServerDetachfromBackpack();

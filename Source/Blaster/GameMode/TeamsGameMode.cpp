@@ -69,6 +69,7 @@ void ATeamsGameMode::HandleMatchHasStarted()
 				{
 					BGameState->RedTeam.AddUnique(BPState);
 					BPState->SetTeam(ETeam::ET_RedTeam);
+
 				}
 				else
 				{
@@ -105,11 +106,11 @@ void ATeamsGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlas
 	{
 		if (AttackerPlayerState->GetTeam() == ETeam::ET_BlueTeam)
 		{
-			BGameState->BlueTeamScores();
+			BGameState->BlueTeamScores(AttackerPlayerState);
 		}
 		if (AttackerPlayerState->GetTeam() == ETeam::ET_RedTeam)
 		{
-			BGameState->RedTeamScores();
+			BGameState->RedTeamScores(AttackerPlayerState);
 		}
 	}
 }

@@ -37,25 +37,61 @@ void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
 	}
 }
 
-void ABlasterGameState::RedTeamScores()
+void ABlasterGameState::RedTeamScores(ABlasterPlayerState* ScoringPlayerState)
 {
 	++RedTeamScore;
 
-	ABlasterPlayerController* BPlayer= Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
+	ABlasterPlayerController* BPlayer = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
 	if (BPlayer)
 	{
 		BPlayer->SetHUDRedTeamScore(RedTeamScore);
 	}
+
+	if (!ScoringPlayerState)
+	{
+		return;
+	}
+	ABlasterPlayerController* ScoringPlayerController = Cast<ABlasterPlayerController>(ScoringPlayerState->GetOwner());
+	if (!ScoringPlayerController)
+	{
+		return;
+	}
+
+	FString PlayerName = ScoringPlayerState->GetPlayerName();
+	UE_LOG(LogTemp, Error, TEXT("Player %s scored a point"), *PlayerName);
+	int32& PlayerScore = PlayerScores.FindOrAdd(PlayerName);
+	PlayerScore++;
+	Multicast_UpdatePlayerScorePoints(PlayerName, ETeam::ET_RedTeam, PlayerScore);
+	Multicast_UpdateTeamScorePoints(ETeam::ET_RedTeam, RedTeamScore);
 }
 
-void ABlasterGameState::BlueTeamScores()
+void ABlasterGameState::BlueTeamScores(ABlasterPlayerState* ScoringPlayerState)
 {
 	++BlueTeamScore;
+
 	ABlasterPlayerController* BPlayer = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
 	if (BPlayer)
 	{
 		BPlayer->SetHUDBlueTeamScore(BlueTeamScore);
 	}
+
+	if (!ScoringPlayerState)
+	{
+		return;
+	}
+
+	ABlasterPlayerController* ScoringPlayerController = Cast<ABlasterPlayerController>(ScoringPlayerState->GetOwner());
+	if (!ScoringPlayerController)
+	{
+		return;
+	}
+
+	FString PlayerName = ScoringPlayerState->GetPlayerName();
+	UE_LOG(LogTemp, Error, TEXT("Player %s scored a point"), *PlayerName);
+	int32& PlayerScore = PlayerScores.FindOrAdd(PlayerName);
+	PlayerScore++;
+	Multicast_UpdatePlayerScorePoints(PlayerName, ETeam::ET_BlueTeam, PlayerScore);
+	Multicast_UpdateTeamScorePoints(ETeam::ET_BlueTeam, BlueTeamScore);
 }
 
 void ABlasterGameState::OnRep_RedTeamScore()
@@ -101,5 +137,15 @@ TArray<class ABlasterPlayerController*> ABlasterGameState::GetAllPlayerControlle
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, DebugMessage);
 
 	return Result;
+}
+
+void ABlasterGameState::Multicast_UpdatePlayerScorePoints_Implementation(const FString& PlayerName, ETeam TeamThatScored, int32 PlayerScore)
+{
+	OnPlayerScoredPoint.Broadcast(PlayerName, TeamThatScored, PlayerScore);
+}
+
+void ABlasterGameState::Multicast_UpdateTeamScorePoints_Implementation(ETeam TeamThatScored, int32 TeamScore)
+{
+	OnTeamScoredPoint.Broadcast(TeamThatScored, TeamScore);
 }
 

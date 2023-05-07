@@ -9,6 +9,11 @@
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerScoredKill, const FString&, PlayerName, int32, NewKills);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerDeath, const FString&, PlayerName, int32, NewDeaths);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPlayerKDUpdated, const FString&, PlayerName, int32, Kills, int32, Deaths);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerTeamAssigned, const FString&, PlayerName, ETeam, Team);
+
+
 
 /**
  * 
@@ -34,11 +39,33 @@ public:
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
 
+	UFUNCTION()
+		void DelayedMulticastUpdateTeam();
+
 	UFUNCTION(NetMulticast, Reliable)
-		void Multicast_UpdatePlayerKills(const FString& PlayerName, int32 NewKills);
+	void Multicast_UpdatePlayerKills(const FString& PlayerName, int32 NewKills);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UpdatePlayerDeaths(const FString& PlayerName, int32 NewDeaths);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UpdatePlayerKD(const FString& PlayerName, int32 NewKills, int32 NewDeaths);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_UpdateTeam(const FString& PlayerName, ETeam TeamAssigned);
 
 	UPROPERTY(BlueprintAssignable, Category = "Score")
 		FOnPlayerScoredKill OnPlayerScoredKill;
+
+	UPROPERTY(BlueprintAssignable, Category = "Score")
+		FOnPlayerDeath OnPlayerDeath;
+
+	UPROPERTY(BlueprintAssignable, Category = "Score")
+		FOnPlayerKDUpdated OnPlayerKDUpdated;
+
+	UPROPERTY(BlueprintAssignable, Category = "Score")
+		FOnPlayerTeamAssigned 	OnPlayerTeamAssigned;
+
 
 private:
 

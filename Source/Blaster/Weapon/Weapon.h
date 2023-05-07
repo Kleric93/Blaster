@@ -29,6 +29,8 @@ enum class EFireType : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponStateChanged, EWeaponState, NewState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitscanDamage, const FString&, PlayerName, int32, HitscanDamage);
+
 
 
 UCLASS()
@@ -57,6 +59,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FOnWeaponStateChanged OnWeaponStateChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnHitscanDamage OnHitscanDamage;
 	/*
 	* Textures for the weapon Crosshairs
 	*/
