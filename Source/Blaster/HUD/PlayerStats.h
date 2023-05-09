@@ -60,6 +60,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
 	void UpdateOverallScores(ETeam TeamThatScored, int32 PointScored);
 
+	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
+	void RemovePlayerFromScoreboard(ABlasterPlayerState* PlayerLeaving);
+
+	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
+	void AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining);
+
+
+	bool IsLocalPlayer(const FString& PlayerName);
+
 	UPROPERTY(meta = (BindWidget))
 		class UTextBlock* RedTeamScore;
 

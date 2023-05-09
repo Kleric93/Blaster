@@ -524,6 +524,16 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
+void ABlasterGameMode::PlayerJoinedGame(ABlasterPlayerState* PlayerJoining)
+{
+	if (PlayerJoining == nullptr) return;
+	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+	if (BlasterGameState)
+	{
+		BlasterGameState->Multicast_AddPlayerJoined(PlayerJoining);
+	}
+}
+
 void ABlasterPlayerController::ServerCheckmatchState_Implementation()
 {
 	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
@@ -536,10 +546,11 @@ void ABlasterPlayerController::ServerCheckmatchState_Implementation()
 		MatchState = GameMode->GetMatchState();
 		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 
-		/*if (BlasterHUD && MatchState == MatchState::WaitingToStart)
+		ABlasterGameMode* AuthGameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
+		if (AuthGameMode)
 		{
-			BlasterHUD->AddAnnouncement();
-		}*/
+			AuthGameMode->PlayerJoinedGame(Cast<ABlasterPlayerState>(PlayerState));
+		}
 	}
 }
 
@@ -1162,12 +1173,11 @@ void ABlasterPlayerController::ShowMatchStats()
 		BlasterHUD->ScoresOverview->PlayerStats;
 	if (bHUDValid)
 	{
-		//BlasterHUD->AddPlayerStats();
 		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Visible);
 		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Visible);
 
 
-		UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE VISIBLE!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE VISIBLE!!!"));
 	}
 }
 
@@ -1185,7 +1195,7 @@ void ABlasterPlayerController::HideMatchStats()
 		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Hidden);
 		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Hidden);
 
-		UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE HIDDEN!!!"));
+		//UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE HIDDEN!!!"));
 
 	}
 }

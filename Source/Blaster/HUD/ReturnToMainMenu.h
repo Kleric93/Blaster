@@ -17,6 +17,8 @@ class BLASTER_API UReturnToMainMenu : public UUserWidget
 public:
 
 	void MenuSetup();
+
+	UFUNCTION(BlueprintCallable)
 	void MenuTearDown();
 
 protected:
@@ -34,8 +36,14 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* ReturnButton;
 
+	UPROPERTY(meta = (BindWidget))
+	class UButton* QuitButton;
+
 	UFUNCTION()
 	void ReturnButtonClicked();
+
+	UFUNCTION()
+	void QuitButtonClicked();
 
 	UPROPERTY()
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;

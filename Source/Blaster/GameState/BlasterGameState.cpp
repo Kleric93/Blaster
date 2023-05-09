@@ -149,3 +149,14 @@ void ABlasterGameState::Multicast_UpdateTeamScorePoints_Implementation(ETeam Tea
 	OnTeamScoredPoint.Broadcast(TeamThatScored, TeamScore);
 }
 
+void ABlasterGameState::Multicast_RemovePlayerLeft_Implementation(ABlasterPlayerState* PlayerLeaving)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Multicast_RemovePlayerLeft: PlayerLeaving is %s"), *PlayerLeaving->GetName()));
+	OnPlayerLeft.Broadcast(PlayerLeaving);
+}
+
+void ABlasterGameState::Multicast_AddPlayerJoined_Implementation(ABlasterPlayerState* PlayerJoining)
+{
+	OnPlayerJoined.Broadcast(PlayerJoining);
+}
+

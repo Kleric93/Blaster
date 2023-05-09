@@ -33,6 +33,7 @@ void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
 				BPState->SetTeam(ETeam::ET_BlueTeam);
 			}
 		}
+		BGameState->Multicast_AddPlayerJoined(BPState);
 	}
 }
 
@@ -50,6 +51,7 @@ void ATeamsGameMode::Logout(AController* Exiting)
 		{
 			BGameState->BlueTeam.Remove(BPState);
 		}
+		BGameState->Multicast_RemovePlayerLeft(BPState);
 	}
 }
 

@@ -201,7 +201,7 @@ void UBuffComponent::ResetBerserk()
 {
 	if (Character && Character->GetEquippedWeapon())
 	{
-		Character->GetEquippedWeapon()->FireDelay = InitialFireDelay;
+		InitialFireDelay = Character->GetEquippedWeapon()->FireDelay *2 ;
 	}
 	MulticastBerserkBuff(InitialFireDelay);
 }

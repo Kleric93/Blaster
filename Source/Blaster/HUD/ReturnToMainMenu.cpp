@@ -32,6 +32,11 @@ void UReturnToMainMenu::MenuSetup()
 		ReturnButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
 	}
 
+	if (QuitButton && !QuitButton->OnClicked.IsBound())
+	{
+		QuitButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::QuitButtonClicked);
+	}
+
 	UGameInstance* GameInstance = GetGameInstance();
 	if (GameInstance)
 	{
@@ -123,6 +128,38 @@ void UReturnToMainMenu::ReturnButtonClicked()
 			else
 			{
 				ReturnButton->SetIsEnabled(true);
+			}
+		}
+	}
+}
+
+void UReturnToMainMenu::QuitButtonClicked()
+{
+	QuitButton->SetIsEnabled(false);
+
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		APlayerController* FirstPlayerController = World->GetFirstPlayerController();
+		if (FirstPlayerController)
+		{
+			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(FirstPlayerController->GetPawn());
+			if (BlasterCharacter)
+			{
+				BlasterCharacter->Elim(true);
+				BlasterCharacter->MulticastElim(true);
+				BlasterCharacter->ServerLeaveGame();
+				BlasterCharacter->OnLeftGame.AddDynamic(this, &UReturnToMainMenu::OnPlayerLeftGame);
+
+				// Add a delay of 2 seconds before quitting the game
+				FTimerHandle TimerHandle;
+				World->GetTimerManager().SetTimer(TimerHandle, [FirstPlayerController]() {
+					FirstPlayerController->ConsoleCommand("quit");
+					}, 3.0f, false);
+			}
+			else
+			{
+				QuitButton->SetIsEnabled(true);
 			}
 		}
 	}

@@ -120,6 +120,8 @@ void UPlayerStats::SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayer
     {
         GameState->OnPlayerScoredPoint.AddDynamic(this, &UPlayerStats::UpdateTeamScorePoints);
         GameState->OnTeamScoredPoint.AddDynamic(this, &UPlayerStats::UpdateOverallScores);
+        GameState->OnPlayerLeft.AddDynamic(this, &UPlayerStats::RemovePlayerFromScoreboard);
+        GameState->OnPlayerJoined.AddDynamic(this, &UPlayerStats::AddPlayerToScoreboard);
     }   
 }
 
@@ -173,12 +175,48 @@ void UPlayerStats::UpdateKD(const FString& PlayerName, int32 Kills, int32 Deaths
     }
 }
 
+bool UPlayerStats::IsLocalPlayer(const FString& PlayerName)
+{
+    APlayerController* LocalPlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    if (LocalPlayerController && LocalPlayerController->PlayerState)
+    {
+        return LocalPlayerController->PlayerState->GetPlayerName() == PlayerName;
+    }
+
+    return false;
+}
+
+
 void UPlayerStats::UpdateTeam(const FString& PlayerName, ETeam TeamToAssign)
 {
     UPlayerStatsLine* StatsLine = FindPlayerStatsLine(PlayerName);
     if (StatsLine)
     {
         ETeam Team = TeamToAssign;
+        bool bIsLocalPlayer = IsLocalPlayer(PlayerName);
+
+        FLinearColor BorderColor;
+        FLinearColor CyanColor(0.0f, 1.0f, 1.0f, 1.0f);
+
+        if (bIsLocalPlayer)
+        {
+            BorderColor = FLinearColor::Green;
+        }
+        else
+        {
+            if (Team == ETeam::ET_RedTeam)
+            {
+                BorderColor = FLinearColor::Red;
+            }
+            else if (Team == ETeam::ET_BlueTeam)
+            {
+                BorderColor = FLinearColor::Blue;
+            }
+            else if (Team == ETeam::ET_NoTeam)
+            {
+                BorderColor = CyanColor;
+            }
+        }
 
         if (Team == ETeam::ET_NoTeam)
         {
@@ -189,27 +227,22 @@ void UPlayerStats::UpdateTeam(const FString& PlayerName, ETeam TeamToAssign)
         {
             StatsLine->TeamIcon->SetBrushFromTexture(RedTeamIcon);
             StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-            StatsLine->IconBorder->SetColorAndOpacity(FLinearColor::Red);
-            StatsLine->NameBorder->SetColorAndOpacity(FLinearColor::Red);
-            StatsLine->ScoreBorder->SetColorAndOpacity(FLinearColor::Red);
-            StatsLine->KillsBorder->SetColorAndOpacity(FLinearColor::Red);
-            StatsLine->DeathsBorder->SetColorAndOpacity(FLinearColor::Red);
-            StatsLine->KDBorder->SetColorAndOpacity(FLinearColor::Red);
-
         }
         if (Team == ETeam::ET_BlueTeam)
         {
             StatsLine->TeamIcon->SetBrushFromTexture(BlueTeamIcon);
             StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-            StatsLine->IconBorder->SetColorAndOpacity(FLinearColor::Blue);
-            StatsLine->NameBorder->SetColorAndOpacity(FLinearColor::Blue);
-            StatsLine->ScoreBorder->SetColorAndOpacity(FLinearColor::Blue);
-            StatsLine->KillsBorder->SetColorAndOpacity(FLinearColor::Blue);
-            StatsLine->DeathsBorder->SetColorAndOpacity(FLinearColor::Blue);
-            StatsLine->KDBorder->SetColorAndOpacity(FLinearColor::Blue);
         }
+
+        StatsLine->IconBorder->SetColorAndOpacity(BorderColor);
+        StatsLine->NameBorder->SetColorAndOpacity(BorderColor);
+        StatsLine->ScoreBorder->SetColorAndOpacity(BorderColor);
+        StatsLine->KillsBorder->SetColorAndOpacity(BorderColor);
+        StatsLine->DeathsBorder->SetColorAndOpacity(BorderColor);
+        StatsLine->KDBorder->SetColorAndOpacity(BorderColor);
     }
 }
+
 
 void UPlayerStats::UpdateTeamScorePoints(const FString& PlayerName, ETeam TeamThatScored, int32 PlayerScore)
 {
@@ -233,3 +266,62 @@ void UPlayerStats::UpdateOverallScores(ETeam TeamThatScored, int32 PointScored)
         BlueTeamScore->SetText(FText::AsNumber(PointScored));
     }
 }
+
+void UPlayerStats::RemovePlayerFromScoreboard(ABlasterPlayerState* PlayerLeaving)
+{
+    if (!PlayerLeaving) return;
+
+    FString PlayerName = PlayerLeaving->GetPlayerName();
+    UPlayerStatsLine* StatsLine = FindPlayerStatsLine(PlayerName);
+
+    if (StatsLine)
+    {
+        StatsLine->RemoveFromParent();
+    }
+}
+
+void UPlayerStats::AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining)
+{
+    if (!PlayerJoining) return;
+
+    // Check if player is already in the scoreboard
+    if (FindPlayerStatsLine(PlayerJoining->GetPlayerName()))
+    {
+        return;
+    }
+
+    // Check if player joining is the server
+    if (PlayerJoining->HasAuthority())
+    {
+        return;
+    }
+
+    UPlayerStatsLine* NewStatsLine = CreateWidget<UPlayerStatsLine>(GetWorld(), PlayerStatLine);
+    if (NewStatsLine)
+    {
+        APlayerState* InGamePlayer = PlayerJoining;
+        if (InGamePlayer == nullptr) return;
+
+        NewStatsLine->DisplayName->SetText(FText::FromString(InGamePlayer->GetPlayerName()));
+        SetupPlayerStatsLineWidget(PlayerJoining, InGamePlayer);
+
+        NewStatsLine->AddToViewport();
+
+        ETeam PlayerTeam = PlayerJoining->GetTeam();
+        if (PlayerTeam == ETeam::ET_RedTeam && PlayerStatsScrollBox_RedTeam)
+        {
+            PlayerStatsScrollBox_RedTeam->AddChild(NewStatsLine);
+        }
+        else if (PlayerTeam == ETeam::ET_BlueTeam && PlayerStatsScrollBox_BlueTeam)
+        {
+            PlayerStatsScrollBox_BlueTeam->AddChild(NewStatsLine);
+        }
+        else
+        {
+            PlayerStatsScrollBox->AddChild(NewStatsLine);
+        }
+    }
+}
+
+
+

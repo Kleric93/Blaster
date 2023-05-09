@@ -70,6 +70,11 @@ void ABlasterGameMode::OnMatchStateSet()
         if (BlasterPlayer)
         {
             BlasterPlayer->OnMatchStateSet(MatchState, bTeamsMatch, bCaptureTheFlagMatch);
+            ABlasterPlayerState* BPState = Cast<ABlasterPlayerState>(BlasterPlayer->PlayerState);
+            if (!bTeamsMatch && !bCaptureTheFlagMatch)
+            {
+                BPState->SetTeam(ETeam::ET_NoTeam);
+            }
         }
     }
 }
@@ -211,11 +216,14 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
     if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(PlayerLeaving))
     {
         BlasterGameState->TopScoringPlayers.Remove(PlayerLeaving);
+
     }
     ABlasterCharacter* CharacterLeaving = Cast<ABlasterCharacter>(PlayerLeaving->GetPawn());
     if (CharacterLeaving)
     {
         CharacterLeaving->Elim(true);
+        BlasterGameState->Multicast_RemovePlayerLeft(PlayerLeaving);
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("PlayerLeftGame: PlayerLeaving is %s"), *PlayerLeaving->GetName()));
     }
 }
 
