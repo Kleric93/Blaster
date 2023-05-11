@@ -31,14 +31,14 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 {
 	if (!OtherActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OtherActor is nullptr"));
+		//UE_LOG(LogTemp, Warning, TEXT("OtherActor is nullptr"));
 		return;
 	}
 
 	ATeamsFlag* OverlappingFlag = Cast<ATeamsFlag>(OtherActor);
 	if (!OverlappingFlag)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("OverlappingFlag is nullptr"));
+		//UE_LOG(LogTemp, Warning, TEXT("OverlappingFlag is nullptr"));
 		return;
 	}
 	bool bCanScoreRedFlag = this->ActorHasTag("BlueZoneTag") && OverlappingFlag && OverlappingFlag->ActorHasTag("RedFlagTag");
@@ -57,17 +57,17 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 			if (BPlayerState)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is valid. PlayerName: %s"), *BPlayerState->GetPlayerName());
+				//UE_LOG(LogTemp, Warning, TEXT("BPlayerState is valid. PlayerName: %s"), *BPlayerState->GetPlayerName());
 				GameMode->FlagCaptured(OverlappingFlag, this, BPlayerState);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is nullptr"));
+				//UE_LOG(LogTemp, Warning, TEXT("BPlayerState is nullptr"));
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("GameMode is nullptr"));
+			//UE_LOG(LogTemp, Warning, TEXT("GameMode is nullptr"));
 		}
 
 		OverlappingFlag->ServerDetachfromBackpack();
@@ -97,17 +97,17 @@ void AFlagZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 			if (BPlayerState)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is valid. PlayerName: %s"), *BPlayerState->GetPlayerName());
+				//UE_LOG(LogTemp, Warning, TEXT("BPlayerState is valid. PlayerName: %s"), *BPlayerState->GetPlayerName());
 				GameMode->FlagCaptured(OverlappingFlag, this, BPlayerState);
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("BPlayerState is nullptr"));
+				//UE_LOG(LogTemp, Warning, TEXT("BPlayerState is nullptr"));
 			}
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("GameMode is nullptr"));
+			//UE_LOG(LogTemp, Warning, TEXT("GameMode is nullptr"));
 		}
 
 		OverlappingFlag->ServerDetachfromBackpack();

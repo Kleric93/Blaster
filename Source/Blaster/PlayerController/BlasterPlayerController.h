@@ -80,6 +80,19 @@ public:
 
 	FORCEINLINE float GetHUDScore() const {	return HUDScore; }
 
+	UPROPERTY(EditAnywhere, Category = HUD)
+		TSubclassOf<class UVotingSyastem> VotingSystemWidget;
+
+	UPROPERTY()
+		class UVotingSyastem* VotingSystem;
+
+	UFUNCTION(Server, Reliable)
+	void Server_FFAVoteCast();
+
+	UFUNCTION(Server, Reliable)
+	void Server_TDMVoteCast();
+
+
 private:
 	UPROPERTY(EditAnywhere, Category = HUD)
 	TSubclassOf<class UChatSystemOverlay> ChatSystemOverlayClass;
@@ -130,6 +143,8 @@ protected:
 
 	void ShowReturnToMainMenu();
 
+	void ShowVotingSystem();
+
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 
@@ -151,6 +166,8 @@ protected:
 	void ShowMatchStats();
 
 	void HideMatchStats();
+
+
 
 private:
 

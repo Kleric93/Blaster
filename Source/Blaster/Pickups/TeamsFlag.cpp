@@ -55,7 +55,7 @@ void ATeamsFlag::BeginPlay()
 
 	if (this->ActorHasTag("BlueFlagTag"))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN BEGINPLAY"));
+		//UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN BEGINPLAY"));
 
 		OnBlueFlagStateChanged.Broadcast(EFlagState::EFS_Initial);
 	}
@@ -123,7 +123,7 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 		{
 			if (this->ActorHasTag("BlueFlagTag"))
 			{
-				UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN OverlapSphere Initial state"));
+				//UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN OverlapSphere Initial state"));
 
 				OnBlueFlagStateChanged.Broadcast(EFlagState::EFS_Initial);
 			}
@@ -144,7 +144,7 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 		{
 			if (this->ActorHasTag("BlueFlagTag"))
 			{
-				UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN OverlapSphere Equipped State"));
+				//UE_LOG(LogTemp, Error, TEXT("Blue delegate being called IN OverlapSphere Equipped State"));
 
 				OnBlueFlagStateChanged.Broadcast(EFlagState::EFS_Equipped);
 			}
@@ -152,11 +152,11 @@ void ATeamsFlag::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 			//UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
 		}
 		//FlagBehavior();
-		UE_LOG(LogTemp, Warning, TEXT("Overlapping"));
+		//UE_LOG(LogTemp, Warning, TEXT("Overlapping"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("BLASTER WAS NULL IN FLAG.CPP"));
+		//UE_LOG(LogTemp, Error, TEXT("BLASTER WAS NULL IN FLAG.CPP"));
 	}
 }
 
@@ -166,7 +166,7 @@ void ATeamsFlag::ServerDetachfromBackpack()
 
 	if (FlagState == EFlagState::EFS_Equipped)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
+		//UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
 
 		FlagState = EFlagState::EFS_Dropped;
 
@@ -201,7 +201,7 @@ void ATeamsFlag::MulticastDetachfromBackpack_Implementation()
 	}
 	if (FlagState == EFlagState::EFS_Equipped)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
+		//UE_LOG(LogTemp, Error, TEXT("Flag is dropped from FLAG.CPP"));
 
 		FlagState = EFlagState::EFS_Dropped;
 

@@ -24,6 +24,7 @@ class BLASTER_API ABlasterPlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
+	ABlasterPlayerState();
 
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
@@ -38,6 +39,7 @@ public:
 
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
+
 
 	UFUNCTION()
 		void DelayedMulticastUpdateTeam();
@@ -65,6 +67,7 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Score")
 		FOnPlayerTeamAssigned 	OnPlayerTeamAssigned;
+
 
 
 private:

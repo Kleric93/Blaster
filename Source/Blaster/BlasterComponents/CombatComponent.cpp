@@ -334,7 +334,7 @@ void UCombatComponent::EquipFlag(class ATeamsFlag* FlagToEquip)
 	AttachFlagToBackpack(EquippedFlag);
 	EquippedFlag->SetOwner(Character);
 	EquippedFlag->GetFlagMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
-	UE_LOG(LogTemp, Error, TEXT("Flag Was Equipped in UCOMBATCOMPONENT"));
+	//UE_LOG(LogTemp, Error, TEXT("Flag Was Equipped in UCOMBATCOMPONENT"));
 }
 
 bool UCombatComponent::ShouldSwapWeapons()
@@ -906,7 +906,7 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
 	{
 		Reload();
-		UE_LOG(LogTemp, Error, TEXT("Reload() is being called!!!!!!!!"))
+		//UE_LOG(LogTemp, Error, TEXT("Reload() is being called!!!!!!!!"))
 	}
 }
 

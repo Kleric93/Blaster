@@ -16,7 +16,10 @@ void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME(ABlasterGameState, TopScoringPlayers);
 	DOREPLIFETIME(ABlasterGameState, RedTeamScore);
-	DOREPLIFETIME(ABlasterGameState, BlueTeamScore);}
+	DOREPLIFETIME(ABlasterGameState, BlueTeamScore);
+	DOREPLIFETIME(ABlasterGameState, TotalFFAVotes);
+
+}
 
 void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
 {
@@ -58,7 +61,7 @@ void ABlasterGameState::RedTeamScores(ABlasterPlayerState* ScoringPlayerState)
 	}
 
 	FString PlayerName = ScoringPlayerState->GetPlayerName();
-	UE_LOG(LogTemp, Error, TEXT("Player %s scored a point"), *PlayerName);
+	//UE_LOG(LogTemp, Error, TEXT("Player %s scored a point"), *PlayerName);
 	int32& PlayerScore = PlayerScores.FindOrAdd(PlayerName);
 	PlayerScore++;
 	Multicast_UpdatePlayerScorePoints(PlayerName, ETeam::ET_RedTeam, PlayerScore);
@@ -87,7 +90,7 @@ void ABlasterGameState::BlueTeamScores(ABlasterPlayerState* ScoringPlayerState)
 	}
 
 	FString PlayerName = ScoringPlayerState->GetPlayerName();
-	UE_LOG(LogTemp, Error, TEXT("Player %s scored a point"), *PlayerName);
+	//UE_LOG(LogTemp, Error, TEXT("Player %s scored a point"), *PlayerName);
 	int32& PlayerScore = PlayerScores.FindOrAdd(PlayerName);
 	PlayerScore++;
 	Multicast_UpdatePlayerScorePoints(PlayerName, ETeam::ET_BlueTeam, PlayerScore);
@@ -130,7 +133,7 @@ TArray<class ABlasterPlayerController*> ABlasterGameState::GetAllPlayerControlle
 	}
 
 	// Log the number of player controllers in the array
-	UE_LOG(LogTemp, Warning, TEXT("GetAllPlayerControllers - PlayerControllersArray size: %d"), PlayerControllersArray.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("GetAllPlayerControllers - PlayerControllersArray size: %d"), PlayerControllersArray.Num());
 
 	// Display the number of player controllers on the screen for all clients
 	FString DebugMessage = FString::Printf(TEXT("PlayerControllersArray size: %d"), PlayerControllersArray.Num());
@@ -160,3 +163,33 @@ void ABlasterGameState::Multicast_AddPlayerJoined_Implementation(ABlasterPlayerS
 	OnPlayerJoined.Broadcast(PlayerJoining);
 }
 
+void ABlasterGameState::OnRep_FFATotalVotes()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void ABlasterGameState::SetFFAVotes()
+{
+	++TotalFFAVotes;
+
+	Multicast_UpdateFFAVotes(TotalFFAVotes);
+	UE_LOG(LogTemp, Warning, TEXT("SetFFAVotes_Implementation called. Vote: %d"), TotalFFAVotes);
+}
+
+void ABlasterGameState::SetTDMVotes()
+{
+	++TotalTDMVotes;
+
+	Multicast_UpdateTDMVotes(TotalTDMVotes);
+	UE_LOG(LogTemp, Warning, TEXT("SetTDMVotes_Implementation called. Vote: %d"), TotalTDMVotes);
+}
+
+void ABlasterGameState::Multicast_UpdateFFAVotes_Implementation(int32 Vote)
+{
+	OnFFAVoteCast.Broadcast(Vote);
+}
+
+void ABlasterGameState::Multicast_UpdateTDMVotes_Implementation(int32 Vote)
+{
+	OnTDMVoteCast.Broadcast(Vote);
+}

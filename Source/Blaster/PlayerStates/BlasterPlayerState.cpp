@@ -4,7 +4,18 @@
 #include "BlasterPlayerState.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Net/UnrealNetwork.h"
+#include "Blaster/HUD/VotingSyastem.h"
+#include "Components/CheckBox.h"
+#include "Components/TextBlock.h"
+#include "Kismet/GameplayStatics.h"
+
+
+
+ABlasterPlayerState::ABlasterPlayerState()
+{
+}
 
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -12,6 +23,7 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
 	DOREPLIFETIME(ABlasterPlayerState, Team);
+
 }
 
 void ABlasterPlayerState::AddToScore(float ScoreAmount)
@@ -99,7 +111,6 @@ void ABlasterPlayerState::SetTeam(ETeam TeamToSet)
 	TimerDelegate.BindUFunction(this, FName("DelayedMulticastUpdateTeam"));
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 11.0f, false);
 
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::DelayedMulticastUpdateTeam()

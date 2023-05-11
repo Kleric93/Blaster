@@ -45,7 +45,7 @@ void UPlayerStats::WidgetSetup(TArray<class ABlasterPlayerState*> BlasterPlayerS
 
                 PlayerStatsLineWidget->AddToViewport();
 
-                UE_LOG(LogTemp, Warning, TEXT("UPlayerStats created the widget setup"));
+                //UE_LOG(LogTemp, Warning, TEXT("UPlayerStats created the widget setup"));
             }
         }
     }
@@ -95,7 +95,7 @@ void UPlayerStats::WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPl
             }
 
 
-            UE_LOG(LogTemp, Warning, TEXT("UPlayerStats created the widget setup"));
+            //UE_LOG(LogTemp, Warning, TEXT("UPlayerStats created the widget setup"));
         }
     }
 }

@@ -105,7 +105,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				FString PlayerName = BlasterPlayerState->GetPlayerName();
 
 				MulticastHitscanDamage(PlayerName, FinalDamage);
-				UE_LOG(LogTemp, Error, TEXT("player: %s, Dealt: %d damage"), *PlayerName, FinalDamage);
+				//UE_LOG(LogTemp, Error, TEXT("player: %s, Dealt: %d damage"), *PlayerName, FinalDamage);
 
 			}
 			if (!HasAuthority() && bUseServerSideRewind)

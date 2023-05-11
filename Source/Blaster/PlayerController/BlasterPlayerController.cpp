@@ -17,6 +17,7 @@
 #include "Components/Image.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/HUD/ReturnToMainMenu.h"
+#include "Blaster/HUD/VotingSyastem.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Blaster/BlasterTypes/Announcement.h"
 #include "Blaster/Pickups/TeamsFlag.h"
@@ -166,11 +167,11 @@ void ABlasterPlayerController::UpdateRedFlagStateInHUD(EFlagState NewFlagState)
 void ABlasterPlayerController::AddChatBox()
 {
 	if (!IsLocalPlayerController()) return;
-	UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from !islocalplayercontroller IF"));
+	//UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from !islocalplayercontroller IF"));
 
 	if (ChatSystemOverlayClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from 1st IF"));
+		//UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from 1st IF"));
 
 		ChatSystemWidget = ChatSystemWidget == nullptr ? CreateWidget<UChatSystemOverlay>(this, ChatSystemOverlayClass) : ChatSystemWidget;
 		if (ChatSystemWidget)
@@ -178,13 +179,13 @@ void ABlasterPlayerController::AddChatBox()
 			ChatSystemWidget->AddToViewport();
 			ChatSystemWidget->InputTextBox->SetVisibility(ESlateVisibility::Collapsed);
 			ChatSystemWidget->InputTextBox->OnTextCommitted.AddDynamic(this, &ABlasterPlayerController::OnTextCommitted);
-			UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from 2nd IF"));
+			//UE_LOG(LogTemp, Warning, TEXT("Chatboxadded from 2nd IF"));
 
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("class is null"));
+		//UE_LOG(LogTemp, Warning, TEXT("class is null"));
 
 	}
 
@@ -194,7 +195,7 @@ void ABlasterPlayerController::ToggleInputChatBox()
 {
 	if (ChatSystemWidget && ChatSystemWidget->InputTextBox)
 	{
-		UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox"));
+		//UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox"));
 		if (ChatSystemWidget->InputTextBox->GetVisibility() == ESlateVisibility::Collapsed)
 		{
 			ChatSystemWidget->InputTextBox->SetVisibility(ESlateVisibility::Visible);
@@ -202,7 +203,7 @@ void ABlasterPlayerController::ToggleInputChatBox()
 			InputMode.SetWidgetToFocus(ChatSystemWidget->InputTextBox->TakeWidget());
 			SetInputMode(InputMode);
 			SetShowMouseCursor(true);
-			UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox"));
+			//UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox"));
 
 		}
 		else
@@ -211,7 +212,7 @@ void ABlasterPlayerController::ToggleInputChatBox()
 			FInputModeGameOnly InputMode;
 			SetInputMode(InputMode);
 			SetShowMouseCursor(false);
-			UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox else"));
+			//UE_LOG(LogTemp, Error, TEXT("ToggleInputChatbox else"));
 
 		}
 	}
@@ -395,7 +396,7 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if (PlayerState)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("PlayerState->GetPing() * 4: %d"), PlayerState->GetPing() * 4);
+			//UE_LOG(LogTemp, Warning, TEXT("PlayerState->GetPing() * 4: %d"), PlayerState->GetPing() * 4);
 			if (PlayerState->GetPing() * 4 > HighPingThreshold) //ping is compressed; it's actually Ping/4
 			{
 				HighPingWarning();
@@ -443,6 +444,38 @@ void ABlasterPlayerController::ShowReturnToMainMenu()
 		}
 	}
 }
+
+void ABlasterPlayerController::ShowVotingSystem()
+{
+	if (VotingSystemWidget == nullptr) return;
+	if (VotingSystem == nullptr)
+	{
+		VotingSystem = CreateWidget<UVotingSyastem>(this, VotingSystemWidget);
+	}
+	if (VotingSystem)
+	{
+		VotingSystem->MenuSetup();
+	}
+}
+
+void ABlasterPlayerController::Server_FFAVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetFFAVotes();
+	}
+}
+
+void ABlasterPlayerController::Server_TDMVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetTDMVotes();
+	}
+}
+
 
 void ABlasterPlayerController::OnRep_ShowTeamScores()
 {
@@ -1074,6 +1107,8 @@ void ABlasterPlayerController::HandleCooldown()
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 			FString AnnouncementText = Announcement::NewMatchStartsIn;
 			BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			ShowVotingSystem();
+
 
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();

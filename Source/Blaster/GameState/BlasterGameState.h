@@ -10,7 +10,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPlayerScoredPoint, const FStri
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamScoredPoint, ETeam, TeamThatScored, int32, TeamScore);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerLeftDelegate, ABlasterPlayerState*, PlayerLeaving);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerJoinedDelegate, ABlasterPlayerState*, PlayerJoining);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFFAVoteCast, int32, Vote);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTDMVoteCast, int32, Vote);
 
 
 
@@ -89,8 +90,43 @@ public:
 	UPROPERTY()
 	TMap<FString, int32> PlayerScores;
 
+	UPROPERTY(EditAnywhere, Category = HUD)
+		TSubclassOf<class UVotingSyastem> VotingSystemWidget;
+
+	UPROPERTY()
+		class UVotingSyastem* VotingSystem;
+
+
+	UPROPERTY(ReplicatedUsing = OnRep_FFATotalVotes)
+		int32 TotalFFAVotes;
+
+	UPROPERTY(Replicated)
+		int32 TotalTDMVotes;
+
+	UFUNCTION()
+		void OnRep_FFATotalVotes();
+
+	UFUNCTION()
+		void SetFFAVotes();
+
+	UFUNCTION()
+		void SetTDMVotes();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdateFFAVotes(int32 Vote);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdateTDMVotes(int32 Vote);
+
+
+	UPROPERTY(BlueprintAssignable, Category = "Voting")
+		FOnFFAVoteCast OnFFAVoteCast;
+
+	UPROPERTY(BlueprintAssignable, Category = "Voting")
+		FOnTDMVoteCast OnTDMVoteCast;
+
 private:
 
 	float TopScore = 0.f;
-	
+
 };

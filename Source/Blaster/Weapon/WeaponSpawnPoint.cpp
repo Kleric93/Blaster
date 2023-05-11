@@ -34,8 +34,6 @@ void AWeaponSpawnPoint::BeginPlay()
 	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
 	if (PedestalParticlesComponent)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Particles DEactivated BeginPlay"));
-
 		PedestalParticlesComponent->Deactivate();
 	}
 
