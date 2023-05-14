@@ -12,7 +12,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 
 /**
- * 
+ *
  */
 UCLASS()
 class BLASTER_API ABlasterPlayerController : public APlayerController
@@ -43,7 +43,7 @@ public:
 	float SingleTripTime = 0;
 
 	UPROPERTY(BlueprintAssignable, Category = "Score")
-	FHighPingDelegate HighPingDelegate;
+		FHighPingDelegate HighPingDelegate;
 
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 
@@ -67,18 +67,18 @@ public:
 	void AddChatBox();
 
 	UFUNCTION()
-	void ToggleInputChatBox();
+		void ToggleInputChatBox();
 
 	UFUNCTION()
-	void OnTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+		void OnTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 
 	UFUNCTION(Server, Reliable)
-	void ServerSetText(const FString& Text, const FString& PlayerName);
+		void ServerSetText(const FString& Text, const FString& PlayerName);
 
 	UFUNCTION(Client, Reliable)
-	void ClientSetText(const FString& Text, const FString& PlayerName);
+		void ClientSetText(const FString& Text, const FString& PlayerName);
 
-	FORCEINLINE float GetHUDScore() const {	return HUDScore; }
+	FORCEINLINE float GetHUDScore() const { return HUDScore; }
 
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UVotingSyastem> VotingSystemWidget;
@@ -87,17 +87,27 @@ public:
 		class UVotingSyastem* VotingSystem;
 
 	UFUNCTION(Server, Reliable)
-	void Server_FFAVoteCast();
+		void Server_FFAVoteCast();
 
 	UFUNCTION(Server, Reliable)
-	void Server_TDMVoteCast();
+		void Server_TDMVoteCast();
+
+	UFUNCTION(Server, Reliable)
+		void Server_CTFVoteCast();
+
+	UFUNCTION(Server, Reliable)
+		void Server_InstaKillVoteCast();
 
 
 private:
 	UPROPERTY(EditAnywhere, Category = HUD)
-	TSubclassOf<class UChatSystemOverlay> ChatSystemOverlayClass;
+		TSubclassOf<class UChatSystemOverlay> ChatSystemOverlayClass;
 	UPROPERTY()
-	UChatSystemOverlay* ChatSystemWidget;
+		UChatSystemOverlay* ChatSystemWidget;
+
+	UPROPERTY()
+		FTimerHandle TimerHandle_CompareVotesAndLog;
+
 
 
 protected:
@@ -115,26 +125,26 @@ protected:
 
 	// requests the current server time, passing in the client's time when the request was sent.
 	UFUNCTION(Server, Reliable)
-	void ServerRequestServerTime(float TimeOfClientRequest);
+		void ServerRequestServerTime(float TimeOfClientRequest);
 
 	// reports the current server time to the client in response to ServerRequestServerTime
 	UFUNCTION(Client, Reliable)
-	void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
+		void ClientReportServerTime(float TimeOfClientRequest, float TimeServerReceivedClientRequest);
 
 	// Difference between client and server times
 	float ClientServerDelta = 0;
 
 	UPROPERTY(EditAnywhere, Category = Time)
-	float TimeSyncFrequency = 5.f;
+		float TimeSyncFrequency = 5.f;
 
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime);
 
 	UFUNCTION(Server, Reliable)
-	void ServerCheckmatchState();
+		void ServerCheckmatchState();
 
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime);
+		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime);
 
 
 	void HighPingWarning();
@@ -146,19 +156,19 @@ protected:
 	void ShowVotingSystem();
 
 	UFUNCTION(Client, Reliable)
-	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
+		void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 
 	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
-	bool bShowTeamScores = false;
+		bool bShowTeamScores = false;
 
 	UPROPERTY(ReplicatedUsing = OnRep_ShowFlagIcons)
-	bool bShowFlagIcons = false;
+		bool bShowFlagIcons = false;
 
 	UFUNCTION()
-	void OnRep_ShowTeamScores();
+		void OnRep_ShowTeamScores();
 
 	UFUNCTION()
-	void OnRep_ShowFlagIcons();
+		void OnRep_ShowFlagIcons();
 
 	FString GetInfoText(const TArray<class ABlasterPlayerState*>& Players);
 	FString GetTeamsInfoText(class ABlasterGameState* BlasterGameState);
@@ -175,21 +185,21 @@ private:
 	/// return to main menu
 	//
 	UPROPERTY(EditAnywhere, Category = HUD)
-	TSubclassOf<class UUserWidget> ReturnToMainMenuWidget;
+		TSubclassOf<class UUserWidget> ReturnToMainMenuWidget;
 
 	UPROPERTY()
-	class UReturnToMainMenu* ReturnToMainMenu;
+		class UReturnToMainMenu* ReturnToMainMenu;
 
 	bool bReturnToMainMenuOpen = false;
 
 	UPROPERTY()
-	class ABlasterHUD* BlasterHUD;
+		class ABlasterHUD* BlasterHUD;
 
 	UPROPERTY()
-	class UPlayerStats* PlayerStats;
+		class UPlayerStats* PlayerStats;
 
 	UPROPERTY()
-	class ABlasterGameMode* BlasterGameMode;
+		class ABlasterGameMode* BlasterGameMode;
 
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
@@ -198,13 +208,13 @@ private:
 	uint32 CountdownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
-	FName MatchState;
+		FName MatchState;
 
 	UFUNCTION()
-	void OnRep_MatchState();
+		void OnRep_MatchState();
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "True"))
-	class UCharacterOverlay* CharacterOverlay;
+		class UCharacterOverlay* CharacterOverlay;
 
 
 	float HUDHealth;
@@ -232,39 +242,39 @@ private:
 	float highPingRunningTime = 0.f;
 
 	UPROPERTY(EditAnywhere)
-	float HighPingDuration = 10.f;
+		float HighPingDuration = 10.f;
 
 	UPROPERTY(EditAnywhere)
-	float CheckPingFrequency = 20.f;
+		float CheckPingFrequency = 20.f;
 
 	UFUNCTION(Server, Reliable)
-	void ServerReportPingStatus(bool bHighPing);
+		void ServerReportPingStatus(bool bHighPing);
 
 	UPROPERTY(EditAnywhere)
-	float HighPingThreshold = 50.f;
+		float HighPingThreshold = 50.f;
 
 	float PingAnimationRunningTime = 0.f;
 
 	UPROPERTY(EditAnywhere)
-	class UImage* DefaultWeaponIcon;
+		class UImage* DefaultWeaponIcon;
 	UImage* DefaultAmmoIcon;
 
 	UPROPERTY(EditAnywhere)
 		class UTexture2D* BlueFlagInitial;
 
 	UPROPERTY(EditAnywhere)
-		 UTexture2D* BlueFlagStolen;
+		UTexture2D* BlueFlagStolen;
 
 	UPROPERTY(EditAnywhere)
-		 UTexture2D* BlueFlagDropped;
+		UTexture2D* BlueFlagDropped;
 
 	UPROPERTY(EditAnywhere)
-		 UTexture2D* RedFlagInitial;
+		UTexture2D* RedFlagInitial;
 
 	UPROPERTY(EditAnywhere)
-		 UTexture2D* RedFlagStolen;
+		UTexture2D* RedFlagStolen;
 
 	UPROPERTY(EditAnywhere)
-		 UTexture2D* RedFlagDropped;
+		UTexture2D* RedFlagDropped;
 
 };

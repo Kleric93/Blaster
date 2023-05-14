@@ -9,6 +9,8 @@
 #include "Kismet/GamePlayStatics.h"
 #include "Blaster/HUD/ScoresOverview.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "MultiplayerSessionsSubsystem.h"
+
 
 void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -184,6 +186,22 @@ void ABlasterGameState::SetTDMVotes()
 	UE_LOG(LogTemp, Warning, TEXT("SetTDMVotes_Implementation called. Vote: %d"), TotalTDMVotes);
 }
 
+void ABlasterGameState::SetCTFVotes()
+{
+	++TotalCTFVotes;
+
+	Multicast_UpdateCTFVotes(TotalCTFVotes);
+	UE_LOG(LogTemp, Warning, TEXT("SetTDMVotes_Implementation called. Vote: %d"), TotalCTFVotes);
+}
+
+void ABlasterGameState::SetInstaKillVotes()
+{
+	++TotalInstaKillVotes;
+
+	Multicast_UpdateInstaKillVotes(TotalInstaKillVotes);
+	UE_LOG(LogTemp, Warning, TEXT("SetTDMVotes_Implementation called. Vote: %d"), TotalInstaKillVotes);
+}
+
 void ABlasterGameState::Multicast_UpdateFFAVotes_Implementation(int32 Vote)
 {
 	OnFFAVoteCast.Broadcast(Vote);
@@ -192,4 +210,68 @@ void ABlasterGameState::Multicast_UpdateFFAVotes_Implementation(int32 Vote)
 void ABlasterGameState::Multicast_UpdateTDMVotes_Implementation(int32 Vote)
 {
 	OnTDMVoteCast.Broadcast(Vote);
+}
+
+void ABlasterGameState::Multicast_UpdateCTFVotes_Implementation(int32 Vote)
+{
+	OnCTFVoteCast.Broadcast(Vote);
+}
+
+void ABlasterGameState::Multicast_UpdateInstaKillVotes_Implementation(int32 Vote)
+{
+	OnInstaKillVoteCast.Broadcast(Vote);
+}
+
+FString ABlasterGameState::CompareVotesAndLog()
+{
+	// Initialize the maxVote variable and the corresponding gameMode
+	int32 maxVote = TotalFFAVotes;
+	FString gameMode = "FFA";
+
+	// Check if TDM votes are greater
+	if (TotalTDMVotes > maxVote)
+	{
+		maxVote = TotalTDMVotes;
+		gameMode = "TDM";
+	}
+
+	// Check if CTF votes are greater
+	if (TotalCTFVotes > maxVote)
+	{
+		maxVote = TotalCTFVotes;
+		gameMode = "CTF";
+	}
+
+	// Check if InstaKill votes are greater
+	if (TotalInstaKillVotes > maxVote)
+	{
+		maxVote = TotalInstaKillVotes;
+		gameMode = "InstaKill";
+	}
+
+	// Log the game mode with the highest vote
+	UE_LOG(LogTemp, Warning, TEXT("Game mode with highest vote: %s with %d votes"), *gameMode, maxVote);
+
+	FString mapName;
+
+	// Determine the mapName based on the gameMode with the highest vote
+	if (gameMode == "FFA")
+	{
+		mapName = "/Game/Maps/BlasterMap";
+	}
+	else if (gameMode == "TDM")
+	{
+		mapName = "/Game/Maps/Teams";
+	}
+	else if (gameMode == "CTF")
+	{
+		mapName = "/Game/Maps/CaptureTheFlag";
+	}
+	else if (gameMode == "InstaKill")
+	{
+		mapName = "/Game/Maps/InstaKillMap";
+	}
+
+	// Return the mapName
+	return mapName;
 }

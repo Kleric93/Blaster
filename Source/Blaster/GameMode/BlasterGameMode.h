@@ -46,6 +46,9 @@ public:
 
 	bool bCaptureTheFlagMatch = false;
 
+	UPROPERTY()
+	class UVotingSyastem* VotingSystem;
+
 protected:
 
 	virtual void BeginPlay() override;

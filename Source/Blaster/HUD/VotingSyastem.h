@@ -15,66 +15,82 @@ class ABlasterGameState;
 class ABlasterPlayerState;
 
 /**
- * 
+ *
  */
 UCLASS()
 class BLASTER_API UVotingSyastem : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 public:
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* FFAButton;
+		UButton* FFAButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* TDMButton;
+		UButton* TDMButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* CTFButton;
+		UButton* CTFButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* InstaKillButton;
+		UButton* InstaKillButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* FFATotalVotesText;
+		UTextBlock* FFATotalVotesText;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* TDMTotalVotesText;
+		UTextBlock* TDMTotalVotesText;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* CTFTotalVotesText;
+		UTextBlock* CTFTotalVotesText;
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* InstaKillTotalVotesText;
+		UTextBlock* InstaKillTotalVotesText;
 
 	void MenuSetup();
 
+	void MenuTeardown();
+
 	UFUNCTION()
-	void FFAVoteCast();
+		void FFAVoteCast();
+
 	UFUNCTION()
-	void TDMVoteCast();
+		void TDMVoteCast();
+
+	UFUNCTION()
+		void CTFVoteCast();
+
+	UFUNCTION()
+		void InstaKillVoteCast();
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateFFAText(int32 Vote);
+		void UpdateFFAText(int32 Vote);
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateTDMText(int32 Vote);
+		void UpdateTDMText(int32 Vote);
+
+	UFUNCTION(BlueprintCallable)
+		void UpdateCTFText(int32 Vote);
+
+	UFUNCTION(BlueprintCallable)
+		void UpdateInstaKillText(int32 Vote);
 
 
 protected:
 
 	virtual void NativeConstruct() override;
 
+
+
 private:
 
+	UPROPERTY()
+		APlayerController* PlayerController;
 
 	UPROPERTY()
-	APlayerController* PlayerController;
+		ABlasterGameState* BlasterGameState;
 
 	UPROPERTY()
-	ABlasterGameState* BlasterGameState;
-
-	UPROPERTY()
-	ABlasterPlayerState* BlasterPlayerState;
+		ABlasterPlayerState* BlasterPlayerState;
 };

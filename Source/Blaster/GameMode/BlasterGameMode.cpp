@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Blaster/KillBox.h"
 #include "Blaster/HUD/VotingSyastem.h"
+#include "Blaster/HUD/VotingSyastem.h"
 
 namespace MatchState
 {
@@ -55,13 +56,31 @@ void ABlasterGameMode::Tick(float DeltaTime)
     {
         CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 
-
         if (CountdownTime <= 0.f)
         {
-            RestartGame();
+            ABlasterGameState * GS = GetGameState<ABlasterGameState>();
+            if (GS == nullptr) return;
+
+            FString mapName = GS->CompareVotesAndLog();
+
+            if (!mapName.IsEmpty() && HasAuthority())
+            {
+                GetWorld()->ServerTravel(mapName + "?listen", GetTravelType());
+            }
+            else
+            {
+                RestartGame();
+            }
+
+            ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
+            if (PlayerController && PlayerController->VotingSystem)
+            {
+                PlayerController->VotingSystem->MenuTeardown();
+            }
         }
     }
 }
+
 
 void ABlasterGameMode::OnMatchStateSet()
 {

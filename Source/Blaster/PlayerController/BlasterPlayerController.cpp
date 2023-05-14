@@ -43,7 +43,7 @@ void ABlasterPlayerController::HideTeamScores()
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->RedTeamScore &&
 		BlasterHUD->CharacterOverlay->BlueTeamScore &&
-		BlasterHUD->CharacterOverlay->Spacer && 
+		BlasterHUD->CharacterOverlay->Spacer &&
 		BlasterHUD->CharacterOverlay->TeamScoresText;
 
 	if (bHUDValid)
@@ -97,7 +97,7 @@ void ABlasterPlayerController::InitTeamScores()
 void ABlasterPlayerController::InitFlagIcons()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	
+
 	bool bHUDValid = BlasterHUD &&
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->BlueFlagState &&
@@ -349,7 +349,7 @@ void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerStat
 				BlasterHUD->AddElimAnnouncement("You", "Yourself", WeaponIcon);
 				return;
 			}
-			if (Attacker == Victim && Attacker !=Self)
+			if (Attacker == Victim && Attacker != Self)
 			{
 				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves", WeaponIcon);
 				return;
@@ -473,6 +473,24 @@ void ABlasterPlayerController::Server_TDMVoteCast_Implementation()
 	if (GameState)
 	{
 		GameState->SetTDMVotes();
+	}
+}
+
+void ABlasterPlayerController::Server_CTFVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetCTFVotes();
+	}
+}
+
+void ABlasterPlayerController::Server_InstaKillVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetInstaKillVotes();
 	}
 }
 
@@ -774,13 +792,13 @@ void ABlasterPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 
 void ABlasterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
 {
-	
+
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	bool bHUDValid = BlasterHUD &&
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->WeaponType;
-		ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
-		AWeapon* EquippedWeapon = Cast<AWeapon>(BlasterCharacter->GetEquippedWeapon());
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+	AWeapon* EquippedWeapon = Cast<AWeapon>(BlasterCharacter->GetEquippedWeapon());
 
 	if (bHUDValid && BlasterCharacter && EquippedWeapon && BlasterHUD)
 	{
@@ -990,7 +1008,7 @@ void ABlasterPlayerController::SetupInputComponent()
 	InputComponent->BindAction("Stats", IE_Pressed, this, &ABlasterPlayerController::ShowMatchStats);
 	InputComponent->BindAction("Stats", IE_Released, this, &ABlasterPlayerController::HideMatchStats);
 }
-	
+
 
 void ABlasterPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
@@ -1107,11 +1125,11 @@ void ABlasterPlayerController::HandleCooldown()
 			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Visible);
 			FString AnnouncementText = Announcement::NewMatchStartsIn;
 			BlasterHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
-			ShowVotingSystem();
-
 
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+
+			ShowVotingSystem();
 
 			if (BlasterGameState && BlasterPlayerState)
 			{
