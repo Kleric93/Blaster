@@ -37,6 +37,10 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 				{
 					World->ServerTravel(FString("/Game/Maps/CaptureTheFlag?listen"));
 				}
+				else if (MatchType == "InstaKill")
+				{
+					World->ServerTravel(FString("/Game/Maps/InstaKillMap?listen"));
+				}
 			}
 		}
 	}

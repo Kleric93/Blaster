@@ -420,8 +420,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> InstaKillWeaponClass;
+
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
+
+	UPROPERTY()
+	class AInstaKillGameMode* InstaKillGameMode;
 
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);

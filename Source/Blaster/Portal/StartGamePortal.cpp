@@ -68,6 +68,10 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 				{
 					World->ServerTravel(FString("/Game/Maps/CaptureTheFlag?listen"));
 				}
+				else if (MatchType == "InstaKill")
+				{
+					World->ServerTravel(FString("/Game/Maps/InstaKillMap?listen"));
+				}
 
 				UE_LOG(LogTemp, Warning, TEXT("Attempting server travel to: %s"), *TravelURL);
 				bool bTravelSuccessful = World->ServerTravel(TravelURL);

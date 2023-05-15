@@ -24,6 +24,7 @@
 #include "BlasterAnimInstance.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameMode/InstaKillGameMode.h"
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Blaster/Weapon/Magazine.h"
@@ -1254,10 +1255,28 @@ void ABlasterCharacter::UpdateHUDAmmo()
 
 void ABlasterCharacter::SpawnDefaultWeapon()
 {
-	BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
-	UWorld* World = GetWorld();
-	if (BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
+	InstaKillGameMode = Cast<AInstaKillGameMode>(UGameplayStatics::GetGameMode(this));
+	if (!InstaKillGameMode)
 	{
+		BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	}
+
+	UWorld* World = GetWorld();
+	if (InstaKillGameMode && World && !bElimmed && InstaKillWeaponClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Current game mode: InstaKillGameMode"));
+
+		StartingWeapon = World->SpawnActor<AWeapon>(InstaKillWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		if (Combat)
+		{
+			Combat->EquipWeapon(StartingWeapon);
+		}
+	}
+	else if (BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Current game mode: BlasterGameMode"));
+
 		StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		StartingWeapon->bDestroyWeapon = true;
 		if (Combat)
@@ -1266,6 +1285,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 		}
 	}
 }
+
 
 void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
 {
