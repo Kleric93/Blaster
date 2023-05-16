@@ -56,6 +56,40 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_UpdateTeam(const FString& PlayerName, ETeam TeamAssigned);
 
+	//speed buff functions for Icon update
+
+	UFUNCTION()
+	void OnBuffSpawned(APickupSpawnPoint* SpawnPoint);
+
+	UFUNCTION()
+		void OnSpeedBuffPickedUp(float BuffTime);
+
+	UFUNCTION()
+		void OnSpeedBuffEnd();
+
+
+
+	//Jump buff functions for Icon update
+
+	UFUNCTION()
+		void OnJumpBuffPickedUp(float BuffTime);
+
+	UFUNCTION()
+		void OnJumpBuffEnd();
+
+	
+	//Berserk buff functions for Icon update
+
+	UFUNCTION()
+	void OnBerserkBuffPickedUp(float BuffTime);
+
+	UFUNCTION()
+	void OnBerserkBuffEnd();
+
+	void RegisterBuffSpawnPoints();
+
+	
+
 	UPROPERTY(BlueprintAssignable, Category = "Score")
 		FOnPlayerScoredKill OnPlayerScoredKill;
 
@@ -74,6 +108,7 @@ private:
 
 	UPROPERTY()
 	class ABlasterCharacter* Character;
+
 	UPROPERTY()
 	class ABlasterPlayerController* Controller;
 	
@@ -85,6 +120,12 @@ private:
 
 	UFUNCTION()
 	void OnRep_Team();
+
+	FTimerHandle TimerHandle_SpeedBuffDuration;
+
+	FTimerHandle TimerHandle_JumpBuffDuration;
+
+	FTimerHandle TimerHandle_BerserkBuffDuration;
 
 public:
 

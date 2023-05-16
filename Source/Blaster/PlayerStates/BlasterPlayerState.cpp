@@ -10,11 +10,15 @@
 #include "Components/CheckBox.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
-
-
+#include "Blaster/Pickups/SpeedPickup.h"
+#include "Blaster/Pickups/JumpPickup.h"
+#include "Blaster/Pickups/BerserkPickup.h"
+#include "Blaster/Pickups/PickupSpawnPoint.h"
+#include "EngineUtils.h"
 
 ABlasterPlayerState::ABlasterPlayerState()
 {
+
 }
 
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -146,4 +150,91 @@ void ABlasterPlayerState::Multicast_UpdatePlayerKD_Implementation(const FString&
 void ABlasterPlayerState::Multicast_UpdateTeam_Implementation(const FString& PlayerName, ETeam TeamAssigned)
 {
 	OnPlayerTeamAssigned.Broadcast(PlayerName, TeamAssigned);
+}
+
+void ABlasterPlayerState::RegisterBuffSpawnPoints()
+{
+	for (TActorIterator<APickupSpawnPoint> It(GetWorld()); It; ++It)
+	{
+		It->OnSpeedBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
+		It->OnJumpBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
+		It->OnBerserkBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
+	}
+}
+
+void ABlasterPlayerState::OnBuffSpawned(APickupSpawnPoint* SpawnPoint)
+{
+	if (SpawnPoint && SpawnPoint->SpawnedPickup)
+	{
+		// Check if the spawned pickup is a speed pickup
+		ASpeedPickup* SpeedPickup = Cast<ASpeedPickup>(SpawnPoint->SpawnedPickup);
+		AJumpPickup* JumpPickup = Cast<AJumpPickup>(SpawnPoint->SpawnedPickup);
+		ABerserkPickup* BerserkPickup = Cast<ABerserkPickup>(SpawnPoint->SpawnedPickup);
+
+		if (SpeedPickup)
+		{
+			SpeedPickup->OnSpeedBuffPickedUp.AddDynamic(this, &ABlasterPlayerState::OnSpeedBuffPickedUp);
+		}
+		if (JumpPickup)
+		{
+			JumpPickup->OnJumpBuffPickedUp.AddDynamic(this, &ABlasterPlayerState::OnJumpBuffPickedUp);
+		}
+		if (BerserkPickup)
+		{
+			BerserkPickup->OnBerserkBuffPickedUp.AddDynamic(this, &ABlasterPlayerState::OnBerserkBuffPickedUp);
+		}
+	}
+}
+
+void ABlasterPlayerState::OnSpeedBuffPickedUp(float BuffTime)
+{
+	if (Controller)
+	{
+		Controller->UpdateSpeedBuffIcon(true);
+		GetWorldTimerManager().SetTimer(TimerHandle_SpeedBuffDuration, this, &ABlasterPlayerState::OnSpeedBuffEnd, BuffTime, false);
+	}
+}
+
+void ABlasterPlayerState::OnSpeedBuffEnd()
+{
+	if (Controller)
+	{
+		Controller->UpdateSpeedBuffIcon(false);
+	}
+}
+
+
+void ABlasterPlayerState::OnJumpBuffPickedUp(float BuffTime)
+{
+	if (Controller)
+	{
+		Controller->UpdateJumpBuffIcon(true);
+		GetWorldTimerManager().SetTimer(TimerHandle_JumpBuffDuration, this, &ABlasterPlayerState::OnJumpBuffEnd, BuffTime, false);
+	}
+}
+
+void ABlasterPlayerState::OnJumpBuffEnd()
+{
+	if (Controller)
+	{
+		Controller->UpdateJumpBuffIcon(false);
+	}
+}
+
+void ABlasterPlayerState::OnBerserkBuffPickedUp(float BuffTime)
+{
+	if (Controller)
+	{
+		Controller->UpdateBerserkBuffIcon(true);
+		GetWorldTimerManager().SetTimer(TimerHandle_BerserkBuffDuration, this, &ABlasterPlayerState::OnBerserkBuffEnd, BuffTime, false);
+		UE_LOG(LogTemp, Warning, TEXT("Player %s picked up the buff."), *this->GetPlayerName());
+	}
+}
+
+void ABlasterPlayerState::OnBerserkBuffEnd()
+{
+	if (Controller)
+	{
+		Controller->UpdateBerserkBuffIcon(false);
+	}
 }

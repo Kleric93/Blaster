@@ -6,6 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "PickupSpawnPoint.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpeedBuffSpawned, APickupSpawnPoint*, SpawnPoint);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJumpBuffSpawned, APickupSpawnPoint*, SpawnPoint);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBerserkBuffSpawned, APickupSpawnPoint*, SpawnPoint);
+
+
+
 UCLASS()
 class BLASTER_API APickupSpawnPoint : public AActor
 {
@@ -14,25 +20,33 @@ class BLASTER_API APickupSpawnPoint : public AActor
 public:	
 	APickupSpawnPoint();
 
+	FOnSpeedBuffSpawned OnSpeedBuffSpawned;
+	FOnJumpBuffSpawned OnJumpBuffSpawned;
+	FOnBerserkBuffSpawned OnBerserkBuffSpawned;
+
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSetPedestalDefaultMaterial();
 
-UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSetPedestalOnMaterial();
 
-UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void MulticastPlaySpawnSound(USoundCue* Sound, FVector Location);
+
+	UPROPERTY()
+	class APickup* SpawnedPickup;
 
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<class APickup>> PickupClasses;
-
-	UPROPERTY()
-	APickup* SpawnedPickup;
+	TArray<TSubclassOf<APickup>> PickupClasses;
 
 	void SpawnPickup();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSpawnPickupDelegate();
+
 	void SpawnPickupTimerFinished();
 
 	UFUNCTION()

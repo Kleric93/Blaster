@@ -20,6 +20,7 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 	GENERATED_BODY()
 
 public:
+	ABlasterPlayerController();
 
 
 	void SetHUDHealth(float Health, float MaxHealth);
@@ -45,6 +46,7 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Score")
 		FHighPingDelegate HighPingDelegate;
 
+
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 
 	void HideTeamScores();
@@ -59,6 +61,16 @@ public:
 
 	void UpdateBlueFlagStateInHUD(EFlagState NewFlagState);
 	void UpdateRedFlagStateInHUD(EFlagState NewFlagState);
+
+	UFUNCTION(Client, Reliable)
+	void UpdateJumpBuffIcon(bool bIsBuffActive);
+
+	UFUNCTION(Client, Reliable)
+	void UpdateSpeedBuffIcon(bool bIsBuffActive);
+
+	UFUNCTION(Client, Reliable)
+	void UpdateBerserkBuffIcon(bool bIsBuffActive);
+
 
 	//
 	/// chat box
@@ -256,6 +268,9 @@ private:
 	float PingAnimationRunningTime = 0.f;
 
 	UPROPERTY(EditAnywhere)
+	float VotingEndedTimer = 15.f;
+
+	UPROPERTY(EditAnywhere)
 		class UImage* DefaultWeaponIcon;
 	UImage* DefaultAmmoIcon;
 
@@ -277,4 +292,21 @@ private:
 	UPROPERTY(EditAnywhere)
 		UTexture2D* RedFlagDropped;
 
+	UPROPERTY(EditAnywhere)
+		UTexture2D* SpeedBuffIconOn;
+
+	UPROPERTY(EditAnywhere)
+		UTexture2D* SpeedBuffIconOff;
+
+	UPROPERTY(EditAnywhere)
+		UTexture2D* JumpBuffIconOn;
+
+	UPROPERTY(EditAnywhere)
+		UTexture2D* JumpBuffIconOff;
+
+	UPROPERTY(EditAnywhere)
+		UTexture2D* BerserkBuffIconOn;
+
+	UPROPERTY(EditAnywhere)
+		UTexture2D* BerserkBuffIconOff;
 };

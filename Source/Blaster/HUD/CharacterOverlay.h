@@ -71,4 +71,13 @@ public:
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* HighPingAnimation;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* SpeedBuffIcon;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* JumpBuffIcon;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* BerserkBuffIcon;
 };

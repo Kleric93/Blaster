@@ -9,6 +9,10 @@
 #include "Materials/MaterialInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
+#include "SpeedPickup.h"
+#include "JumpPickup.h"
+#include "BerserkPickup.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 APickupSpawnPoint::APickupSpawnPoint()
 {
@@ -69,7 +73,7 @@ void APickupSpawnPoint::MulticastPlaySpawnSound_Implementation(USoundCue* Sound,
 void APickupSpawnPoint::SpawnPickup()
 {
 	int32 NumPickupClasses = PickupClasses.Num();
-	if (NumPickupClasses > 0 )
+	if (NumPickupClasses > 0)
 	{
 		int32 Selection = FMath::RandRange(0, NumPickupClasses - 1);
 		SpawnedPickup = GetWorld()->SpawnActor<APickup>(PickupClasses[Selection], GetActorTransform());
@@ -78,6 +82,27 @@ void APickupSpawnPoint::SpawnPickup()
 		{
 			SpawnedPickup->OnDestroyed.AddDynamic(this, &APickupSpawnPoint::StartSpawnPickupTimer);
 		}
+		MulticastSpawnPickupDelegate();
+	}
+}
+
+void APickupSpawnPoint::MulticastSpawnPickupDelegate_Implementation()
+{
+	ASpeedPickup* SpeedPickup = Cast<ASpeedPickup>(SpawnedPickup);
+	AJumpPickup* JumpPickup = Cast<AJumpPickup>(SpawnedPickup);
+	ABerserkPickup* BerserkPickup = Cast<ABerserkPickup>(SpawnedPickup);
+
+	if (SpeedPickup)
+	{
+		OnSpeedBuffSpawned.Broadcast(this);
+	}
+	if (JumpPickup)
+	{
+		OnJumpBuffSpawned.Broadcast(this);
+	}
+	if (BerserkPickup)
+	{
+		OnBerserkBuffSpawned.Broadcast(this);
 	}
 }
 

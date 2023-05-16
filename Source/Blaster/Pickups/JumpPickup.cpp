@@ -3,6 +3,7 @@
 
 #include "JumpPickup.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
 
 void AJumpPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -16,6 +17,13 @@ void AJumpPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 		if (Buff)
 		{
 			Buff->BuffJump(JumpZVelocityBuff, JumpBuffTime);
+
+			ABlasterPlayerState* PS = Cast<ABlasterPlayerState>(BlasterCharacter->GetPlayerState());
+
+			if (PS)
+			{
+				PS->OnJumpBuffPickedUp(JumpBuffTime);
+			}
 		}
 	}
 	Destroy();

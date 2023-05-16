@@ -6,6 +6,8 @@
 #include "Pickup.h"
 #include "SpeedPickup.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpeedBuffPickedUp, float, BuffTimer);
+
 /**
  * 
  */
@@ -13,6 +15,11 @@ UCLASS()
 class BLASTER_API ASpeedPickup : public APickup
 {
 	GENERATED_BODY()
+
+public:
+
+	UPROPERTY(BlueprintAssignable, Category = "Score")
+	FOnSpeedBuffPickedUp OnSpeedBuffPickedUp;
 	
 protected:
 
@@ -35,4 +42,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float SpeedbuffTime = 30.f;
+
+
 };

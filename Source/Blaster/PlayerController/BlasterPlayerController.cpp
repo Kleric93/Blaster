@@ -28,6 +28,16 @@
 #include "Blaster/HUD/PlayerStats.h"
 #include "Blaster/HUD/ScoresOverview.h"
 #include "Blaster/HUD/PlayerStatsLine.h"
+#include "Blaster/Pickups/SpeedPickup.h"
+#include "Blaster/Pickups/JumpPickup.h"
+#include "Blaster/Pickups/BerserkPickup.h"
+#include "Blaster/Pickups/PickupSpawnPoint.h"
+#include "EngineUtils.h"
+
+ABlasterPlayerController::ABlasterPlayerController()
+{
+	bReplicates = true;
+}
 
 
 void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
@@ -367,6 +377,12 @@ void ABlasterPlayerController::BeginPlay()
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckmatchState();
+
+	ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(this->PlayerState);
+	if (BlasterPlayerState)
+	{
+		BlasterPlayerState->RegisterBuffSpawnPoints();
+	}
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -455,6 +471,15 @@ void ABlasterPlayerController::ShowVotingSystem()
 	if (VotingSystem)
 	{
 		VotingSystem->MenuSetup();
+
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+			{
+				if (this->VotingSystem)
+				{
+					this->VotingSystem->MenuTeardown();
+				}
+			}, VotingEndedTimer, false);
 	}
 }
 
@@ -1251,4 +1276,53 @@ void ABlasterPlayerController::HideMatchStats()
 		//UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE HIDDEN!!!"));
 
 	}
+}
+
+void ABlasterPlayerController::UpdateSpeedBuffIcon_Implementation(bool bIsBuffActive)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->SpeedBuffIcon;
+
+	UE_LOG(LogTemp, Warning, TEXT("UpdateSpeedBuffIcon: %s"), bIsBuffActive ? TEXT("true") : TEXT("false"));
+
+	if (BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->SpeedBuffIcon)
+	{
+		BlasterHUD->CharacterOverlay->SpeedBuffIcon->SetBrushFromTexture(bIsBuffActive ? SpeedBuffIconOn : SpeedBuffIconOff);
+	}
+}
+
+void ABlasterPlayerController::UpdateJumpBuffIcon_Implementation(bool bIsBuffActive)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->JumpBuffIcon;
+
+	UE_LOG(LogTemp, Warning, TEXT("UpdateJumpBuffIcon: %s"), bIsBuffActive ? TEXT("true") : TEXT("false"));
+
+	if (BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->JumpBuffIcon)
+	{
+		BlasterHUD->CharacterOverlay->JumpBuffIcon->SetBrushFromTexture(bIsBuffActive ? JumpBuffIconOn : JumpBuffIconOff);
+	}
+}
+
+void ABlasterPlayerController::UpdateBerserkBuffIcon_Implementation(bool bIsBuffActive)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->BerserkBuffIcon;
+
+	if (BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->BerserkBuffIcon)
+	{
+		BlasterHUD->CharacterOverlay->BerserkBuffIcon->SetBrushFromTexture(bIsBuffActive ? BerserkBuffIconOn : BerserkBuffIconOff);
+
+		UE_LOG(LogTemp, Warning, TEXT("Controller %s updated BerserkBuffIcon to %s"), *GetName(), bIsBuffActive ? TEXT("On") : TEXT("Off"));
+	}
+
 }

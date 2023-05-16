@@ -6,6 +6,9 @@
 #include "Pickup.h"
 #include "JumpPickup.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJumpBuffPickedUp, float, BuffTimer);
+
+
 /**
  * 
  */
@@ -13,6 +16,10 @@ UCLASS()
 class BLASTER_API AJumpPickup : public APickup
 {
 	GENERATED_BODY()
+
+public:
+
+	FOnJumpBuffPickedUp OnJumpBuffPickedUp;
 	
 protected:
 

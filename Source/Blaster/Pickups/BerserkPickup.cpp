@@ -3,6 +3,7 @@
 
 #include "BerserkPickup.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
@@ -21,6 +22,13 @@ void ABerserkPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, A
 			{
 				float BuffFireDelay = BlasterCharacter->GetEquippedWeapon()->FireDelay;
 				Buff->BuffBerserk(BuffFireDelay, BerserkBuffTime);
+
+				ABlasterPlayerState* PS = Cast<ABlasterPlayerState>(BlasterCharacter->GetPlayerState());
+
+				if (PS)
+				{
+					PS->OnBerserkBuffPickedUp(BerserkBuffTime);
+				}
 			}
 		}
 	}
