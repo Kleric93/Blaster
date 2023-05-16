@@ -51,7 +51,7 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Remote Role: %d, Authority: %s"), static_cast<int32>(GetRemoteRole()), HasAuthority() ? TEXT("true") : TEXT("false"));
 
-				GameMode->bUseSeamlessTravel = true;
+				//GameMode->bUseSeamlessTravel = true;
 
 				FString MatchType = Subsystem->DesiredMatchType;
 				FString TravelURL;

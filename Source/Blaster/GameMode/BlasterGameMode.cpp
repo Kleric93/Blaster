@@ -63,6 +63,12 @@ void ABlasterGameMode::Tick(float DeltaTime)
 
             FString mapName = GS->CompareVotesAndLog();
 
+            ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
+            if (BlasterPlayerController && BlasterPlayerController->VotingSystem)
+            {
+                BlasterPlayerController->VotingSystem->MenuTeardown();
+            }
+
             if (!mapName.IsEmpty() && HasAuthority())
             {
                 GetWorld()->ServerTravel(mapName + "?listen", GetTravelType());
@@ -70,12 +76,6 @@ void ABlasterGameMode::Tick(float DeltaTime)
             else
             {
                 RestartGame();
-            }
-
-            ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
-            if (PlayerController && PlayerController->VotingSystem)
-            {
-                PlayerController->VotingSystem->MenuTeardown();
             }
         }
     }

@@ -11,6 +11,7 @@ class UCheckBox;
 class UButton;
 class UTextBlock;
 class APlayerController;
+class ABlasterPlayerController;
 class ABlasterGameState;
 class ABlasterPlayerState;
 
@@ -87,6 +88,9 @@ private:
 
 	UPROPERTY()
 		APlayerController* PlayerController;
+
+	UPROPERTY()
+		ABlasterPlayerController* BlasterPlayerController;
 
 	UPROPERTY()
 		ABlasterGameState* BlasterGameState;

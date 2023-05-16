@@ -218,50 +218,6 @@ void ATeamsFlag::MulticastDetachfromBackpack_Implementation()
 		OwningController = nullptr;
 	}
 }
-/*
-void ATeamsFlag::FlagBehavior()
-{
-	if (OwningCharacter == nullptr || OwningCharacter->GetCombat() == nullptr) return;
-	BlasterPlayerState = BlasterPlayerState == nullptr ? Cast<ABlasterPlayerState>(OwningCharacter->GetPlayerState()) : BlasterPlayerState;
-
-	if (BlasterPlayerState->GetTeam() == ETeam::ET_BlueTeam)
-	{
-		switch (FlagType)
-		{
-		case EFlagType::EFT_RedFlag:
-			OwningCharacter->GetCombat()->EquipFlag(this);
-			UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with red flag"));
-			break;
-		case EFlagType::EFT_BlueFlag:
-			UE_LOG(LogTemp, Error, TEXT("Blue team character overlapped with blue flag"));
-			flagrespawn();
-			break;
-		default:
-			break;
-		}
-
-	}
-	else if (BlasterPlayerState->GetTeam() == ETeam::ET_RedTeam)
-	{
-		switch (FlagType)
-		{
-		case EFlagType::EFT_RedFlag:
-			UE_LOG(LogTemp, Error, TEXT("red team character overlapped with red flag"));
-
-			flagrespawn();
-			break;
-		case EFlagType::EFT_BlueFlag:
-			OwningCharacter->GetCombat()->EquipFlag(this);
-			UE_LOG(LogTemp, Error, TEXT("red team character overlapped with Blue flag"));
-
-			break;
-		default:
-			break;
-		}
-
-	}
-
-}*/
 
 void ATeamsFlag::MulticastFlagRespawn_Implementation()
 {

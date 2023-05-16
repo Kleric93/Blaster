@@ -28,6 +28,7 @@ void UVotingSyastem::MenuSetup()
     if (World)
     {
         PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
         BlasterPlayerState = Cast<ABlasterPlayerState>(PlayerController->PlayerState);
         BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(World));
 
@@ -35,8 +36,8 @@ void UVotingSyastem::MenuSetup()
         {
             FInputModeGameAndUI InputModeData;
             InputModeData.SetWidgetToFocus(TakeWidget());
-            PlayerController->SetInputMode(InputModeData);
-            PlayerController->SetShowMouseCursor(true);
+            BlasterPlayerController->SetInputMode(InputModeData);
+            BlasterPlayerController->SetShowMouseCursor(true);
         }
         if (BlasterGameState)
         {
@@ -59,15 +60,11 @@ void UVotingSyastem::MenuSetup()
 void UVotingSyastem::MenuTeardown()
 {
     RemoveFromParent();
-    bIsFocusable = false;
 
     UWorld* World = GetWorld();
     if (World)
     {
         PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
-        BlasterPlayerState = Cast<ABlasterPlayerState>(PlayerController->PlayerState);
-        BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(World));
-
         if (PlayerController)
         {
             FInputModeGameOnly InputModeData;
@@ -75,6 +72,9 @@ void UVotingSyastem::MenuTeardown()
             PlayerController->SetShowMouseCursor(false);
         }
     }
+    /*
+    BlasterPlayerState = Cast<ABlasterPlayerState>(PlayerController->PlayerState);
+    BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(World));
 
     if (BlasterGameState)
     {
@@ -90,14 +90,16 @@ void UVotingSyastem::MenuTeardown()
         TDMButton->OnClicked.RemoveDynamic(this, &UVotingSyastem::TDMVoteCast);
         CTFButton->OnClicked.RemoveDynamic(this, &UVotingSyastem::CTFVoteCast);
         InstaKillButton->OnClicked.RemoveDynamic(this, &UVotingSyastem::InstaKillVoteCast);
-    }
+    }*/
+
+    GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void UVotingSyastem::FFAVoteCast()
 {
     if (PlayerController)
     {
-        ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
         if (BlasterPlayerController)
         {
             BlasterPlayerController->Server_FFAVoteCast();
@@ -116,7 +118,7 @@ void UVotingSyastem::TDMVoteCast()
 {
     if (PlayerController)
     {
-        ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
         if (BlasterPlayerController)
         {
             BlasterPlayerController->Server_TDMVoteCast();
@@ -134,7 +136,7 @@ void UVotingSyastem::CTFVoteCast()
 {
     if (PlayerController)
     {
-        ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
         if (BlasterPlayerController)
         {
             BlasterPlayerController->Server_CTFVoteCast();
@@ -152,7 +154,7 @@ void UVotingSyastem::InstaKillVoteCast()
 {
     if (PlayerController)
     {
-        ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
         if (BlasterPlayerController)
         {
             BlasterPlayerController->Server_InstaKillVoteCast();
