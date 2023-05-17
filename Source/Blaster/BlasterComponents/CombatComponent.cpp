@@ -22,6 +22,7 @@
 #include "Blaster/Pickups/TeamsFlag.h"
 #include "Blaster/HUD/OverheadWidget.h"
 #include "Components/WidgetComponent.h"
+#include "Blaster/BlasterComponents/BuffComponent.h"
 
 
 
@@ -916,7 +917,8 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	bAiming = bIsAiming;
 	CombatState = ECombatState::ECS_Unoccupied;
 	ServerSetAiming(bIsAiming);
-	if (Character)
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+	if (Character && !Character->Getbuff())
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
@@ -933,8 +935,10 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+
 	bAiming = bIsAiming;
-	if (Character)
+	if (Character && !Character->Getbuff())
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
