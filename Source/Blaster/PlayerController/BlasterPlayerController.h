@@ -9,6 +9,9 @@
 #include "Blaster/BlasterTypes/Team.h"
 #include "BlasterPlayerController.generated.h"
 
+class UInputMappingContext;
+class ABlasterPlayerState;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 
 /**
@@ -59,7 +62,9 @@ public:
 	void SetHUDBlueFlagState(AActor* Flag, EFlagState NewFlagState);
 	void SetHUDRedFlagState(AActor* Flag, EFlagState NewFlagState);
 
+	UFUNCTION()
 	void UpdateBlueFlagStateInHUD(EFlagState NewFlagState);
+	UFUNCTION()
 	void UpdateRedFlagStateInHUD(EFlagState NewFlagState);
 
 	UFUNCTION(Client, Reliable)
@@ -112,6 +117,7 @@ public:
 
 
 private:
+
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UChatSystemOverlay> ChatSystemOverlayClass;
 	UPROPERTY()
@@ -123,6 +129,14 @@ private:
 
 
 protected:
+
+	//
+	/// Enhanced Input
+	//
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputMappingContext* BlasterMappingContext;
+
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
@@ -161,6 +175,7 @@ protected:
 
 	void HighPingWarning();
 	void StopHighPingWarning();
+
 	void CheckPing(float DeltaTime);
 
 	void ShowReturnToMainMenu();

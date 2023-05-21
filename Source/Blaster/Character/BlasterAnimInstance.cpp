@@ -7,6 +7,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/BlasterTypes/CombatState.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 
 void UBlasterAnimInstance::NativeInitializeAnimation()
 {
@@ -38,6 +39,9 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	TurningInPlace = BlasterCharacter->GetTurningInPlace();
 	bRotateRootBone = BlasterCharacter->ShouldRotateRootBone();
 	bElimmed = BlasterCharacter->IsElimmed();
+	bIsSliding = BlasterCharacter->GetCombat()->bIsSliding;
+	bIsProne = BlasterCharacter->GetCombat()->bIsProne;
+
 
 
 	// Offset Yaw for Strafing

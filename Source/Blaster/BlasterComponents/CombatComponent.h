@@ -68,6 +68,66 @@ public:
 	UFUNCTION()
 	void OnRep_EquippedFlag();
 
+#pragma region Sliding Functions
+
+	void StartSliding();
+
+	void StopSliding();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Sliding)
+		bool bIsSliding = false;
+
+	UFUNCTION()
+		void OnRep_Sliding();
+
+	UFUNCTION(Server, Reliable)
+		void ServerStartSliding();
+
+	UFUNCTION(Server, Reliable)
+		void ServerStopSliding();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastStartSliding();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastStopSliding();
+
+	UPROPERTY(EditAnywhere)
+		float SlidingSpeed;
+
+	FTimerHandle SlidingTimerHandle;
+
+#pragma endregion Sliding Functions
+
+#pragma region Prone Functions
+
+	void StartProne();
+	void StopProne();
+
+
+	UFUNCTION(Server, Reliable)
+	void ServerStartProne();
+
+	UFUNCTION(Server, Reliable)
+	void ServerStopProne();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStartProne();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastStopProne();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Prone)
+	bool bIsProne = false;
+
+	UFUNCTION()
+		void OnRep_Prone();
+
+	UPROPERTY(EditAnywhere)
+		float ProneSpeed = 100.f;
+
+#pragma endregion Prone Functions
+
 protected:
 	void SetAiming(bool bIsAiming);
 
@@ -142,8 +202,6 @@ protected:
 	void ShowAttachedGrenade(bool bShowGrenade);
 	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
-
-
 
 private:
 

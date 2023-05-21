@@ -23,6 +23,7 @@
 #include "Blaster/HUD/OverheadWidget.h"
 #include "Components/WidgetComponent.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
+#include "Components/CapsuleCOmponent.h"
 
 
 
@@ -45,6 +46,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
 	DOREPLIFETIME(UCombatComponent, bLocallyReloading);
+	DOREPLIFETIME(UCombatComponent, bIsSliding);
+	DOREPLIFETIME(UCombatComponent, bIsProne);
 }
 
 void UCombatComponent::BeginPlay()
@@ -316,7 +319,13 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
 	{
-		EquipSecondaryWeapon(WeaponToEquip);
+		Character->PlaySwapMontage();
+		AWeapon* TempWeapon = EquippedWeapon;
+		EquippedWeapon = SecondaryWeapon;
+		SecondaryWeapon = TempWeapon;
+		EquipPrimaryWeapon(WeaponToEquip);
+		EquipSecondaryWeapon(TempWeapon);
+		//EquipSecondaryWeapon(WeaponToEquip);
 	}
 	else
 	{
@@ -492,17 +501,6 @@ void UCombatComponent::HandleReload()
 	if (Character)
 	{
 		Character->PlayReloadMontage();
-	}
-}
-
-void UCombatComponent::OnRep_HandleReload()
-{
-	if (EquippedWeapon->IsEmpty())
-	{
-		if (Character)
-		{
-			Character->PlayReloadMontage();
-		}
 	}
 }
 
@@ -918,9 +916,16 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	CombatState = ECombatState::ECS_Unoccupied;
 	ServerSetAiming(bIsAiming);
 	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
-	if (Character && !Character->Getbuff())
+	bool bCanReduceAimSpeed =
+		Character &&
+		BuffComponent->GetbIsSpeedBuffActive() == false &&
+		!bIsSliding &&
+		!bIsProne;
+
+	if (bCanReduceAimSpeed)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
 	}
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
@@ -936,9 +941,14 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
-
 	bAiming = bIsAiming;
-	if (Character && !Character->Getbuff())
+	bool bCanReduceAimSpeed =
+		Character &&
+		BuffComponent->GetbIsSpeedBuffActive() == false &&
+		!bIsSliding &&
+		!bIsProne;
+
+	if (bCanReduceAimSpeed)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
@@ -988,4 +998,158 @@ void UCombatComponent::SetWeaponTypeOnHUD()
 	{
 		Controller->SetHUDWeaponType(EquippedWeapon->GetWeaponType());
 	}
+}
+
+void UCombatComponent::OnRep_HandleReload()
+{
+	if (EquippedWeapon->IsEmpty())
+	{
+		if (Character)
+		{
+			Character->PlayReloadMontage();
+		}
+	}
+}
+
+void UCombatComponent::OnRep_Sliding()
+{
+	bIsSliding = true;
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = SlidingSpeed;
+	}
+	GetWorld()->GetTimerManager().SetTimer(SlidingTimerHandle, this, &UCombatComponent::StopSliding, 1.f, false);
+}
+
+void UCombatComponent::StartSliding()
+{
+	if (GetOwner()->GetLocalRole() < ROLE_Authority)
+	{
+		ServerStartSliding();
+	}
+	else
+	{
+		MulticastStartSliding();
+	}
+}
+
+void UCombatComponent::StopSliding()
+{
+	if (GetOwner()->GetLocalRole() < ROLE_Authority)
+	{
+		ServerStopSliding();
+	}
+	else
+	{
+		MulticastStopSliding();
+	}
+}
+
+void UCombatComponent::ServerStartSliding_Implementation()
+{
+	MulticastStartSliding();
+}
+
+void UCombatComponent::ServerStopSliding_Implementation()
+{
+	MulticastStopSliding();
+}
+
+void UCombatComponent::MulticastStartSliding_Implementation()
+{
+	bIsSliding = true;
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = SlidingSpeed;
+	}
+	GetWorld()->GetTimerManager().SetTimer(SlidingTimerHandle, this, &UCombatComponent::StopSliding, 1.f, false);
+}
+
+void UCombatComponent::MulticastStopSliding_Implementation()
+{
+	bIsSliding = false;
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
+	{
+		if (bIsProne == true)
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = ProneSpeed;
+		}
+		else
+		{
+			Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+		}
+	}
+}
+
+void UCombatComponent::OnRep_Prone()
+{
+	bIsProne = false;
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
+	}
+}
+
+void UCombatComponent::StartProne()
+{
+	if (GetOwner()->GetLocalRole() < ROLE_Authority)
+	{
+		ServerStartProne();
+	}
+	else
+	{
+		MulticastStartProne();
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void UCombatComponent::StopProne()
+{
+	if (GetOwner()->GetLocalRole() < ROLE_Authority)
+	{
+		ServerStopProne();
+	}
+	else
+	{
+		MulticastStopProne();
+	}
+}
+
+void UCombatComponent::ServerStartProne_Implementation()
+{
+	MulticastStartProne();
+}
+
+void UCombatComponent::ServerStopProne_Implementation()
+{
+	MulticastStopProne();
+}
+
+void UCombatComponent::MulticastStartProne_Implementation()
+{
+	bIsProne = true;
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = ProneSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void UCombatComponent::MulticastStopProne_Implementation()
+{
+	bIsProne = false;
+	UBuffComponent* BuffComponent = Cast<UBuffComponent>(Character->Getbuff());
+	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }

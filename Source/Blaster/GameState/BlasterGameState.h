@@ -9,11 +9,12 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnPlayerScoredPoint, const FString&, PlayerName, ETeam, TeamThatScored, int32, PlayerScore);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamScoredPoint, ETeam, TeamThatScored, int32, TeamScore);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerLeftDelegate, ABlasterPlayerState*, PlayerLeaving);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerJoinedDelegate, ABlasterPlayerState*, PlayerJoining);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPlayerJoinedDelegate, ABlasterPlayerState*, PlayerJoining, const FString&, PlayerName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFFAVoteCast, int32, Vote);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTDMVoteCast, int32, Vote);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCTFVoteCast, int32, Vote);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInstaKillVoteCast, int32, Vote);
+
 
 
 
@@ -70,7 +71,7 @@ public:
 		void Multicast_RemovePlayerLeft(ABlasterPlayerState* PlayerLeaving);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void Multicast_AddPlayerJoined(ABlasterPlayerState* PlayerJoining);
+		void Multicast_AddPlayerJoined(ABlasterPlayerState* PlayerJoining, const FString& PlayerName);
 
 	UPROPERTY()
 		TArray<ABlasterPlayerController*> PlayerControllersArray;
@@ -89,7 +90,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FPlayerJoinedDelegate OnPlayerJoined;
-
 
 	UPROPERTY()
 		TMap<FString, int32> PlayerScores;

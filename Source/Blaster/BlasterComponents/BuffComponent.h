@@ -61,6 +61,7 @@ private:
 	void ResetSpeeds();
 	float InitialBaseSpeed;
 	float InitialCrouchSpeed;
+	bool bSpeedBuffActive = false;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSpeedBuff(float BaseSpeed, float CrouchedSpeed);
@@ -93,4 +94,5 @@ public:
 	FORCEINLINE FTimerHandle GetSpeedBuffTimer() const { return SpeedBuffTimer; }
 	FORCEINLINE FTimerHandle GetJumpBuffTimer() const { return JumpBuffTimer; }
 	FORCEINLINE FTimerHandle GetberserkBuffTimer() const { return BerserkBuffTimer; }
+	FORCEINLINE bool GetbIsSpeedBuffActive() { return bSpeedBuffActive; }
 };

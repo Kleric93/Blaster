@@ -2,6 +2,8 @@
 
 
 #include "BlasterPlayerController.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
 #include "Components/ProgressBar.h"
@@ -378,6 +380,11 @@ void ABlasterPlayerController::BeginPlay()
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckmatchState();
 
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetLocalPlayer()))
+	{
+		Subsystem->AddMappingContext(BlasterMappingContext, 0);
+	}
+
 	ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(this->PlayerState);
 	if (BlasterPlayerState)
 	{
@@ -600,16 +607,6 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
-void ABlasterGameMode::PlayerJoinedGame(ABlasterPlayerState* PlayerJoining)
-{
-	if (PlayerJoining == nullptr) return;
-	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
-	if (BlasterGameState)
-	{
-		BlasterGameState->Multicast_AddPlayerJoined(PlayerJoining);
-	}
-}
-
 void ABlasterPlayerController::ServerCheckmatchState_Implementation()
 {
 	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
@@ -621,12 +618,6 @@ void ABlasterPlayerController::ServerCheckmatchState_Implementation()
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
 		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
-
-		ABlasterGameMode* AuthGameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
-		if (AuthGameMode)
-		{
-			AuthGameMode->PlayerJoinedGame(Cast<ABlasterPlayerState>(PlayerState));
-		}
 	}
 }
 
@@ -1109,12 +1100,12 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 		}
 		if (BlasterHUD->PlayerStats == nullptr)
 		{
-			//BlasterHUD->AddPlayerStats();
-
+			BlasterHUD->AddPlayerStats();
+			/*
 			FTimerHandle TimerHandle;
 			GetWorldTimerManager().SetTimer(TimerHandle, [this]() {
 				BlasterHUD->AddPlayerStats();
-				}, 1.f, false);
+				}, 1.f, false);*/
 		}
 		//if (!HasAuthority()) return;
 		if (bShowFlagIcons)

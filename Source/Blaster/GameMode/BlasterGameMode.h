@@ -25,7 +25,6 @@ public:
 	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 	void PlayerLeftGame(class ABlasterPlayerState* PlayerLeaving);
-	void PlayerJoinedGame(ABlasterPlayerState* PlayerJoining);
 
 	void SendChat(const FString& Text, const FString& PlayerName);
 
@@ -53,8 +52,6 @@ protected:
 
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
-
-
 
 private:
 

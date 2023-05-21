@@ -24,17 +24,20 @@ void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
 		{
 			if (BGameState->BlueTeam.Num() >= BGameState->RedTeam.Num())
 			{
+				UE_LOG(LogTemp, Error, TEXT("PostLogin got inside the if check for red team"))
 				BGameState->RedTeam.AddUnique(BPState);
 				BPState->SetTeam(ETeam::ET_RedTeam);
 			}
 			else
 			{
+				UE_LOG(LogTemp, Error, TEXT("PostLogin got inside the if check for blue team"))
+
 				BGameState->BlueTeam.AddUnique(BPState);
 				BPState->SetTeam(ETeam::ET_BlueTeam);
 			}
 		}
-		BGameState->Multicast_AddPlayerJoined(BPState);
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ATeamsGameMode::Logout(AController* Exiting)
@@ -81,6 +84,7 @@ void ATeamsGameMode::HandleMatchHasStarted()
 			}
 		}
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 float ATeamsGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)

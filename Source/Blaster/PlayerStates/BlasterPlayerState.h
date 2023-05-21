@@ -40,9 +40,8 @@ public:
 	void AddToScore(float ScoreAmount);
 	void AddToDefeats(int32 DefeatsAmount);
 
-
 	UFUNCTION()
-		void DelayedMulticastUpdateTeam();
+	void DelayedMulticastUpdateTeam();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_UpdatePlayerKills(const FString& PlayerName, int32 NewKills);
@@ -55,6 +54,8 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_UpdateTeam(const FString& PlayerName, ETeam TeamAssigned);
+
+
 
 	//speed buff functions for Icon update
 
@@ -129,6 +130,6 @@ private:
 
 public:
 
-	FORCEINLINE	ETeam GetTeam() const { return Team; }
 	void SetTeam(ETeam TeamToSet);
+	FORCEINLINE	ETeam GetTeam() const { return Team; }
 };

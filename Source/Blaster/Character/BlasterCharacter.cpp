@@ -2,6 +2,9 @@
 
 
 #include "BlasterCharacter.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+#include "Components/InputComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -283,7 +286,6 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterCharacter, Health);
 	DOREPLIFETIME(ABlasterCharacter, Shield);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
-
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -466,6 +468,15 @@ void ABlasterCharacter::OnPlayerStateInitialized()
 	SetSpawnPoint();
 	SetHeadIcon();
 
+	
+	ABlasterPlayerState* PlayerJoining = Cast<ABlasterPlayerState>(this->GetPlayerState());
+	if (PlayerJoining == nullptr) return;
+	ABlasterGameState* BlasterGameState = GetWorld()->GetGameState<ABlasterGameState>();
+	if (BlasterGameState && !bHasAlreadyJoined)
+	{
+		BlasterGameState->Multicast_AddPlayerJoined(PlayerJoining, PlayerJoining->GetPlayerName());
+		bHasAlreadyJoined = true;
+	}
 }
 
 void ABlasterCharacter::SetSpawnPoint()
@@ -600,7 +611,7 @@ void ABlasterCharacter::SetHeadIcon()
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	SpawnDefaultWeapon();
 	UpdateHUDAmmo();
 	UpdateHUDHealth();
@@ -633,6 +644,223 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	UpdateHUDFlag();
 }
 
+#pragma region EnhancedInput
+
+void ABlasterCharacter::Movement(const FInputActionValue& Value)
+{
+	const FVector2D DirectionValue = Value.Get<FVector2D>();
+	if (bDisableGameplay) return;
+
+	if (Controller)
+	{
+		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
+		const FVector DirectionX(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));
+		const FVector DirectionY(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y));
+
+		AddMovementInput(DirectionX, DirectionValue.X);
+		AddMovementInput(DirectionY, DirectionValue.Y);
+	}
+}
+
+void ABlasterCharacter::Look(const FInputActionValue& Value)
+{
+	const FVector2D LookAxisValue = Value.Get<FVector2D>();
+
+	if (Controller)
+	{
+		if (!Combat->IsAiming())
+		{
+			AddControllerYawInput(LookAxisValue.X * BaseTurnSpeedMultiplier);
+			AddControllerPitchInput(LookAxisValue.Y * BaseTurnSpeedMultiplier);
+		}
+		else
+		{
+			float ZoomedFOV = Combat->EquippedWeapon->GetZoomedFOV();
+			float InverseZoomedFOV = 1.0f / ZoomedFOV;
+			InverseZoomedFOV = FMath::Pow(InverseZoomedFOV, 0.5f);  // take the square root of the inverse
+			const float SpeedScale = 100.0f;  // New constant to control speed
+			float FinalFOVSpeed = (BaseTurnSpeedMultiplier * InverseZoomedFOV) * SpeedScale;
+			AddControllerYawInput(LookAxisValue.X / FinalFOVSpeed);
+			AddControllerPitchInput(LookAxisValue.Y / FinalFOVSpeed);
+			UE_LOG(LogTemp, Warning, TEXT("ZoomedFOV: %f, FinalFOVSpeed: %f, BaseTurnSpeed: %f"), ZoomedFOV, FinalFOVSpeed, BaseTurnSpeedMultiplier);
+		}
+	}
+}
+
+// no inputactionvalue needed, cause it's a Super::
+void ABlasterCharacter::Jump()
+{
+	if (bDisableGameplay) return;
+	if (bIsCrouched)
+	{
+		UnCrouch();
+		if (Combat->bIsProne)
+		{
+			Combat->StopProne();
+		}
+	}
+	else
+	{
+		if (Combat->bIsProne)
+		{
+			Combat->StopProne();
+		}
+		Super::Jump();
+	}
+}
+
+// no inputactionvalue needed, cause no value in signature
+void ABlasterCharacter::EquipButtonPressed()
+{
+	if (bDisableGameplay) return;
+	if (Combat)
+	{
+		ServerEquipButtonPressed();
+	}
+}
+
+void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
+{
+	if (Combat)
+	{
+		if (OverlappingWeapon)
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+	}
+}
+
+// no inputactionvalue needed, cause no value in signature
+void ABlasterCharacter::SwapButtonPressed()
+{
+	if (bDisableGameplay) return;
+	if (Combat)
+	{
+		if (Combat->CombatState == ECombatState::ECS_Unoccupied) ServerSwapButtonPressed();
+
+		bool bSwap = Combat->ShouldSwapWeapons() &&
+			!HasAuthority() &&
+			Combat->CombatState == ECombatState::ECS_Unoccupied &&
+			OverlappingWeapon == nullptr;
+
+		if (bSwap)
+		{
+			PlaySwapMontage();
+			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
+			bFinishedSwapping = false;
+		}
+	}
+}
+
+void ABlasterCharacter::ServerSwapButtonPressed_Implementation()
+{
+	if (Combat && Combat->ShouldSwapWeapons())
+	{
+		Combat->SwapWeapon();
+	}
+}
+
+// no inputactionvalue needed, cause no value in signature
+void ABlasterCharacter::CrouchButtonPressed()
+{
+	float Speed = CalculateSpeed();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (bDisableGameplay) return;
+	if (bIsCrouched)
+	{
+		Combat->StopProne();
+		UnCrouch();
+	}
+	if(Speed <= 400.f || Combat->bIsProne)
+	{
+		Combat->bIsProne = false;
+		Crouch();
+	}
+	if (Speed > 400.f && !bIsCrouched)
+	{
+		if (Combat->bIsSliding == true || bIsInAir)
+		{
+			Combat->StopSliding();
+		}
+		else if(!Combat->bAiming)
+		{
+			Combat->StartSliding();
+		}
+	}
+}
+
+void ABlasterCharacter::ProneButtonPressed()
+{
+	float Speed = CalculateSpeed();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+	bool bIsSliding = Combat->bIsSliding;
+
+	if (bDisableGameplay) return;
+	if (Combat->bIsProne == false)
+	{
+		Combat->StopSliding();
+		UE_LOG(LogTemp, Error, TEXT("SlidingStopped"));
+	}
+	if (Combat->bIsProne == true)
+	{
+		Combat->StopProne();
+		UE_LOG(LogTemp, Error, TEXT("ProneSTOPPED!"));
+	}
+	else if (Speed >= 0 || bIsInAir || bIsCrouched || bIsSliding)
+	{
+		UnCrouch();
+		Combat->StartProne();
+		UE_LOG(LogTemp, Error, TEXT("ProneStarted!"));
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void ABlasterCharacter::Aim(const FInputActionValue& Value)
+{
+	bool IsAiming = Value.Get<bool>();
+
+	if (bDisableGameplay) return;
+	if (Combat)
+	{
+		Combat->SetAiming(IsAiming);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Aiming is now: %s"), IsAiming ? TEXT("True") : TEXT("False"));
+
+}
+
+void ABlasterCharacter::Fire(const FInputActionValue& Value)
+{
+	bool IsFiring = Value.Get<bool>();
+	if (bDisableGameplay) return;
+	if (Combat)
+	{
+		Combat->FireButtonPressed(IsFiring);
+	}
+}
+
+// no inputactionvalue needed, cause no value in signature
+void ABlasterCharacter::ReloadButtonPressed()
+{
+	if (bDisableGameplay) return;
+	if (Combat)
+	{
+		Combat->Reload();
+	}
+}
+
+// no inputactionvalue needed, cause no value in signature
+void ABlasterCharacter::GrenadeButtonPressed()
+{
+	if (Combat)
+	{
+		Combat->ThrowGrenade();
+	}
+}
+
+#pragma endregion EnhancedInput
+
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
 	if (Combat && Combat->EquippedWeapon)
@@ -661,44 +889,24 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 	}
 }
 
-void ABlasterCharacter::GrenadeButtonPressed()
-{
-	if (Combat)
-	{
-		Combat->ThrowGrenade();
-	}
-}
-
-/*void ABlasterCharacter::SmokeGrenadeButtonPressed()
-{
-}*/
-
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABlasterCharacter::Jump);
-
-	PlayerInputComponent->BindAxis("MoveForward", this, &ABlasterCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ABlasterCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("Turn", this, &ABlasterCharacter::Turn);
-	PlayerInputComponent->BindAxis("LookUp", this, &ABlasterCharacter::Lookup);
-
-	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
-	PlayerInputComponent->BindAction("Swap", IE_Pressed, this, &ABlasterCharacter::SwapButtonPressed);
-
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABlasterCharacter::CrouchButtonPressed);
-	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ABlasterCharacter::AimButtonPressed);
-	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABlasterCharacter::AimButtonReleased);
-
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
-	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
-
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABlasterCharacter::ReloadButtonPressed);
-
-	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ABlasterCharacter::GrenadeButtonPressed);
-	//PlayerInputComponent->BindAction("ThrowSmokeGrenade", IE_Pressed, this, &ABlasterCharacter::SmokeGrenadeButtonPressed);
-
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	{
+		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Movement);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipButtonPressed);
+		EnhancedInputComponent->BindAction(SwapAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::SwapButtonPressed);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchButtonPressed);
+		EnhancedInputComponent->BindAction(ProneAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ProneButtonPressed);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Aim);
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Fire);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
+		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::GrenadeButtonPressed);
+	}
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -911,128 +1119,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	}
 }
 
-void ABlasterCharacter::MoveForward(float Value)
-{
-	if (bDisableGameplay) return;
-	if (Controller && Value != 0.f)
-	{
-		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
-		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));
-		AddMovementInput(Direction, Value);
-	}
-}
-
-void ABlasterCharacter::MoveRight(float Value)
-{
-	if (bDisableGameplay) return;
-	if (Controller && Value != 0.f)
-	{
-		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
-		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y));
-		AddMovementInput(Direction, Value);
-	}
-}
-
-void ABlasterCharacter::Turn(float Value)
-{
-	AddControllerYawInput(Value);
-}
-
-void ABlasterCharacter::Lookup(float Value)
-{
-	AddControllerPitchInput(Value);
-}
-
-void ABlasterCharacter::EquipButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		ServerEquipButtonPressed();
-	}
-}
-
-void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
-{
-	if (Combat)
-	{
-		if (OverlappingWeapon)
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-	}
-}
-
-void ABlasterCharacter::SwapButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		if (Combat->CombatState == ECombatState::ECS_Unoccupied) ServerSwapButtonPressed();
-
-		bool bSwap = Combat->ShouldSwapWeapons() &&
-			!HasAuthority() &&
-			Combat->CombatState == ECombatState::ECS_Unoccupied &&
-			OverlappingWeapon == nullptr;
-
-		if (bSwap)
-		{
-			PlaySwapMontage();
-			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
-			bFinishedSwapping = false;
-		}
-	}
-}
-
-void ABlasterCharacter::ServerSwapButtonPressed_Implementation()
-{
-	if (Combat && Combat->ShouldSwapWeapons())
-	{
-		Combat->SwapWeapon();
-	}
-}
-
-void ABlasterCharacter::CrouchButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (bIsCrouched)
-	{
-		UnCrouch();
-	}
-	else
-	{
-		Crouch();
-
-	}
-}
-
-void ABlasterCharacter::ReloadButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		Combat->Reload();
-	}
-}
-
-void ABlasterCharacter::AimButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		Combat->SetAiming(true);
-	}
-}
-
-void ABlasterCharacter::AimButtonReleased()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		Combat->SetAiming(false);
-	}
-}
-
 float ABlasterCharacter::CalculateSpeed()
 {
 	FVector Velocity = GetVelocity();
@@ -1140,36 +1226,6 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
-void ABlasterCharacter::Jump()
-{
-	if (bDisableGameplay) return;
-	if (bIsCrouched)
-	{
-		UnCrouch();
-	}
-	else
-	{
-		Super::Jump();
-	}
-}
-
-void ABlasterCharacter::FireButtonPressed()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		Combat->FireButtonPressed(true);
-	}
-}
-
-void ABlasterCharacter::FireButtonReleased()
-{
-	if (bDisableGameplay) return;
-	if (Combat)
-	{
-		Combat->FireButtonPressed(false);
-	}
-}
 
 void ABlasterCharacter::HideCharacterAndWeaponsIfScopingOrCameraClose()
 {
@@ -1347,8 +1403,7 @@ bool ABlasterCharacter::IsAiming()
 
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
-	if (Combat == nullptr) return nullptr;
-
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return nullptr;
 	return Combat->EquippedWeapon;
 }
 

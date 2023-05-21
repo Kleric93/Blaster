@@ -9,7 +9,10 @@
 #include "Components/TimelineComponent.h"
 #include "Blaster/BlasterTypes/CombatState.h"
 #include "Blaster/BlasterTypes/Team.h"
+#include "InputActionValue.h"
 #include "BlasterCharacter.generated.h"
+
+class UInputAction;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
@@ -97,35 +100,76 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Sprite")
 		class UPaperSprite* BlueTeamPlayerIcon;
 	
-
 	void SetHeadIcon();
 
 protected:
 
-	virtual void BeginPlay() override;
-	void ARMagazineAnimation();
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void Turn(float Value);
-	void Lookup(float Value);
+	//
+	/// Enhanced Input
+	//
+	UPROPERTY(EditAnywhere, Category = Input, meta = (ClampMin = "0.1", ClampMax = "1"))
+	float BaseTurnSpeedMultiplier;
+
+	UPROPERTY(VisibleAnywhere, Category = Input)
+	float TurnSpeedMultiplier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* MovementAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* JumpAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* EquipAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* SwapAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CrouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* ProneAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* AimAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* FireAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* ReloadAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* ThrowGrenadeAction;
+
+	void Movement(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	virtual void Jump() override;
 	void EquipButtonPressed();
 	void SwapButtonPressed();
 	void CrouchButtonPressed();
+	void ProneButtonPressed();
+	void Aim(const FInputActionValue& Value);
+	void Fire(const FInputActionValue& Value);
 	void ReloadButtonPressed();
-	void AimButtonPressed();
-	void AimButtonReleased();
+	void GrenadeButtonPressed();
+
+
+
+	virtual void BeginPlay() override;
+	void ARMagazineAnimation();
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
 	void SimProxiesTurn();
 	void TurnInPlace(float DeltaTime);
-	virtual void Jump() override;
-	void FireButtonPressed();
-	void FireButtonReleased();
 	void PlayHitReactMontage();
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
 	void RotateInPlace(float DeltaTime);
-	void GrenadeButtonPressed();
 	//void SmokeGrenadeButtonPressed();
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void SetSpawnPoint();
@@ -245,6 +289,7 @@ private:
 	float AO_Yaw;
 	float InterpAO_Yaw;
 	float AO_Pitch;
+
 	FRotator StartingAimRotation;
 
 	ETurningInPlace TurningInPlace;
@@ -329,6 +374,7 @@ private:
 	void ElimTimerFinished();
 
 	bool bLeftGame = false;
+	bool bHasAlreadyJoined;
 
 
 	//

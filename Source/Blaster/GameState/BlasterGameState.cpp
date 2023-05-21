@@ -20,7 +20,6 @@ void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterGameState, RedTeamScore);
 	DOREPLIFETIME(ABlasterGameState, BlueTeamScore);
 	DOREPLIFETIME(ABlasterGameState, TotalFFAVotes);
-
 }
 
 void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
@@ -156,13 +155,13 @@ void ABlasterGameState::Multicast_UpdateTeamScorePoints_Implementation(ETeam Tea
 
 void ABlasterGameState::Multicast_RemovePlayerLeft_Implementation(ABlasterPlayerState* PlayerLeaving)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Multicast_RemovePlayerLeft: PlayerLeaving is %s"), *PlayerLeaving->GetName()));
 	OnPlayerLeft.Broadcast(PlayerLeaving);
 }
 
-void ABlasterGameState::Multicast_AddPlayerJoined_Implementation(ABlasterPlayerState* PlayerJoining)
+void ABlasterGameState::Multicast_AddPlayerJoined_Implementation(ABlasterPlayerState* PlayerJoining, const FString& PlayerName)
 {
-	OnPlayerJoined.Broadcast(PlayerJoining);
+	OnPlayerJoined.Broadcast(PlayerJoining, PlayerName);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Multicast_AddPlayerJoined: PlayerJoined is %s"), *PlayerJoining->GetPlayerName()));
 }
 
 void ABlasterGameState::OnRep_FFATotalVotes()
@@ -175,7 +174,6 @@ void ABlasterGameState::SetFFAVotes()
 	++TotalFFAVotes;
 
 	Multicast_UpdateFFAVotes(TotalFFAVotes);
-	UE_LOG(LogTemp, Warning, TEXT("SetFFAVotes_Implementation called. Vote: %d"), TotalFFAVotes);
 }
 
 void ABlasterGameState::SetTDMVotes()
@@ -183,7 +181,6 @@ void ABlasterGameState::SetTDMVotes()
 	++TotalTDMVotes;
 
 	Multicast_UpdateTDMVotes(TotalTDMVotes);
-	UE_LOG(LogTemp, Warning, TEXT("SetTDMVotes_Implementation called. Vote: %d"), TotalTDMVotes);
 }
 
 void ABlasterGameState::SetCTFVotes()
@@ -191,7 +188,6 @@ void ABlasterGameState::SetCTFVotes()
 	++TotalCTFVotes;
 
 	Multicast_UpdateCTFVotes(TotalCTFVotes);
-	UE_LOG(LogTemp, Warning, TEXT("SetTDMVotes_Implementation called. Vote: %d"), TotalCTFVotes);
 }
 
 void ABlasterGameState::SetInstaKillVotes()
@@ -199,7 +195,6 @@ void ABlasterGameState::SetInstaKillVotes()
 	++TotalInstaKillVotes;
 
 	Multicast_UpdateInstaKillVotes(TotalInstaKillVotes);
-	UE_LOG(LogTemp, Warning, TEXT("SetTDMVotes_Implementation called. Vote: %d"), TotalInstaKillVotes);
 }
 
 void ABlasterGameState::Multicast_UpdateFFAVotes_Implementation(int32 Vote)

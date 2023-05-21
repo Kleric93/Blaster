@@ -22,7 +22,8 @@ void UChatSystemOverlay::SetChatText(const FString& Text, const FString& PlayerN
                 ChatBoxWidget->ChatTextBlock->SetText(FText::FromString(Chat));
                 ChatBoxWidget->ChatTextBlock->SetColorAndOpacity(FSlateColor(FLinearColor(0.4f, 0.8f, 1.0f, 1.0f)));
                 ChatBoxWidget->ChatTextBlock->SetAutoWrapText(true);
-                InputScrollBox->AddChild(ChatBoxWidget->ChatTextBlock); // This will add the TextBlock from WBP_ChatBox to the ScrollBox from top to bottom
+               // InputScrollBox->AddChild(ChatBoxWidget->ChatTextBlock);
+                InputScrollBox->AddChild(ChatBoxWidget->ChatTextBlock);
                 InputScrollBox->ScrollToEnd();
                 InputScrollBox->bAnimateWheelScrolling = true;
             }

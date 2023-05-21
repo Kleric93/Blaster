@@ -92,11 +92,15 @@ void ABlasterGameMode::OnMatchStateSet()
         if (BlasterPlayer)
         {
             BlasterPlayer->OnMatchStateSet(MatchState, bTeamsMatch, bCaptureTheFlagMatch);
-            ABlasterPlayerState* BPState = Cast<ABlasterPlayerState>(BlasterPlayer->PlayerState);
-            if (!bTeamsMatch && !bCaptureTheFlagMatch)
-            {
-                BPState->SetTeam(ETeam::ET_NoTeam);
-            }
+        }
+    }
+
+    TArray<ABlasterPlayerState*> BlasterPlayerStateArray;
+    for (ABlasterPlayerState* BlasterPlayerState : BlasterPlayerStateArray)
+    {
+        if (!bTeamsMatch && !bCaptureTheFlagMatch)
+        {
+            BlasterPlayerState->SetTeam(ETeam::ET_NoTeam);
         }
     }
 }

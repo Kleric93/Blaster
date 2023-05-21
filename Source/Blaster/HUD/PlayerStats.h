@@ -38,7 +38,7 @@ public:
 
 	void WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPlayerStateArray);
 
-	void SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayerState, APlayerState* InGamePlayer);
+	void SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayerState, const FString& PlayerName);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
 	void UpdateKills(const FString& PlayerName, int32 NewKills);
@@ -64,7 +64,7 @@ public:
 	void RemovePlayerFromScoreboard(ABlasterPlayerState* PlayerLeaving);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining);
+	void AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining, const FString& PlayerName);
 
 
 	bool IsLocalPlayer(const FString& PlayerName);
@@ -87,4 +87,6 @@ public:
 	UPROPERTY()
 	TMap<FString, int32> PlayerScores;
 
+	UPROPERTY()
+	TMap<FString, UPlayerStatsLine*> PlayerStatsWidgets;
 };

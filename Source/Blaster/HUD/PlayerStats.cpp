@@ -38,12 +38,12 @@ void UPlayerStats::WidgetSetup(TArray<class ABlasterPlayerState*> BlasterPlayerS
                 if (PlayerStatsLineWidget == nullptr) continue;
 
                 PlayerStatsLineWidget->DisplayName->SetText(FText::FromString(InGamePlayer->GetPlayerName()));
-                SetupPlayerStatsLineWidget(BlasterPlayerState, InGamePlayer);
+                SetupPlayerStatsLineWidget(BlasterPlayerState, InGamePlayer->GetPlayerName());
 
 
                 PlayerStatsScrollBox->AddChild(PlayerStatsLineWidget);
 
-                PlayerStatsLineWidget->AddToViewport();
+                //PlayerStatsLineWidget->AddToViewport();
 
                 //UE_LOG(LogTemp, Warning, TEXT("UPlayerStats created the widget setup"));
             }
@@ -77,10 +77,11 @@ void UPlayerStats::WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPl
             PlayerStatsLineWidget = CreateWidget<UPlayerStatsLine>(GetWorld(), PlayerStatLine);
             if (PlayerStatsLineWidget == nullptr) continue;
 
-            SetupPlayerStatsLineWidget(BlasterPlayerState, InGamePlayer);
+            PlayerStatsLineWidget->DisplayName->SetText(FText::FromString(InGamePlayer->GetPlayerName()));
+            SetupPlayerStatsLineWidget(BlasterPlayerState, InGamePlayer->GetPlayerName());
 
-            PlayerStatsLineWidget->AddToViewport();
-
+            //PlayerStatsLineWidget->AddToViewport();
+           
             if (BlasterPlayerState->GetTeam() == ETeam::ET_RedTeam && PlayerStatsScrollBox_RedTeam)
             {
                 PlayerStatsScrollBox_RedTeam->AddChild(PlayerStatsLineWidget);
@@ -100,16 +101,15 @@ void UPlayerStats::WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPl
     }
 }
 
-void UPlayerStats::SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayerState, APlayerState* InGamePlayer)
+void UPlayerStats::SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayerState, const FString& PlayerName)
 {
     ABlasterGameState* GameState = Cast<ABlasterGameState>(GetWorld()->GetGameState());
     if (!GameState)
     {
         GameState = Cast<ABlasterGameState>(GetWorld()->GetGameState());
-
     }
 
-    PlayerStatsLineWidget->DisplayName->SetText(FText::FromString(InGamePlayer->GetPlayerName()));
+    //PlayerStatsLineWidget->DisplayName->SetText(FText::FromString(PlayerName));
 
     BlasterPlayerState->OnPlayerScoredKill.AddDynamic(this, &UPlayerStats::UpdateKills);
     BlasterPlayerState->OnPlayerDeath.AddDynamic(this, &UPlayerStats::UpdateDeaths);
@@ -189,6 +189,7 @@ bool UPlayerStats::IsLocalPlayer(const FString& PlayerName)
 
 void UPlayerStats::UpdateTeam(const FString& PlayerName, ETeam TeamToAssign)
 {
+    ABlasterGameState* GameState = Cast<ABlasterGameState>(GetWorld()->GetGameState());
     UPlayerStatsLine* StatsLine = FindPlayerStatsLine(PlayerName);
     if (StatsLine)
     {
@@ -221,17 +222,17 @@ void UPlayerStats::UpdateTeam(const FString& PlayerName, ETeam TeamToAssign)
         if (Team == ETeam::ET_NoTeam)
         {
             StatsLine->TeamIcon->SetBrushFromTexture(NoTeamIcon);
-            StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+            //StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
         }
         if (Team == ETeam::ET_RedTeam)
         {
             StatsLine->TeamIcon->SetBrushFromTexture(RedTeamIcon);
-            StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+            //StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
         }
         if (Team == ETeam::ET_BlueTeam)
         {
             StatsLine->TeamIcon->SetBrushFromTexture(BlueTeamIcon);
-            StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+            //StatsLine->DisplayName->SetColorAndOpacity(FSlateColor(FLinearColor::White));
         }
 
         StatsLine->IconBorder->SetColorAndOpacity(BorderColor);
@@ -280,18 +281,12 @@ void UPlayerStats::RemovePlayerFromScoreboard(ABlasterPlayerState* PlayerLeaving
     }
 }
 
-void UPlayerStats::AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining)
+void UPlayerStats::AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining, const FString& PlayerName)
 {
-    if (!PlayerJoining) return;
+    //if (!PlayerJoining) return;
 
     // Check if player is already in the scoreboard
-    if (FindPlayerStatsLine(PlayerJoining->GetPlayerName()))
-    {
-        return;
-    }
-
-    // Check if player joining is the server
-    if (PlayerJoining->HasAuthority())
+    if (FindPlayerStatsLine(PlayerName))
     {
         return;
     }
@@ -299,13 +294,12 @@ void UPlayerStats::AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining)
     UPlayerStatsLine* NewStatsLine = CreateWidget<UPlayerStatsLine>(GetWorld(), PlayerStatLine);
     if (NewStatsLine)
     {
-        APlayerState* InGamePlayer = PlayerJoining;
-        if (InGamePlayer == nullptr) return;
+        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::Printf(TEXT("Player Name: %s"), *PlayerName));
 
-        NewStatsLine->DisplayName->SetText(FText::FromString(InGamePlayer->GetPlayerName()));
-        SetupPlayerStatsLineWidget(PlayerJoining, InGamePlayer);
+        NewStatsLine->DisplayName->SetText(FText::FromString(PlayerName));
+        SetupPlayerStatsLineWidget(PlayerJoining, PlayerName);
 
-        NewStatsLine->AddToViewport();
+        //NewStatsLine->AddToViewport();
 
         ETeam PlayerTeam = PlayerJoining->GetTeam();
         if (PlayerTeam == ETeam::ET_RedTeam && PlayerStatsScrollBox_RedTeam)
