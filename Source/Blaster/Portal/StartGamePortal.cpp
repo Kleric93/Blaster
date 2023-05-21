@@ -35,6 +35,8 @@ void AStartGamePortal::Tick(float DeltaTime)
 
 void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (!HasAuthority()) return;
+
 	if (OverlappedComp == CollisionBoxComponent)
 	{
 		UGameInstance* GameInstance = GetGameInstance();
@@ -51,7 +53,7 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Remote Role: %d, Authority: %s"), static_cast<int32>(GetRemoteRole()), HasAuthority() ? TEXT("true") : TEXT("false"));
 
-				//GameMode->bUseSeamlessTravel = true;
+				GameMode->bUseSeamlessTravel = true;
 
 				FString MatchType = Subsystem->DesiredMatchType;
 				FString TravelURL;

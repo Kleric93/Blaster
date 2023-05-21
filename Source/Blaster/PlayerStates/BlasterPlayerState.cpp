@@ -103,8 +103,8 @@ void ABlasterPlayerState::OnRep_Defeats()
 void ABlasterPlayerState::SetTeam(ETeam TeamToSet)
 {
 	Team = TeamToSet;
+
 	ABlasterCharacter* BCharacter = Cast<ABlasterCharacter>(GetPawn());
-	UE_LOG(LogTemp, Error, TEXT("SetTeam called for player %s with team %d"), *GetPlayerName(), static_cast<uint8>(TeamToSet));
 	if (BCharacter)
 	{
 		BCharacter->SetTeamColor(Team);
@@ -114,13 +114,14 @@ void ABlasterPlayerState::SetTeam(ETeam TeamToSet)
 
 	TimerDelegate.BindUFunction(this, FName("DelayedMulticastUpdateTeam"));
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 11.0f, false);
-
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::DelayedMulticastUpdateTeam()
 {
 	FString PlayerName = this->GetPlayerName();
 	Multicast_UpdateTeam(PlayerName, Team);
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::OnRep_Team()
@@ -130,6 +131,7 @@ void ABlasterPlayerState::OnRep_Team()
 	{
 		BCharacter->SetTeamColor(Team);
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::Multicast_UpdatePlayerKills_Implementation(const FString& PlayerName, int32 NewKills)
@@ -150,6 +152,7 @@ void ABlasterPlayerState::Multicast_UpdatePlayerKD_Implementation(const FString&
 void ABlasterPlayerState::Multicast_UpdateTeam_Implementation(const FString& PlayerName, ETeam TeamAssigned)
 {
 	OnPlayerTeamAssigned.Broadcast(PlayerName, TeamAssigned);
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::RegisterBuffSpawnPoints()

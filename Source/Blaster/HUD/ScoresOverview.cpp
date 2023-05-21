@@ -42,9 +42,6 @@ void UScoresOverview::StatsSetup()
                 }
 
                 PlayerStats->AddToViewport();
-
-                UE_LOG(LogTemp, Warning, TEXT("UScoresOverview created the scrollbox"));
-                GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
             }
         }
     }
@@ -52,8 +49,4 @@ void UScoresOverview::StatsSetup()
     {
         UE_LOG(LogTemp, Warning, TEXT("scrollbox is null in ScoresOverview"));
     }
-}
-
-void UScoresOverview::StatsTeardown()
-{
 }

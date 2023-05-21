@@ -40,7 +40,6 @@ void AWeaponSpawnPoint::BeginPlay()
 	// Check if the pedestal mesh is currently using the default material
 	if (PedestalMesh->GetMaterial(0) == DefaultPedestalMaterial)
 	{
-		// If it is, swap it to the special material
 		PedestalMesh->SetMaterial(0, DefaultPedestalMaterial);
 		MulticastSetPedestalDefaultMaterial();
 	}

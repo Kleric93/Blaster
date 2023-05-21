@@ -234,8 +234,7 @@ private:
 	FTransform MagazineTransform;
 
 	UPROPERTY(EditAnywhere, Category = MagazineEject)
-		float MagSpawn
-		= 0.2f;
+		float MagSpawn = 0.2f;
 
 	UPROPERTY(EditAnywhere, Category = MagazineEject)
 		FRotator MagazineSpawnRotation;

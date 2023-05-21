@@ -18,7 +18,6 @@ class BLASTER_API UScoresOverview : public UUserWidget
 public:
 
 	void StatsSetup();
-	void StatsTeardown();
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UPlayerStats> PlayerStatsWidget;
