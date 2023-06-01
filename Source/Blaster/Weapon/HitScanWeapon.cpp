@@ -26,12 +26,12 @@ void AHitScanWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	Super::BeginPlay();
-	SpawnSparksSystem();
+	//SpawnSparksSystem();
 }
 
 void AHitScanWeapon::SpawnSparksSystem()
 {
-	if (GetWeaponMesh() == nullptr || ChargerSparksSystem == nullptr || ChargerSparksSystemComponent != nullptr) return;
+	if (GetWeaponMesh() == nullptr || ChargerSparksSystem == nullptr || ChargerSparksSystemComponent == nullptr) return;
 
 	FVector ChargerLocation = GetWeaponMesh()->GetSocketLocation(FName("ChargerSparks"));
 	FRotator ChargerRotation = GetWeaponMesh()->GetSocketRotation(FName("ChargerSparks"));

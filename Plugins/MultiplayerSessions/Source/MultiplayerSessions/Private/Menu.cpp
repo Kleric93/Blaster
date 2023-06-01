@@ -6,9 +6,12 @@
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "Components/SpinBox.h"
+
 
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FString LobbyPath)
 {
+
 	PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	NumPublicConnections = NumberOfPublicConnections;
 	MatchType = TypeOfMatch;
@@ -45,6 +48,16 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FStr
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
 		MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
 	}
+
+	if (DMMatchTimeBox)
+	{
+		//DMMatchTimeBox->OnValueCommitted.AddDynamic(this, &ThisClass::OnDMMatchTimeValueChanged);
+	}
+}
+
+void UMenu::OnDMMatchTimeValueChanged(float InValue)
+{
+
 }
 
 bool UMenu::Initialize()
@@ -63,6 +76,11 @@ bool UMenu::Initialize()
 	{
 		JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
 	}
+
+	if (TrainingButton)
+	{
+		TrainingButton->OnClicked.AddDynamic(this, &ThisClass::TrainingButtonClicked);
+	}
 	return true;
 }
 
@@ -77,12 +95,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			15.f,
-			FColor::Green,
-			FString(TEXT("Session Created Successfully"))
-		);
+		//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("Session Created Successfully")));
 	}
 
 	UWorld* World = GetWorld();
@@ -94,12 +107,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 	{
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				15.f,
-				FColor::Red,
-				FString(TEXT("Failed to create session!"))
-			);
+			//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Failed to create session!")));
 		}
 		HostButton->SetIsEnabled(true);
 	}
@@ -175,6 +183,16 @@ void UMenu::JoinButtonClicked()
 	if (MultiplayerSessionsSubsystem)
 	{
 		MultiplayerSessionsSubsystem->FindSessions(10000);
+	}
+}
+
+void UMenu::TrainingButtonClicked()
+{
+	TrainingButton->SetIsEnabled(false);
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		World->ServerTravel("/Game/Maps/TrainingMap");
 	}
 }
 

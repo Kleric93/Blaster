@@ -10,6 +10,7 @@
 #include "Blaster/HUD/ScoresOverview.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "MultiplayerSessionsSubsystem.h"
+#include "Blaster/BlasterUserSettings.h"
 
 
 void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -19,7 +20,9 @@ void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterGameState, TopScoringPlayers);
 	DOREPLIFETIME(ABlasterGameState, RedTeamScore);
 	DOREPLIFETIME(ABlasterGameState, BlueTeamScore);
-	DOREPLIFETIME(ABlasterGameState, TotalFFAVotes);
+	DOREPLIFETIME_CONDITION_NOTIFY(ABlasterGameState, TimeElapsed, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME(ABlasterGameState, bMatchEndedAbruptly);
+	DOREPLIFETIME(ABlasterGameState, ScoreToWin);
 }
 
 void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
@@ -138,7 +141,7 @@ TArray<class ABlasterPlayerController*> ABlasterGameState::GetAllPlayerControlle
 
 	// Display the number of player controllers on the screen for all clients
 	FString DebugMessage = FString::Printf(TEXT("PlayerControllersArray size: %d"), PlayerControllersArray.Num());
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, DebugMessage);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, DebugMessage);
 
 	return Result;
 }
@@ -161,12 +164,7 @@ void ABlasterGameState::Multicast_RemovePlayerLeft_Implementation(ABlasterPlayer
 void ABlasterGameState::Multicast_AddPlayerJoined_Implementation(ABlasterPlayerState* PlayerJoining, const FString& PlayerName)
 {
 	OnPlayerJoined.Broadcast(PlayerJoining, PlayerName);
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Multicast_AddPlayerJoined: PlayerJoined is %s"), *PlayerJoining->GetPlayerName()));
-}
-
-void ABlasterGameState::OnRep_FFATotalVotes()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("Multicast_AddPlayerJoined: PlayerJoined is %s"), *PlayerJoining->GetPlayerName()));
 }
 
 void ABlasterGameState::SetFFAVotes()
@@ -176,11 +174,25 @@ void ABlasterGameState::SetFFAVotes()
 	Multicast_UpdateFFAVotes(TotalFFAVotes);
 }
 
+void ABlasterGameState::SetFFASMVotes()
+{
+	++TotalFFASMVotes;
+
+	Multicast_UpdateFFASMVotes(TotalFFASMVotes);
+}
+
 void ABlasterGameState::SetTDMVotes()
 {
 	++TotalTDMVotes;
 
 	Multicast_UpdateTDMVotes(TotalTDMVotes);
+}
+
+void ABlasterGameState::SetTDMSMVotes()
+{
+	++TotalTDMSMVotes;
+
+	Multicast_UpdateTDMSMVotes(TotalTDMSMVotes);
 }
 
 void ABlasterGameState::SetCTFVotes()
@@ -190,11 +202,25 @@ void ABlasterGameState::SetCTFVotes()
 	Multicast_UpdateCTFVotes(TotalCTFVotes);
 }
 
+void ABlasterGameState::SetCTFSMVotes()
+{
+	++TotalCTFSMVotes;
+
+	Multicast_UpdateCTFSMVotes(TotalCTFSMVotes);
+}
+
 void ABlasterGameState::SetInstaKillVotes()
 {
 	++TotalInstaKillVotes;
 
 	Multicast_UpdateInstaKillVotes(TotalInstaKillVotes);
+}
+
+void ABlasterGameState::SetInstaKillSMVotes()
+{
+	++TotalInstaKillSMVotes;
+
+	Multicast_UpdateInstaKillSMVotes(TotalInstaKillSMVotes);
 }
 
 void ABlasterGameState::Multicast_UpdateFFAVotes_Implementation(int32 Vote)
@@ -217,6 +243,27 @@ void ABlasterGameState::Multicast_UpdateInstaKillVotes_Implementation(int32 Vote
 	OnInstaKillVoteCast.Broadcast(Vote);
 }
 
+void ABlasterGameState::Multicast_UpdateFFASMVotes_Implementation(int32 Vote)
+{
+	OnFFASMVoteCast.Broadcast(Vote);
+}
+
+void ABlasterGameState::Multicast_UpdateTDMSMVotes_Implementation(int32 Vote)
+{
+	OnTDMSMVoteCast.Broadcast(Vote);
+}
+
+void ABlasterGameState::Multicast_UpdateCTFSMVotes_Implementation(int32 Vote)
+{
+	OnCTFSMVoteCast.Broadcast(Vote);
+}
+
+void ABlasterGameState::Multicast_UpdateInstaKillSMVotes_Implementation(int32 Vote)
+{
+	OnInstaKillSMVoteCast.Broadcast(Vote);
+}
+
+
 FString ABlasterGameState::CompareVotesAndLog()
 {
 	// Initialize the maxVote variable and the corresponding gameMode
@@ -224,10 +271,23 @@ FString ABlasterGameState::CompareVotesAndLog()
 	FString gameMode = "FFA";
 
 	// Check if TDM votes are greater
+
+	if (TotalFFASMVotes > maxVote)
+	{
+		maxVote = TotalFFASMVotes;
+		gameMode = "FFASM";
+	}
+
 	if (TotalTDMVotes > maxVote)
 	{
 		maxVote = TotalTDMVotes;
 		gameMode = "TDM";
+	}
+
+	if (TotalTDMSMVotes > maxVote)
+	{
+		maxVote = TotalTDMSMVotes;
+		gameMode = "TDMSM";
 	}
 
 	// Check if CTF votes are greater
@@ -237,6 +297,12 @@ FString ABlasterGameState::CompareVotesAndLog()
 		gameMode = "CTF";
 	}
 
+	if (TotalCTFSMVotes > maxVote)
+	{
+		maxVote = TotalCTFSMVotes;
+		gameMode = "CTFSM";
+	}
+
 	// Check if InstaKill votes are greater
 	if (TotalInstaKillVotes > maxVote)
 	{
@@ -244,8 +310,14 @@ FString ABlasterGameState::CompareVotesAndLog()
 		gameMode = "InstaKill";
 	}
 
+	if (TotalInstaKillSMVotes > maxVote)
+	{
+		maxVote = TotalInstaKillSMVotes;
+		gameMode = "InstaKillSM";
+	}
+
 	// Log the game mode with the highest vote
-	UE_LOG(LogTemp, Warning, TEXT("Game mode with highest vote: %s with %d votes"), *gameMode, maxVote);
+	//UE_LOG(LogTemp, Warning, TEXT("Game mode with highest vote: %s with %d votes"), *gameMode, maxVote);
 
 	FString mapName;
 
@@ -254,19 +326,84 @@ FString ABlasterGameState::CompareVotesAndLog()
 	{
 		mapName = "/Game/Maps/BlasterMap";
 	}
+	if (gameMode == "FFASM")
+	{
+		mapName = "/Game/Maps/BlasterMapSM";
+	}
 	else if (gameMode == "TDM")
 	{
 		mapName = "/Game/Maps/Teams";
+	}
+	else if (gameMode == "TDMSM")
+	{
+		mapName = "/Game/Maps/TeamsSM";
 	}
 	else if (gameMode == "CTF")
 	{
 		mapName = "/Game/Maps/CaptureTheFlag";
 	}
+	else if (gameMode == "CTFSM")
+	{
+		mapName = "/Game/Maps/CaptureTheFlagSM";
+	}
 	else if (gameMode == "InstaKill")
 	{
 		mapName = "/Game/Maps/InstaKillMap";
 	}
+	else if (gameMode == "InstaKillSM")
+	{
+		mapName = "/Game/Maps/InstaKillMapSM";
+	}
 
 	// Return the mapName
 	return mapName;
+}
+
+bool ABlasterGameState::HasMatchEndedAbruptly()
+{
+	return bMatchEndedAbruptly;
+}
+
+void ABlasterGameState::SetHasMatchEndedAbruptly(bool BendedAbruptly)
+{
+	bMatchEndedAbruptly = BendedAbruptly;
+}
+
+void ABlasterGameState::SetTimeElapsed(float TimeElapsedInMatch)
+{
+	TimeElapsed = TimeElapsedInMatch;
+}
+
+void ABlasterGameState::OnRep_TimeElapsed()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(It->Get());
+		if (PlayerController)
+		{
+			PlayerController->SetHUDTime();
+		}
+	}
+}
+
+void ABlasterGameState::OnRep_MatchHasEndedAbruptly()
+{
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(It->Get());
+		if (PlayerController)
+		{
+			PlayerController->SetHUDTime();
+		}
+	}
+}
+
+float ABlasterGameState::GetScoreToWinFromServer()
+{
+	ABlasterPlayerController* BPlayer = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (BPlayer && BPlayer->Settings)
+	{
+		ScoreToWin = BPlayer->Settings->GetMaxScore();
+	}
+	return ScoreToWin;
 }

@@ -14,11 +14,12 @@
 #include "Blaster/Pickups/JumpPickup.h"
 #include "Blaster/Pickups/BerserkPickup.h"
 #include "Blaster/Pickups/PickupSpawnPoint.h"
+#include "Blaster/BlasterUserSettings.h"
 #include "EngineUtils.h"
+
 
 ABlasterPlayerState::ABlasterPlayerState()
 {
-
 }
 
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -27,6 +28,7 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
 	DOREPLIFETIME(ABlasterPlayerState, Team);
+	DOREPLIFETIME(ABlasterPlayerState, TeamChoice);
 
 }
 
@@ -112,16 +114,21 @@ void ABlasterPlayerState::SetTeam(ETeam TeamToSet)
 	FTimerHandle TimerHandle;
 	FTimerDelegate TimerDelegate;
 
-	TimerDelegate.BindUFunction(this, FName("DelayedMulticastUpdateTeam"));
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 11.0f, false);
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	APlayerController* BaseController = this->GetPlayerController();
+	ABlasterPlayerController* BPController = Cast<ABlasterPlayerController>(BaseController);
+	float TimerforBeginPlay = BPController->GetWarmupTime() + 0.5f;
+	if (BPController)
+	{
+		TimerDelegate.BindUFunction(this, FName("DelayedMulticastUpdateTeam"));
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, TimerforBeginPlay, false);
+	}
+
 }
 
 void ABlasterPlayerState::DelayedMulticastUpdateTeam()
 {
 	FString PlayerName = this->GetPlayerName();
 	Multicast_UpdateTeam(PlayerName, Team);
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::OnRep_Team()
@@ -131,7 +138,6 @@ void ABlasterPlayerState::OnRep_Team()
 	{
 		BCharacter->SetTeamColor(Team);
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::Multicast_UpdatePlayerKills_Implementation(const FString& PlayerName, int32 NewKills)
@@ -152,7 +158,6 @@ void ABlasterPlayerState::Multicast_UpdatePlayerKD_Implementation(const FString&
 void ABlasterPlayerState::Multicast_UpdateTeam_Implementation(const FString& PlayerName, ETeam TeamAssigned)
 {
 	OnPlayerTeamAssigned.Broadcast(PlayerName, TeamAssigned);
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerState::RegisterBuffSpawnPoints()
@@ -230,7 +235,6 @@ void ABlasterPlayerState::OnBerserkBuffPickedUp(float BuffTime)
 	{
 		Controller->UpdateBerserkBuffIcon(true);
 		GetWorldTimerManager().SetTimer(TimerHandle_BerserkBuffDuration, this, &ABlasterPlayerState::OnBerserkBuffEnd, BuffTime, false);
-		UE_LOG(LogTemp, Warning, TEXT("Player %s picked up the buff."), *this->GetPlayerName());
 	}
 }
 
@@ -240,4 +244,20 @@ void ABlasterPlayerState::OnBerserkBuffEnd()
 	{
 		Controller->UpdateBerserkBuffIcon(false);
 	}
+}
+
+void ABlasterPlayerState::ServerSetTeamChoice_Implementation()
+{
+	Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
+	if (Settings)
+	{
+		TeamChoice = Settings->GetTeamToChoose();
+	}
+	
+	UE_LOG(LogTemp, Error, TEXT("ServerSetTeamChoice_Implementation with team"));
+}
+
+void ABlasterPlayerState::OnRep_TeamChoice()
+{
+	SetTeam(TeamChoice);
 }

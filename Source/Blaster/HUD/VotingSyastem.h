@@ -29,25 +29,49 @@ public:
 		UButton* FFAButton;
 
 	UPROPERTY(meta = (BindWidget))
+		UButton* FFASMButton;
+
+	UPROPERTY(meta = (BindWidget))
 		UButton* TDMButton;
+
+	UPROPERTY(meta = (BindWidget))
+		UButton* TDMSMButton;
 
 	UPROPERTY(meta = (BindWidget))
 		UButton* CTFButton;
 
 	UPROPERTY(meta = (BindWidget))
+		UButton* CTFSMButton;
+
+	UPROPERTY(meta = (BindWidget))
 		UButton* InstaKillButton;
+
+	UPROPERTY(meta = (BindWidget))
+		UButton* InstaKillSMButton;
 
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* FFATotalVotesText;
 
 	UPROPERTY(meta = (BindWidget))
+		UTextBlock* FFASMTotalVotesText;
+
+	UPROPERTY(meta = (BindWidget))
 		UTextBlock* TDMTotalVotesText;
+
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* TDMSMTotalVotesText;
 
 	UPROPERTY(meta = (BindWidget))
 		UTextBlock* CTFTotalVotesText;
 
 	UPROPERTY(meta = (BindWidget))
+		UTextBlock* CTFSMTotalVotesText;
+
+	UPROPERTY(meta = (BindWidget))
 		UTextBlock* InstaKillTotalVotesText;
+
+	UPROPERTY(meta = (BindWidget))
+		UTextBlock* InstaKillSMTotalVotesText;
 
 	void MenuSetup();
 
@@ -57,25 +81,49 @@ public:
 		void FFAVoteCast();
 
 	UFUNCTION()
+		void FFASMVoteCast();
+
+	UFUNCTION()
 		void TDMVoteCast();
+
+	UFUNCTION()
+		void TDMSMVoteCast();
 
 	UFUNCTION()
 		void CTFVoteCast();
 
 	UFUNCTION()
+		void CTFSMVoteCast();
+
+	UFUNCTION()
 		void InstaKillVoteCast();
+
+	UFUNCTION()
+		void InstaKillSMVoteCast();
 
 	UFUNCTION(BlueprintCallable)
 		void UpdateFFAText(int32 Vote);
 
 	UFUNCTION(BlueprintCallable)
+		void UpdateFFASMText(int32 Vote);
+
+	UFUNCTION(BlueprintCallable)
 		void UpdateTDMText(int32 Vote);
+
+	UFUNCTION(BlueprintCallable)
+		void UpdateTDMSMText(int32 Vote);
 
 	UFUNCTION(BlueprintCallable)
 		void UpdateCTFText(int32 Vote);
 
 	UFUNCTION(BlueprintCallable)
+		void UpdateCTFSMText(int32 Vote);
+
+	UFUNCTION(BlueprintCallable)
 		void UpdateInstaKillText(int32 Vote);
+
+	UFUNCTION(BlueprintCallable)
+		void UpdateInstaKillSMText(int32 Vote);
 
 
 protected:

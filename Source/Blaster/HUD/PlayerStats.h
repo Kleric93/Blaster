@@ -8,31 +8,31 @@
 #include "PlayerStats.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class BLASTER_API UPlayerStats : public UUserWidget
 {
 	GENERATED_BODY()
-	
+
 
 public:
 
 
 	UPROPERTY(meta = (BindWidget))
-	class UScrollBox* PlayerStatsScrollBox;
+		class UScrollBox* PlayerStatsScrollBox;
 
 	UPROPERTY(meta = (BindWidget))
-	UScrollBox* PlayerStatsScrollBox_RedTeam;
+		UScrollBox* PlayerStatsScrollBox_RedTeam;
 
 	UPROPERTY(meta = (BindWidget))
-	UScrollBox* PlayerStatsScrollBox_BlueTeam;
+		UScrollBox* PlayerStatsScrollBox_BlueTeam;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UPlayerStatsLine> PlayerStatLine;
+		TSubclassOf<class UPlayerStatsLine> PlayerStatLine;
 
 	UPROPERTY()
-	UPlayerStatsLine* PlayerStatsLineWidget;
+		UPlayerStatsLine* PlayerStatsLineWidget;
 
 	void WidgetSetup(TArray<class ABlasterPlayerState*> BlasterPlayerStateArray);
 
@@ -41,30 +41,30 @@ public:
 	void SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayerState, const FString& PlayerName);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void UpdateKills(const FString& PlayerName, int32 NewKills);
+		void UpdateKills(const FString& PlayerName, int32 NewKills);
 
 	UPlayerStatsLine* FindPlayerStatsLine(const FString& PlayerName);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void UpdateDeaths(const FString& PlayerName, int32 NewDeaths);
+		void UpdateDeaths(const FString& PlayerName, int32 NewDeaths);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void UpdateKD(const FString& PlayerName, int32 Kills, int32 Deaths);
+		void UpdateKD(const FString& PlayerName, int32 Kills, int32 Deaths);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void UpdateTeam(const FString& PlayerName, ETeam TeamToAssign);
+		void UpdateTeam(const FString& PlayerName, ETeam TeamToAssign);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void UpdateTeamScorePoints(const FString& PlayerName, ETeam TeamthatScored, int32 PlayerScore);
+		void UpdateTeamScorePoints(const FString& PlayerName, ETeam TeamthatScored, int32 PlayerScore);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void UpdateOverallScores(ETeam TeamThatScored, int32 PointScored);
+		void UpdateOverallScores(ETeam TeamThatScored, int32 PointScored);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void RemovePlayerFromScoreboard(ABlasterPlayerState* PlayerLeaving);
+		void RemovePlayerFromScoreboard(ABlasterPlayerState* PlayerLeaving);
 
 	UFUNCTION(BlueprintCallable, Category = "PlayerStats")
-	void AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining, const FString& PlayerName);
+		void AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining, const FString& PlayerName);
 
 
 	bool IsLocalPlayer(const FString& PlayerName);
@@ -85,8 +85,8 @@ public:
 		class UTexture2D* BlueTeamIcon;
 
 	UPROPERTY()
-	TMap<FString, int32> PlayerScores;
+		TMap<FString, int32> PlayerScores;
 
 	UPROPERTY()
-	TMap<FString, UPlayerStatsLine*> PlayerStatsWidgets;
+		TMap<FString, UPlayerStatsLine*> PlayerStatsWidgets;
 };

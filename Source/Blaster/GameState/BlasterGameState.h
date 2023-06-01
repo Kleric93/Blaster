@@ -14,6 +14,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFFAVoteCast, int32, Vote);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTDMVoteCast, int32, Vote);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCTFVoteCast, int32, Vote);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInstaKillVoteCast, int32, Vote);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFFASMVoteCast, int32, Vote);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTDMSMVoteCast, int32, Vote);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCTFSMVoteCast, int32, Vote);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInstaKillSMVoteCast, int32, Vote);
 
 
 
@@ -42,6 +46,9 @@ public:
 
 	void RedTeamScores(ABlasterPlayerState* ScoringPlayerState);
 	void BlueTeamScores(ABlasterPlayerState* ScoringPlayerState);
+
+	UFUNCTION(BlueprintPure)
+	float GetScoreToWinFromServer();
 
 	TArray<ABlasterPlayerState*> RedTeam;
 	TArray<ABlasterPlayerState*> BlueTeam;
@@ -101,40 +108,68 @@ public:
 		class UVotingSyastem* VotingSystem;
 
 
-	UPROPERTY(ReplicatedUsing = OnRep_FFATotalVotes)
+	UPROPERTY(Replicated)
 		int32 TotalFFAVotes;
+
+	UPROPERTY(Replicated)
+		int32 TotalFFASMVotes;
 
 	UPROPERTY(Replicated)
 		int32 TotalTDMVotes;
 
 	UPROPERTY(Replicated)
+		int32 TotalTDMSMVotes;
+
+	UPROPERTY(Replicated)
 		int32 TotalCTFVotes;
+
+	UPROPERTY(Replicated)
+		int32 TotalCTFSMVotes;
 
 	UPROPERTY(Replicated)
 		int32 TotalInstaKillVotes;
 
-	UFUNCTION()
-		void OnRep_FFATotalVotes();
+	UPROPERTY(Replicated)
+		int32 TotalInstaKillSMVotes;
 
 	UFUNCTION()
 		void SetFFAVotes();
 
 	UFUNCTION()
+		void SetFFASMVotes();
+
+	UFUNCTION()
 		void SetTDMVotes();
+
+	UFUNCTION()
+		void SetTDMSMVotes();
 
 	UFUNCTION()
 		void SetCTFVotes();
 
 	UFUNCTION()
+		void SetCTFSMVotes();
+
+	UFUNCTION()
 		void SetInstaKillVotes();
 
+	UFUNCTION()
+		void SetInstaKillSMVotes();
+
+	UFUNCTION(BlueprintPure)
 	FString CompareVotesAndLog();
 
 	UFUNCTION(NetMulticast, Reliable)
 		void Multicast_UpdateFFAVotes(int32 Vote);
 
 	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdateFFASMVotes(int32 Vote);
+
+	UFUNCTION(NetMulticast, Reliable)
 		void Multicast_UpdateTDMVotes(int32 Vote);
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdateTDMSMVotes(int32 Vote);
 
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -142,22 +177,63 @@ public:
 
 
 	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdateCTFSMVotes(int32 Vote);
+
+
+	UFUNCTION(NetMulticast, Reliable)
 		void Multicast_UpdateInstaKillVotes(int32 Vote);
 
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdateInstaKillSMVotes(int32 Vote);
+
+	bool HasMatchEndedAbruptly();
+
+	void SetHasMatchEndedAbruptly(bool BendedAbruptly); 
+	void SetTimeElapsed(float TimeElapsedInMatch);
+	float GetTimeElapsed() const { return TimeElapsed; }
 
 	UPROPERTY(BlueprintAssignable, Category = "Voting")
 		FOnFFAVoteCast OnFFAVoteCast;
 
 	UPROPERTY(BlueprintAssignable, Category = "Voting")
+		FOnFFASMVoteCast OnFFASMVoteCast;
+
+	UPROPERTY(BlueprintAssignable, Category = "Voting")
 		FOnTDMVoteCast OnTDMVoteCast;
+
+	UPROPERTY(BlueprintAssignable, Category = "Voting")
+		FOnTDMSMVoteCast OnTDMSMVoteCast;
 
 	UPROPERTY(BlueprintAssignable, Category = "Voting")
 		FOnCTFVoteCast OnCTFVoteCast;
 
 	UPROPERTY(BlueprintAssignable, Category = "Voting")
+		FOnCTFSMVoteCast OnCTFSMVoteCast;
+
+	UPROPERTY(BlueprintAssignable, Category = "Voting")
 		FOnInstaKillVoteCast OnInstaKillVoteCast;
-private:
+
+	UPROPERTY(BlueprintAssignable, Category = "Voting")
+		FOnInstaKillSMVoteCast OnInstaKillSMVoteCast;
 
 	float TopScore = 0.f;
 
+protected:
+
+		UFUNCTION()
+			void OnRep_TimeElapsed();
+
+		UFUNCTION()
+			void OnRep_MatchHasEndedAbruptly();
+
+private:
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchHasEndedAbruptly)
+	bool bMatchEndedAbruptly = false;
+
+	UPROPERTY(ReplicatedUsing = OnRep_TimeElapsed)
+		float TimeElapsed;
+
+	UPROPERTY(Replicated)
+		float ScoreToWin;
 };

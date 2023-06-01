@@ -41,7 +41,7 @@ void UScoresOverview::StatsSetup()
                     PlayerStats->WidgetSetupTeams(PlayerStatesArray);
                 }
 
-                PlayerStats->AddToViewport();
+                PlayerStats->AddToViewport(3);
             }
         }
     }

@@ -34,7 +34,10 @@
 #include "Blaster/Pickups/JumpPickup.h"
 #include "Blaster/Pickups/BerserkPickup.h"
 #include "Blaster/Pickups/PickupSpawnPoint.h"
+#include "Blaster/HUD/SettingsMenu.h"
 #include "EngineUtils.h"
+#include "Blaster/BlasterUserSettings.h"
+#include "Blaster/HUD/TeamChoice.h"
 
 ABlasterPlayerController::ABlasterPlayerController()
 {
@@ -156,25 +159,42 @@ void ABlasterPlayerController::SetHUDRedFlagState(AActor* Flag, EFlagState NewFl
 
 void ABlasterPlayerController::UpdateRedFlagStateInHUD(EFlagState NewFlagState)
 {
-	// Get the BlueFlagState image widget from the HUD
-	UImage* RedFlagState = BlasterHUD->CharacterOverlay->RedFlagState;
-
-	// Set the image based on the new flag state
-	switch (NewFlagState)
+	// Check if BlasterHUD and CharacterOverlay are not null
+	if (BlasterHUD && BlasterHUD->CharacterOverlay)
 	{
-	case EFlagState::EFS_Initial:
-		RedFlagState->SetBrushFromTexture(RedFlagInitial);
-		break;
-	case EFlagState::EFS_Equipped:
-		RedFlagState->SetBrushFromTexture(RedFlagStolen);
-		break;
-	case EFlagState::EFS_Dropped:
-		RedFlagState->SetBrushFromTexture(RedFlagDropped);
-		break;
-	default:
-		break;
+		// Get the BlueFlagState image widget from the HUD
+		UImage* RedFlagState = BlasterHUD->CharacterOverlay->RedFlagState;
+
+		// Check if RedFlagState is not null
+		if (RedFlagState)
+		{
+			// Set the image based on the new flag state
+			switch (NewFlagState)
+			{
+			case EFlagState::EFS_Initial:
+				RedFlagState->SetBrushFromTexture(RedFlagInitial);
+				break;
+			case EFlagState::EFS_Equipped:
+				RedFlagState->SetBrushFromTexture(RedFlagStolen);
+				break;
+			case EFlagState::EFS_Dropped:
+				RedFlagState->SetBrushFromTexture(RedFlagDropped);
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("RedFlagState is null"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BlasterHUD or CharacterOverlay is null"));
 	}
 }
+
 
 void ABlasterPlayerController::AddChatBox()
 {
@@ -314,25 +334,42 @@ void ABlasterPlayerController::SetHUDBlueFlagState(AActor* Flag, EFlagState NewF
 
 void ABlasterPlayerController::UpdateBlueFlagStateInHUD(EFlagState NewFlagState)
 {
-	// Get the BlueFlagState image widget from the HUD
-	UImage* BlueFlagState = BlasterHUD->CharacterOverlay->BlueFlagState;
-
-	// Set the image based on the new flag state
-	switch (NewFlagState)
+	// Check if BlasterHUD and CharacterOverlay are initialized
+	if (BlasterHUD && BlasterHUD->CharacterOverlay)
 	{
-	case EFlagState::EFS_Initial:
-		BlueFlagState->SetBrushFromTexture(BlueFlagInitial);
-		break;
-	case EFlagState::EFS_Equipped:
-		BlueFlagState->SetBrushFromTexture(BlueFlagStolen);
-		break;
-	case EFlagState::EFS_Dropped:
-		BlueFlagState->SetBrushFromTexture(BlueFlagDropped);
-		break;
-	default:
-		break;
+		// Get the BlueFlagState image widget from the HUD
+		UImage* BlueFlagState = BlasterHUD->CharacterOverlay->BlueFlagState;
+
+		// Check if BlueFlagState is initialized
+		if (BlueFlagState)
+		{
+			// Set the image based on the new flag state
+			switch (NewFlagState)
+			{
+			case EFlagState::EFS_Initial:
+				BlueFlagState->SetBrushFromTexture(BlueFlagInitial);
+				break;
+			case EFlagState::EFS_Equipped:
+				BlueFlagState->SetBrushFromTexture(BlueFlagStolen);
+				break;
+			case EFlagState::EFS_Dropped:
+				BlueFlagState->SetBrushFromTexture(BlueFlagDropped);
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("BlueFlagState is not initialized."));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BlasterHUD or CharacterOverlay are not initialized."));
 	}
 }
+
 
 void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
 {
@@ -374,6 +411,11 @@ void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerStat
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (Settings == nullptr)
+	{
+		Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
+	}
 
 	AddChatBox();
 
@@ -449,6 +491,7 @@ void ABlasterPlayerController::CheckPing(float DeltaTime)
 
 void ABlasterPlayerController::ShowReturnToMainMenu()
 {
+	if (bSettingsMenuOpen) return;
 	if (ReturnToMainMenuWidget == nullptr) return;
 	if (ReturnToMainMenu == nullptr)
 	{
@@ -456,17 +499,19 @@ void ABlasterPlayerController::ShowReturnToMainMenu()
 	}
 	if (ReturnToMainMenu)
 	{
-		bReturnToMainMenuOpen = !bReturnToMainMenuOpen;
-		if (bReturnToMainMenuOpen)
+		if (!bReturnToMainMenuOpen)
 		{
+			bReturnToMainMenuOpen = true;
 			ReturnToMainMenu->MenuSetup();
 		}
 		else
 		{
 			ReturnToMainMenu->MenuTearDown();
+			bReturnToMainMenuOpen = false;
 		}
 	}
 }
+
 
 void ABlasterPlayerController::ShowVotingSystem()
 {
@@ -499,12 +544,31 @@ void ABlasterPlayerController::Server_FFAVoteCast_Implementation()
 	}
 }
 
+
+void ABlasterPlayerController::Server_FFASMVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetFFASMVotes();
+	}
+}
+
 void ABlasterPlayerController::Server_TDMVoteCast_Implementation()
 {
 	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
 	if (GameState)
 	{
 		GameState->SetTDMVotes();
+	}
+}
+
+void ABlasterPlayerController::Server_TDMSMVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetTDMSMVotes();
 	}
 }
 
@@ -517,6 +581,15 @@ void ABlasterPlayerController::Server_CTFVoteCast_Implementation()
 	}
 }
 
+void ABlasterPlayerController::Server_CTFSMVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetCTFSMVotes();
+	}
+}
+
 void ABlasterPlayerController::Server_InstaKillVoteCast_Implementation()
 {
 	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
@@ -526,6 +599,26 @@ void ABlasterPlayerController::Server_InstaKillVoteCast_Implementation()
 	}
 }
 
+void ABlasterPlayerController::Server_InstaKillSMVoteCast_Implementation()
+{
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->SetInstaKillSMVotes();
+	}
+}
+
+void ABlasterPlayerController::Server_RedTeamChosen_Implementation()
+{
+	OnTeamChosen.Broadcast(this, ETeam::ET_RedTeam);
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void ABlasterPlayerController::Server_BlueTeamChosen_Implementation()
+{
+	OnTeamChosen.Broadcast(this, ETeam::ET_BlueTeam);
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
 
 void ABlasterPlayerController::OnRep_ShowTeamScores()
 {
@@ -602,7 +695,6 @@ void ABlasterPlayerController::StopHighPingWarning()
 		if (BlasterHUD->CharacterOverlay->IsAnimationPlaying(BlasterHUD->CharacterOverlay->HighPingAnimation))
 		{
 			BlasterHUD->CharacterOverlay->StopAnimation(BlasterHUD->CharacterOverlay->HighPingAnimation);
-
 		}
 	}
 }
@@ -613,26 +705,49 @@ void ABlasterPlayerController::ServerCheckmatchState_Implementation()
 	if (GameMode)
 	{
 		WarmupTime = GameMode->WarmupTime;
-		MatchTime = GameMode->MatchTime;
+		MatchTime = Settings->GetGameTime();
 		CooldownTime = GameMode->CooldownTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
+		bTMatch = GameMode->bTeamsMatch;
+		bCTFMatch = GameMode->bCaptureTheFlagMatch;
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime, bTMatch, bCTFMatch);
 	}
 }
 
-void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime)
+void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime, bool bIsTeamMatch, bool bIsCaptureTheFlagMatch)
 {
 	WarmupTime = Warmup;
 	MatchTime = Match;
 	CooldownTime = Cooldown;
 	LevelStartingTime = StartingTime;
 	MatchState = StateOfMatch;
+	bTMatch = bIsTeamMatch;
+	bCTFMatch = bIsCaptureTheFlagMatch;
 	OnMatchStateSet(MatchState);
 
-	if (BlasterHUD && MatchState == MatchState::WaitingToStart)
+	if (BlasterHUD)
 	{
-		BlasterHUD->AddAnnouncement();
+		if (MatchState == MatchState::WaitingToStart)
+		{
+			BlasterHUD->AddAnnouncement();
+
+			if (bTMatch || bCTFMatch)
+			{
+				TeamChoiceWidget = CreateWidget<UTeamChoice>(GetWorld(), TeamChoiceClass);
+				TeamChoiceWidget->WidgetSetup();
+
+				FTimerHandle TimerHandle;
+				GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+					{
+						if (this->TeamChoiceWidget)
+						{
+							this->TeamChoiceWidget->WidgetTeardown();
+						}
+					}, WarmupTime, false);
+			}
+		}
+			
 	}
 }
 
@@ -955,20 +1070,42 @@ void ABlasterPlayerController::SetHUDGrenades(int32 Grenades)
 
 void ABlasterPlayerController::SetHUDTime()
 {
-	float TimeLeft = 0.f;
-	if (MatchState == MatchState::WaitingToStart) TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::InProgress) TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-	else if (MatchState == MatchState::Cooldown) TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
-	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+	ABlasterGameState* GameState = GetWorld()->GetGameState<ABlasterGameState>();
+	if (!GameState) return;
 
-	/*if (HasAuthority())
+	float TimeElapsedInGame = GameState->GetTimeElapsed();
+
+	if (HasAuthority())
 	{
-		BlasterGameMode = BlasterGameMode == nullptr ? Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)) : BlasterGameMode;
-		if (BlasterGameMode)
+		//UE_LOG(LogTemp, Error, TEXT("TimeElapsed for Server %f"), TimeElapsedInGame);
+	}
+	else
+	{
+		//UE_LOG(LogTemp, Error, TEXT("TimeElapsed for CLIENT %f"), TimeElapsedInGame);
+	}
+
+
+	float TimeLeft = 0.f;
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime;
+	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		TimeLeft = WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		if (GameState->HasMatchEndedAbruptly())
 		{
-			SecondsLeft = FMath::CeilToInt(BlasterGameMode->GetCountdownTime() + LevelStartingTime);
+			TimeLeft = CooldownTime + WarmupTime + TimeElapsedInGame - GetServerTime() + LevelStartingTime;
 		}
-	}*/
+		else
+		{
+			TimeLeft = CooldownTime + WarmupTime + MatchTime - GetServerTime() + LevelStartingTime;
+		}
+	}
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 
 	if (CountdownInt != SecondsLeft)
 	{
@@ -1082,6 +1219,26 @@ void ABlasterPlayerController::OnRep_MatchState()
 	}
 }
 
+void ABlasterPlayerController::SetCharacterOverlayVisibility(bool BCharOverlayVisible)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay;
+
+	if (bHUDValid)
+	{
+		if (BCharOverlayVisible == true)
+		{
+			CharacterOverlay->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			CharacterOverlay->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+
 void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCaptureTheFlagMatch)
 {
 	if (HasAuthority()) bShowTeamScores = bTeamsMatch;
@@ -1101,13 +1258,7 @@ void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch, bool bCap
 		if (BlasterHUD->PlayerStats == nullptr)
 		{
 			BlasterHUD->AddPlayerStats();
-			/*
-			FTimerHandle TimerHandle;
-			GetWorldTimerManager().SetTimer(TimerHandle, [this]() {
-				BlasterHUD->AddPlayerStats();
-				}, 1.f, false);*/
 		}
-		//if (!HasAuthority()) return;
 		if (bShowFlagIcons)
 		{
 			InitTeamScores();
@@ -1131,7 +1282,10 @@ void ABlasterPlayerController::HandleCooldown()
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD)
 	{
-		BlasterHUD->CharacterOverlay->RemoveFromParent();
+		if (BlasterHUD->CharacterOverlay)
+		{
+			BlasterHUD->CharacterOverlay->RemoveFromParent();
+		}		
 		bool bHUDValid = BlasterHUD->Announcement &&
 			BlasterHUD->Announcement->AnnouncementText &&
 			BlasterHUD->Announcement->InfoText;
@@ -1145,7 +1299,7 @@ void ABlasterPlayerController::HandleCooldown()
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			ABlasterPlayerState* BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 
-			ShowVotingSystem();
+		
 
 			if (BlasterGameState && BlasterPlayerState)
 			{
@@ -1154,9 +1308,11 @@ void ABlasterPlayerController::HandleCooldown()
 
 				BlasterHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
 
-			}
+			}	
 		}
 	}
+
+	ShowVotingSystem();
 
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
 	if (BlasterCharacter && BlasterCharacter->GetCombat())
@@ -1244,9 +1400,6 @@ void ABlasterPlayerController::ShowMatchStats()
 	{
 		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Visible);
 		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Visible);
-
-
-		//UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE VISIBLE!!!"));
 	}
 }
 
@@ -1263,9 +1416,6 @@ void ABlasterPlayerController::HideMatchStats()
 	{
 		BlasterHUD->ScoresOverview->SetVisibility(ESlateVisibility::Hidden);
 		BlasterHUD->ScoresOverview->PlayerStats->SetVisibility(ESlateVisibility::Hidden);
-
-		//UE_LOG(LogTemp, Warning, TEXT("MATCH STATS SHOULD BE HIDDEN!!!"));
-
 	}
 }
 
@@ -1277,7 +1427,7 @@ void ABlasterPlayerController::UpdateSpeedBuffIcon_Implementation(bool bIsBuffAc
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->SpeedBuffIcon;
 
-	UE_LOG(LogTemp, Warning, TEXT("UpdateSpeedBuffIcon: %s"), bIsBuffActive ? TEXT("true") : TEXT("false"));
+	//UE_LOG(LogTemp, Warning, TEXT("UpdateSpeedBuffIcon: %s"), bIsBuffActive ? TEXT("true") : TEXT("false"));
 
 	if (BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->SpeedBuffIcon)
 	{
@@ -1293,7 +1443,7 @@ void ABlasterPlayerController::UpdateJumpBuffIcon_Implementation(bool bIsBuffAct
 		BlasterHUD->CharacterOverlay &&
 		BlasterHUD->CharacterOverlay->JumpBuffIcon;
 
-	UE_LOG(LogTemp, Warning, TEXT("UpdateJumpBuffIcon: %s"), bIsBuffActive ? TEXT("true") : TEXT("false"));
+	//UE_LOG(LogTemp, Warning, TEXT("UpdateJumpBuffIcon: %s"), bIsBuffActive ? TEXT("true") : TEXT("false"));
 
 	if (BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->JumpBuffIcon)
 	{
@@ -1313,7 +1463,9 @@ void ABlasterPlayerController::UpdateBerserkBuffIcon_Implementation(bool bIsBuff
 	{
 		BlasterHUD->CharacterOverlay->BerserkBuffIcon->SetBrushFromTexture(bIsBuffActive ? BerserkBuffIconOn : BerserkBuffIconOff);
 
-		UE_LOG(LogTemp, Warning, TEXT("Controller %s updated BerserkBuffIcon to %s"), *GetName(), bIsBuffActive ? TEXT("On") : TEXT("Off"));
+		//UE_LOG(LogTemp, Warning, TEXT("Controller %s updated BerserkBuffIcon to %s"), *GetName(), bIsBuffActive ? TEXT("On") : TEXT("Off"));
 	}
 
 }
+
+

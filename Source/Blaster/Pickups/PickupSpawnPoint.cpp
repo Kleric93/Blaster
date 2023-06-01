@@ -26,7 +26,8 @@ APickupSpawnPoint::APickupSpawnPoint()
 void APickupSpawnPoint::BeginPlay()
 {
 	Super::BeginPlay();
-	StartSpawnPickupTimer((AActor*)nullptr);
+	//StartSpawnPickupTimer((AActor*)nullptr);
+	SpawnPickupTimerFinished();
 
 	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
 	if (PedestalParticlesComponent)

@@ -62,9 +62,6 @@ public:
 
 	void AddPlayerStats();
 
-	void AddAllPlayerStats();
-
-
 protected:
 	virtual void BeginPlay() override;
 

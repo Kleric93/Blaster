@@ -349,6 +349,7 @@ void ULagCompensationComponent::CacheBoxPositions(ABlasterCharacter* HitCharacte
 	if (HitCharacter == nullptr) return;
 	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
 	{
+		//if (HitBoxPair.Value == nullptr) return;
 		if (HitBoxPair.Value != nullptr)
 		{
 			FBoxInformation BoxInfo;
@@ -356,6 +357,11 @@ void ULagCompensationComponent::CacheBoxPositions(ABlasterCharacter* HitCharacte
 			BoxInfo.Rotation = HitBoxPair.Value->GetComponentRotation();
 			BoxInfo.BoxExtent = HitBoxPair.Value->GetScaledBoxExtent();
 			OutFramePackage.HitBoxInfo.Add(HitBoxPair.Key, BoxInfo);
+		}
+		else
+		{
+			//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::FromHex("#FF0000"), FString("HitBoxPair.Value is NULLPTR inside ULagCompensationComponent::CacheBoxPositions"));
+			return;
 		}
 	}
 }
@@ -365,12 +371,17 @@ void ULagCompensationComponent::MoveBoxes(ABlasterCharacter* HitCharacter, const
 	if (HitCharacter == nullptr) return;
 	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
 	{
-		if (HitBoxPair.Value == nullptr) return; // testing if this works ffs
+		//if (HitBoxPair.Value == nullptr) return; // testing if this works ffs
 		if (HitBoxPair.Value != nullptr)
 		{
 			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
 			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
 			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+		}
+		else
+		{
+			//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::FromHex("#FF0000"), FString("HitBoxPair.Value is NULLPTR inside ULagCompensationComponent::MoveBoxes"));
+			return;
 		}
 	}
 }
@@ -380,12 +391,18 @@ void ULagCompensationComponent::ResetHitBoxes(ABlasterCharacter* HitCharacter, c
 	if (HitCharacter == nullptr) return;
 	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
 	{
+		//if (HitBoxPair.Value == nullptr) return;
 		if (HitBoxPair.Value != nullptr)
 		{
 			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
 			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
 			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
 			HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		else
+		{
+			//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::FromHex("#FF0000"), FString("HitBoxPair.Value is NULLPTR inside ULagCompensationComponent::ResethitBoxes"));
+			return;
 		}
 	}
 }
@@ -646,14 +663,14 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 			UDamageType::StaticClass()
 		);
 
-		UE_LOG(LogTemp, Error, TEXT("Distance: %f"), Distance);
-		UE_LOG(LogTemp, Error, TEXT("total damage applied final: %f"), TotalDamageWithDist);
+		//UE_LOG(LogTemp, Error, TEXT("Distance: %f"), Distance);
+		//UE_LOG(LogTemp, Error, TEXT("total damage applied final: %f"), TotalDamageWithDist);
 
 		// Draw debug sphere for TraceStart
-		DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
+		//DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
 
 		// Draw debug sphere for HitLocation
-		DrawDebugSphere(GetWorld(), HitCharacter->GetTargetLocation(), 30.f, 16, FColor::Green, false, 20.f);
+		//DrawDebugSphere(GetWorld(), HitCharacter->GetTargetLocation(), 30.f, 16, FColor::Green, false, 20.f);
 	}
 }
 

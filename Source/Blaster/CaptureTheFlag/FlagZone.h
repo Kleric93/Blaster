@@ -43,5 +43,4 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundBase* CaptureSound;
-
 };

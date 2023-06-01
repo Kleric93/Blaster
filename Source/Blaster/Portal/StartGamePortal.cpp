@@ -35,7 +35,7 @@ void AStartGamePortal::Tick(float DeltaTime)
 
 void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!HasAuthority()) return;
+	if (!OtherActor->HasAuthority()) return;
 
 	if (OverlappedComp == CollisionBoxComponent)
 	{
@@ -53,7 +53,7 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Remote Role: %d, Authority: %s"), static_cast<int32>(GetRemoteRole()), HasAuthority() ? TEXT("true") : TEXT("false"));
 
-				GameMode->bUseSeamlessTravel = true;
+				//GameMode->bUseSeamlessTravel = true;
 
 				FString MatchType = Subsystem->DesiredMatchType;
 				FString TravelURL;
@@ -62,17 +62,33 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 				{
 					World->ServerTravel(FString("/Game/Maps/BlasterMap?listen"));
 				}
+				if (MatchType == "FreeForAllSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/BlasterMapSM?listen"));
+				}
 				else if (MatchType == "Teams")
 				{
 					World->ServerTravel(FString("/Game/Maps/Teams?listen"));
+				}
+				else if (MatchType == "TeamsSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/TeamsSM?listen"));
 				}
 				else if (MatchType == "CaptureTheFlag")
 				{
 					World->ServerTravel(FString("/Game/Maps/CaptureTheFlag?listen"));
 				}
+				else if (MatchType == "CaptureTheFlagSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/CaptureTheFlagSM?listen"));
+				}
 				else if (MatchType == "InstaKill")
 				{
 					World->ServerTravel(FString("/Game/Maps/InstaKillMap?listen"));
+				}
+				else if (MatchType == "InstaKillSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/InstaKillMapSM?listen"));
 				}
 
 				UE_LOG(LogTemp, Warning, TEXT("Attempting server travel to: %s"), *TravelURL);

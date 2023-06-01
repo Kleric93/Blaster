@@ -11,8 +11,14 @@
 
 class UInputMappingContext;
 class ABlasterPlayerState;
+class USettingsMenu;
+class UBlasterUserSettings;
+class UTeamChoice;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamChosen, ABlasterPlayerController*, BPController, ETeam, ChosenTeam);
+
+
 
 /**
  *
@@ -25,6 +31,8 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 public:
 	ABlasterPlayerController();
 
+	UPROPERTY()
+		UBlasterUserSettings* Settings;
 
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
@@ -48,6 +56,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Score")
 		FHighPingDelegate HighPingDelegate;
+
+	UPROPERTY(BlueprintAssignable, Category = "Teams")
+		FOnTeamChosen OnTeamChosen;
 
 
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
@@ -107,21 +118,54 @@ public:
 		void Server_FFAVoteCast();
 
 	UFUNCTION(Server, Reliable)
+		void Server_FFASMVoteCast();
+
+	UFUNCTION(Server, Reliable)
 		void Server_TDMVoteCast();
+
+	UFUNCTION(Server, Reliable)
+		void Server_TDMSMVoteCast();
 
 	UFUNCTION(Server, Reliable)
 		void Server_CTFVoteCast();
 
 	UFUNCTION(Server, Reliable)
+		void Server_CTFSMVoteCast();
+
+	UFUNCTION(Server, Reliable)
 		void Server_InstaKillVoteCast();
 
+	UFUNCTION(Server, Reliable)
+		void Server_InstaKillSMVoteCast();
 
+	UFUNCTION(Server, Reliable)
+		void Server_RedTeamChosen();
+
+	UFUNCTION(Server, Reliable)
+		void Server_BlueTeamChosen();
+
+	void SetCharacterOverlayVisibility(bool BCharOverlayVisible);
+
+
+	void SetHUDTime();
+
+	bool bReturnToMainMenuOpen = false;
+	bool bSettingsMenuOpen = false;
+
+	FORCEINLINE float GetWarmupTime() const { return WarmupTime; };
 private:
 
 	UPROPERTY(EditAnywhere, Category = HUD)
 		TSubclassOf<class UChatSystemOverlay> ChatSystemOverlayClass;
 	UPROPERTY()
 		UChatSystemOverlay* ChatSystemWidget;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class UTeamChoice> TeamChoiceClass;
+
+	UPROPERTY()
+		UTeamChoice* TeamChoiceWidget;
+
 
 	UPROPERTY()
 		FTimerHandle TimerHandle_CompareVotesAndLog;
@@ -140,7 +184,6 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
-	void SetHUDTime();
 	void PollInit();
 	virtual void SetupInputComponent() override;
 
@@ -170,7 +213,7 @@ protected:
 		void ServerCheckmatchState();
 
 	UFUNCTION(Client, Reliable)
-		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime);
+		void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime, bool bIsTeamMatch, bool bIsCaptureTheFlagMatch);
 
 
 	void HighPingWarning();
@@ -178,8 +221,10 @@ protected:
 
 	void CheckPing(float DeltaTime);
 
+	UFUNCTION()
 	void ShowReturnToMainMenu();
 
+	UFUNCTION()
 	void ShowVotingSystem();
 
 	UFUNCTION(Client, Reliable)
@@ -217,7 +262,12 @@ private:
 	UPROPERTY()
 		class UReturnToMainMenu* ReturnToMainMenu;
 
-	bool bReturnToMainMenuOpen = false;
+	UPROPERTY(EditAnywhere, Category = HUD)
+		TSubclassOf<class UUserWidget> SettingsMenuWidget;
+
+	UPROPERTY()
+		class USettingsMenu* SettingsMenu;
+
 
 	UPROPERTY()
 		class ABlasterHUD* BlasterHUD;
@@ -232,6 +282,8 @@ private:
 	float MatchTime = 0.f;
 	float WarmupTime = 0.f;
 	float CooldownTime = 0.f;
+	bool bTMatch;
+	bool bCTFMatch;
 	uint32 CountdownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
@@ -242,7 +294,6 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "True"))
 		class UCharacterOverlay* CharacterOverlay;
-
 
 	float HUDHealth;
 	bool bInitializeHealth = false;
@@ -265,6 +316,8 @@ private:
 	bool bInitializeWeaponAmmo = false;
 	int32 HUDCarriedAmmo;
 	bool bInitializeCarriedAmmo = false;
+	float HUDScoreToWin;
+	bool bInitializeScoreToWin = false;
 
 	float highPingRunningTime = 0.f;
 

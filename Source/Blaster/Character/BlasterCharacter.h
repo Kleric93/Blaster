@@ -13,6 +13,8 @@
 #include "BlasterCharacter.generated.h"
 
 class UInputAction;
+class UInputConfig;
+class UBlasterUserSettings;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
 
@@ -23,6 +25,10 @@ class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCro
 
 public:
 	ABlasterCharacter();
+
+	UPROPERTY()
+	UBlasterUserSettings* Settings;
+
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -102,17 +108,23 @@ public:
 	
 	void SetHeadIcon();
 
+	FTimerHandle HideWidgetTimerHandle;
+
 protected:
 
 	//
 	/// Enhanced Input
 	//
-	UPROPERTY(EditAnywhere, Category = Input, meta = (ClampMin = "0.1", ClampMax = "1"))
-	float BaseTurnSpeedMultiplier;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	UInputConfig* InputConfig;
+
+	//UPROPERTY(EditAnywhere, Category = Input, meta = (ClampMin = "0.1", ClampMax = "200"))
+	//float BaseTurnSpeedMultiplier;
 
 	UPROPERTY(VisibleAnywhere, Category = Input)
 	float TurnSpeedMultiplier;
-
+/*
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* MovementAction;
 
@@ -144,7 +156,7 @@ protected:
 	UInputAction* ReloadAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputAction* ThrowGrenadeAction;
+	UInputAction* ThrowGrenadeAction;*/
 
 	void Movement(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
@@ -180,6 +192,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
+
+	void GetWidgetVisibility();
 
 	UPROPERTY(EditAnywhere)
 	class UTextureRenderTarget2D* MinimapRenderTarget;
@@ -250,6 +264,12 @@ private:
 	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
+	class UBoxComponent* OverheadWidgetBox;
+
+	UPROPERTY(VisibleAnywhere, Category = "AimAssist")
+	class USphereComponent* AimAssistSphere;
+
+	UPROPERTY(VisibleAnywhere, Category = Camera)
 	USpringArmComponent* OverheadBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -259,7 +279,10 @@ private:
 	class USceneCaptureComponent2D* MinimapCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverheadWidget;
+	class UWidgetComponent* OverheadWidgetComponent;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class UOverheadWidget> OverheadWidgetClass;
 
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
@@ -368,6 +391,7 @@ private:
 
 	FTimerHandle ElimTimer;
 
+
 	UPROPERTY(EditDefaultsOnly)
 	float ElimDelay = 3.f;
 
@@ -475,6 +499,9 @@ private:
 	UPROPERTY()
 	class AInstaKillGameMode* InstaKillGameMode;
 
+	UPROPERTY()
+	FVector2D LastLookInput;
+
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -501,6 +528,41 @@ public:
 	FORCEINLINE UBuffComponent* Getbuff() const { return Buff; }
 	bool IsLocallyReloading();
 	FORCEINLINE ULagCompensationComponent* GetlagCompensation() const { return LagCompensation; }
+	FORCEINLINE UInputConfig* GetInputConfig() const { return InputConfig; }
+	FORCEINLINE FVector2D GetLastLookInput() { return LastLookInput; }
+	//FORCEINLINE float GetTurnSpeedMultiplier() { return BaseTurnSpeedMultiplier; }
+	//FORCEINLINE void SetTurnSpeedMultiplier(float Value) { BaseTurnSpeedMultiplier = Value; }
+
+
+
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+	UBoxComponent* GetOverheadWidgetBoxComponent() const { return OverheadWidgetBox; }
+
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+	UWidgetComponent* GetOverheadWidgetComponent() const { return OverheadWidgetComponent; }
+
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+	TSubclassOf<UOverheadWidget> GetOverheadWidgetClass() const { return OverheadWidgetClass; }
+
+	UFUNCTION(BlueprintCallable, Category = "Widget")
+		USphereComponent* GetAimAssistSphereComponent() const { return AimAssistSphere; }
+
+
+
 	ETeam GetTeam();
+
+
+
+	UPROPERTY(EditAnywhere)
+		TObjectPtr<class UPlayerMappableInputConfig> Config;
+
+	UPROPERTY()
+		TMap<FName, FKey> CustomKeyboardConfig;
+
+	void AddOrUpdateCustomKeyboardBindings(const FName MappingName, const FKey NewKey, ULocalPlayer* LocalPlayer);
+
+	void ResetKeybindingToDefault(const FName MappingName, ULocalPlayer* LocalPlayer);
+
+	void ResetKeybindingsToDefault(ULocalPlayer* LocalPlayer);
 
 };

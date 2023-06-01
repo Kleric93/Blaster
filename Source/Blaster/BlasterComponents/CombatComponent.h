@@ -10,6 +10,8 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "CombatComponent.generated.h"
 
+class UBlasterUserSettings;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 
 class BLASTER_API UCombatComponent : public UActorComponent
@@ -19,6 +21,9 @@ class BLASTER_API UCombatComponent : public UActorComponent
 public:	
 	UCombatComponent();
 	friend class ABlasterCharacter;
+
+	UPROPERTY()
+		UBlasterUserSettings* Settings;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -93,7 +98,7 @@ public:
 		void MulticastStopSliding();
 
 	UPROPERTY(EditAnywhere)
-		float SlidingSpeed;
+		float SlidingSpeed = 1600.f;
 
 	FTimerHandle SlidingTimerHandle;
 
@@ -163,6 +168,12 @@ protected:
 	void MulticastShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void TraceForObjects();
+
+	void TraceForAimAssist();
+
+	void UpdateAim(float DeltaTime);
 
 	void SetHUDCrosshairs(float DeltaTime);
 
@@ -343,6 +354,26 @@ private:
 
 	void UpdateHUDGrenades();
 
+	UPROPERTY(EditAnywhere)
+	float WidgetMinSize = 10;
+
+	UPROPERTY(EditAnywhere)
+	float WidgetMaxSize = 40;
+
+	UPROPERTY(EditAnywhere)
+	float WidgetMinDistance = 100;
+
+	UPROPERTY(EditAnywhere)
+	float WidgetMaxDistance = 5000;
+
+	UPROPERTY(EditAnywhere)
+	float HideWidgetTimer = 0.5f;
+
+	FVector TargetAimDirection;
+	FVector CurrentAimDirection;
+
+	UPROPERTY(EditAnywhere)
+	float AimAssistSpeed;
 
 public:	
 

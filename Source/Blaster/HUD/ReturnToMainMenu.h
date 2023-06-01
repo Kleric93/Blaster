@@ -6,6 +6,16 @@
 #include "Blueprint/UserWidget.h"
 #include "ReturnToMainMenu.generated.h"
 
+class UMultiplayerSessionsSubsystem;
+class UKeymapLine;
+class UButton;
+class UScrollBox;
+class APlayerController;
+class ABlasterCharacter;
+class UInputConfig;
+class UPlayerMappableInputConfig;
+class UBlasterUserSettings;
+
 /**
  * 
  */
@@ -31,13 +41,27 @@ protected:
 	UFUNCTION()
 	void OnPlayerLeftGame();
 
+	void Rebinding();
+
+	UFUNCTION()
+	void OnKeySelected(FInputChord SelectedKey);
+
 private:
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* ReturnButton;
+	UButton* ResumeButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* QuitButton;
+	UButton* ReturnButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* QuitButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* OptionsButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UScrollBox* KeybindingsScrollBox;
 
 	UFUNCTION()
 	void ReturnButtonClicked();
@@ -45,9 +69,38 @@ private:
 	UFUNCTION()
 	void QuitButtonClicked();
 
-	UPROPERTY()
-	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
+	UFUNCTION()
+	void OptionsButtonClicked();
 
 	UPROPERTY()
-	class APlayerController* PlayerController;
+	UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
+
+	UPROPERTY()
+	APlayerController* PlayerController;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UKeymapLine> KeymapLine;
+
+	UPROPERTY()
+	UKeymapLine* KeymapLineWidget;
+
+	UPROPERTY()
+	ABlasterCharacter* Character;
+
+	UPROPERTY()
+	UInputConfig* InputConfig;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UPlayerMappableInputConfig> Config;
+
+	TMap<UKeymapLine*, FName> WidgetToActionMap;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class USettingsMenu> SettingsMenu;
+
+	UPROPERTY()
+		USettingsMenu* SettingsMenuWidget;
+
+	UPROPERTY()
+		UBlasterUserSettings* Settings;
 };

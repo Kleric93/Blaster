@@ -2,9 +2,14 @@
 
 
 #include "BlasterCharacter.h"
+#include "Blaster/BlasterUserSettings.h"
+
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Blaster/BlasterEnhancedInputComponent.h"
+#include "Blaster/Input/BlasterGameplayTags.h"
 #include "Components/InputComponent.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -37,11 +42,14 @@
 #include "Blaster/Pickups/TeamsFlag.h"
 #include "Blaster/PlayerStart/TeamPlayerStart.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/SphereComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Components/BillboardComponent.h"
 #include "PaperSpriteComponent.h"
 #include "PaperSprite.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "PlayerMappableInputConfig.h"
+#include "Blaster/HUD/OverheadWidget.h"
 
 
 
@@ -65,6 +73,28 @@ ABlasterCharacter::ABlasterCharacter()
 	OverheadBoom->bUsePawnControlRotation = true;
 	OverheadBoom->bDoCollisionTest = false;
 
+	OverheadWidgetBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Overhead Widget COllision Box"));
+	OverheadWidgetBox->SetupAttachment(GetCapsuleComponent());
+	OverheadWidgetBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	OverheadWidgetBox->SetCollisionObjectType(ECC_GameTraceChannel3);
+	OverheadWidgetBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	OverheadWidgetBox->SetCollisionResponseToChannel(ECC_GameTraceChannel3, ECR_Block);
+
+
+	OverheadWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidgetComponent"));
+	OverheadWidgetComponent->SetupAttachment(GetMesh());
+	OverheadWidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+	OverheadWidgetComponent->SetDrawSize(FVector2D(5000.f, 5000.f));
+	OverheadWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	OverheadWidgetComponent->SetVisibility(false);
+	OverheadWidgetComponent->SetPivot(FVector2D(0.5f, 0.5f));
+
+	AimAssistSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AimAssistSphere"));
+	AimAssistSphere->SetupAttachment(GetMesh());
+	AimAssistSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	AimAssistSphere->SetCollisionObjectType(ECC_EngineTraceChannel4);
+	AimAssistSphere->SetCollisionResponseToChannel(ECC_EngineTraceChannel4, ECR_Block);
+
 	HeadIconSpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("HeadIcon"));
 	HeadIconSpriteComponent->SetupAttachment(GetCapsuleComponent());
 	HeadIconSpriteComponent->SetRelativeLocation(HeadIconLocation);
@@ -76,9 +106,6 @@ ABlasterCharacter::ABlasterCharacter()
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-
-	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
-	OverheadWidget->SetupAttachment(RootComponent);
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
@@ -159,7 +186,7 @@ ABlasterCharacter::ABlasterCharacter()
 	HitCollisionBoxes.Add(FName("hand_r"), hand_r);
 
 	blankett = CreateDefaultSubobject<UBoxComponent>(TEXT("blankett"));
-	blankett->SetupAttachment(GetMesh(), FName("backpack"));
+	blankett->SetupAttachment(GetMesh(), FName("blanket_l"));
 	HitCollisionBoxes.Add(FName("blankett"), blankett);
 
 	backpack = CreateDefaultSubobject<UBoxComponent>(TEXT("backpack"));
@@ -278,6 +305,13 @@ EPhysicalSurface ABlasterCharacter::GetSurfaceType()
 	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 }
 
+void ABlasterCharacter::GetWidgetVisibility()
+{
+
+}
+
+
+
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -322,13 +356,12 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 				GetWorld(),
 				DroppedFlag
 			);
-
-			//UE_LOG(LogTemp, Error, TEXT("FLAG WAS DETACHED!!!"));
 		}
+		/*
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("FlagIsNull"));
-		}
+			return;  // @TODO Test if it crashes without this line. (it shouldn't)
+		}*/
 	}
 	MulticastElim(bPlayerLeftGame);
 }
@@ -367,6 +400,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetAimAssistSphereComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Spawn Elim Bot
 	if (ElimBotEffect)
@@ -468,7 +502,6 @@ void ABlasterCharacter::OnPlayerStateInitialized()
 	SetSpawnPoint();
 	SetHeadIcon();
 
-	
 	ABlasterPlayerState* PlayerJoining = Cast<ABlasterPlayerState>(this->GetPlayerState());
 	if (PlayerJoining == nullptr) return;
 	ABlasterGameState* BlasterGameState = GetWorld()->GetGameState<ABlasterGameState>();
@@ -477,6 +510,30 @@ void ABlasterCharacter::OnPlayerStateInitialized()
 		BlasterGameState->Multicast_AddPlayerJoined(PlayerJoining, PlayerJoining->GetPlayerName());
 		bHasAlreadyJoined = true;
 	}
+
+	if (OverheadWidgetClass)
+	{
+		UOverheadWidget* OverheadWidget = Cast<UOverheadWidget>(OverheadWidgetComponent->GetUserWidgetObject());
+		if (!OverheadWidget)
+		{
+			OverheadWidget = CreateWidget<UOverheadWidget>(GetWorld(), OverheadWidgetClass);
+			if (OverheadWidget)
+			{
+				OverheadWidgetComponent->SetWidget(OverheadWidget);
+			}
+			else
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Failed to Create Overhead Widget"));
+			}
+		}
+		else
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Widget already exists"));
+		}
+		OverheadWidget->ShowPlayerName(this);
+		OverheadWidget->ChangeOWColor(GetTeam());
+	}
+
 }
 
 void ABlasterCharacter::SetSpawnPoint()
@@ -612,6 +669,12 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (Settings == nullptr)
+	{
+		Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
+	}
+
+
 	SpawnDefaultWeapon();
 	UpdateHUDAmmo();
 	UpdateHUDHealth();
@@ -664,26 +727,39 @@ void ABlasterCharacter::Movement(const FInputActionValue& Value)
 
 void ABlasterCharacter::Look(const FInputActionValue& Value)
 {
-	const FVector2D LookAxisValue = Value.Get<FVector2D>();
+	LastLookInput = Value.Get<FVector2D>();
 
-	if (Controller)
+	if (Controller && Settings && Combat && Combat->EquippedWeapon)
 	{
+		bool bIsLongRange =
+			Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ ||
+			Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle;
+
 		if (!Combat->IsAiming())
 		{
-			AddControllerYawInput(LookAxisValue.X * BaseTurnSpeedMultiplier);
-			AddControllerPitchInput(LookAxisValue.Y * BaseTurnSpeedMultiplier);
+			AddControllerYawInput(LastLookInput.X * Settings->GetBaseTurnRate());
+			AddControllerPitchInput(LastLookInput.Y * Settings->GetBaseTurnRate());
 		}
-		else
+		else if (Combat->IsAiming() && !bIsLongRange)
 		{
-			float ZoomedFOV = Combat->EquippedWeapon->GetZoomedFOV();
-			float InverseZoomedFOV = 1.0f / ZoomedFOV;
-			InverseZoomedFOV = FMath::Pow(InverseZoomedFOV, 0.5f);  // take the square root of the inverse
-			const float SpeedScale = 100.0f;  // New constant to control speed
-			float FinalFOVSpeed = (BaseTurnSpeedMultiplier * InverseZoomedFOV) * SpeedScale;
-			AddControllerYawInput(LookAxisValue.X / FinalFOVSpeed);
-			AddControllerPitchInput(LookAxisValue.Y / FinalFOVSpeed);
-			UE_LOG(LogTemp, Warning, TEXT("ZoomedFOV: %f, FinalFOVSpeed: %f, BaseTurnSpeed: %f"), ZoomedFOV, FinalFOVSpeed, BaseTurnSpeedMultiplier);
+			float DecreasedRotationSpeed = Settings->GetBaseTurnRate() / Settings->GetAimingTurnRateForShortZoom();
+
+			AddControllerYawInput(LastLookInput.X * DecreasedRotationSpeed);
+			AddControllerPitchInput(LastLookInput.Y * DecreasedRotationSpeed);
 		}
+		else if (Combat->IsAiming() && bIsLongRange)
+		{
+			float DecreasedRotationSpeed = Settings->GetBaseTurnRate() / Settings->GetAimingTurnRateForLongZoom();
+
+			AddControllerYawInput(LastLookInput.X * DecreasedRotationSpeed);
+			AddControllerPitchInput(LastLookInput.Y * DecreasedRotationSpeed);
+		}
+		
+	}
+	else
+	{
+		AddControllerYawInput(LastLookInput.X);
+		AddControllerPitchInput(LastLookInput.Y);
 	}
 }
 
@@ -800,21 +876,18 @@ void ABlasterCharacter::ProneButtonPressed()
 	if (Combat->bIsProne == false)
 	{
 		Combat->StopSliding();
-		UE_LOG(LogTemp, Error, TEXT("SlidingStopped"));
 	}
 	if (Combat->bIsProne == true)
 	{
 		Combat->StopProne();
-		UE_LOG(LogTemp, Error, TEXT("ProneSTOPPED!"));
 	}
 	else if (Speed >= 0 || bIsInAir || bIsCrouched || bIsSliding)
 	{
 		UnCrouch();
 		Combat->StartProne();
-		UE_LOG(LogTemp, Error, TEXT("ProneStarted!"));
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterCharacter::Aim(const FInputActionValue& Value)
@@ -826,8 +899,6 @@ void ABlasterCharacter::Aim(const FInputActionValue& Value)
 	{
 		Combat->SetAiming(IsAiming);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Aiming is now: %s"), IsAiming ? TEXT("True") : TEXT("False"));
-
 }
 
 void ABlasterCharacter::Fire(const FInputActionValue& Value)
@@ -891,22 +962,25 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
-	{
-		EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Movement);
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
-		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipButtonPressed);
-		EnhancedInputComponent->BindAction(SwapAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::SwapButtonPressed);
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchButtonPressed);
-		EnhancedInputComponent->BindAction(ProneAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ProneButtonPressed);
-		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Aim);
-		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::Fire);
-		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
-		EnhancedInputComponent->BindAction(ThrowGrenadeAction, ETriggerEvent::Triggered, this, &ABlasterCharacter::GrenadeButtonPressed);
-	}
+	UBlasterEnhancedInputComponent* EnhancedInputComponent = Cast<UBlasterEnhancedInputComponent>(PlayerInputComponent);
+
+	//Make sure to set your input component class in the InputSettings->DefaultClasses
+	check(EnhancedInputComponent);
+
+	const FBlasterGameplayTags& GameplayTags = FBlasterGameplayTags::Get();
+
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Move, ETriggerEvent::Triggered, this, &ABlasterCharacter::Movement);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Look_Mouse, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Jump, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Equip, ETriggerEvent::Triggered, this, &ABlasterCharacter::EquipButtonPressed);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Swap, ETriggerEvent::Triggered, this, &ABlasterCharacter::SwapButtonPressed);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Crouch, ETriggerEvent::Triggered, this, &ABlasterCharacter::CrouchButtonPressed);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Prone, ETriggerEvent::Triggered, this, &ABlasterCharacter::ProneButtonPressed);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Aim, ETriggerEvent::Triggered, this, &ABlasterCharacter::Aim);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Fire, ETriggerEvent::Triggered, this, &ABlasterCharacter::Fire);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Reload, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Grenade, ETriggerEvent::Triggered, this, &ABlasterCharacter::GrenadeButtonPressed);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -1037,7 +1111,7 @@ void ABlasterCharacter::PlayReloadMontage()
 		}
 
 		AnimInstance->Montage_JumpToSection(SectionName);
-		GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+		//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 	}
 }
 
@@ -1070,7 +1144,7 @@ void ABlasterCharacter::PlaySwapMontage()
 
 void ABlasterCharacter::PlayHitReactMontage()
 {
-	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr || Combat->bIsSliding || Combat->bIsProne) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && HitReactMontage && Combat->CombatState != ECombatState::ECS_Reloading)
@@ -1230,6 +1304,8 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 void ABlasterCharacter::HideCharacterAndWeaponsIfScopingOrCameraClose()
 {
 	if (!IsLocallyControlled()) return;
+	if (Combat == nullptr || this == nullptr || FollowCamera == nullptr || Combat->EquippedWeapon == nullptr || Combat->EquippedWeapon == nullptr) return;
+
 	bool bSouldHideChar = ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold) || 
 		(Combat && Combat->bAiming && GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_M4AZ) ||
 		(Combat && Combat->bAiming && GetEquippedWeapon()->GetWeaponType() == EWeaponType::EWT_SniperRifle);
@@ -1320,7 +1396,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 	UWorld* World = GetWorld();
 	if (InstaKillGameMode && World && !bElimmed && InstaKillWeaponClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Current game mode: InstaKillGameMode"));
+		//UE_LOG(LogTemp, Warning, TEXT("Current game mode: InstaKillGameMode"));
 
 		StartingWeapon = World->SpawnActor<AWeapon>(InstaKillWeaponClass);
 		StartingWeapon->bDestroyWeapon = true;
@@ -1331,7 +1407,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 	}
 	else if (BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Current game mode: BlasterGameMode"));
+		//UE_LOG(LogTemp, Warning, TEXT("Current game mode: BlasterGameMode"));
 
 		StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		StartingWeapon->bDestroyWeapon = true;
@@ -1403,7 +1479,7 @@ bool ABlasterCharacter::IsAiming()
 
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
-	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return nullptr;
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return nullptr;  //@TODO sometimes this crashes the engine, investigate further;
 	return Combat->EquippedWeapon;
 }
 
@@ -1424,4 +1500,50 @@ bool ABlasterCharacter::IsLocallyReloading()
 	if (Combat == nullptr) return false;
 	return Combat->bLocallyReloading;
 
+}
+
+void ABlasterCharacter::AddOrUpdateCustomKeyboardBindings(const FName MappingName, const FKey NewKey, ULocalPlayer* LocalPlayer)
+{
+
+	for (const FEnhancedActionKeyMapping& Mapping : Config->GetPlayerMappableKeys())
+	{
+		// Make sure that the mapping has a valid name, its possible to have an empty name
+		// if someone has marked a mapping as "Player Mappable" but deleted the default field value
+		if (Mapping.PlayerMappableOptions.Name != NAME_None)
+		{
+			CustomKeyboardConfig.Add(Mapping.PlayerMappableOptions.Name, Mapping.Key);
+		}
+	}
+
+	if (FKey* ExistingMapping = CustomKeyboardConfig.Find(MappingName))
+	{
+		// Change the key to the new one
+		CustomKeyboardConfig[MappingName] = NewKey;
+	}
+	else
+	{
+		CustomKeyboardConfig.Add(MappingName, NewKey);
+	}
+
+	// Tell the enhanced input subsystem for this local player that we should remap some input! Woo
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+	{
+		Subsystem->AddPlayerMappedKey(MappingName, NewKey);
+	}
+}
+
+void ABlasterCharacter::ResetKeybindingToDefault(const FName MappingName, ULocalPlayer* LocalPlayer)
+{
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+	{
+		Subsystem->RemovePlayerMappedKey(MappingName);
+	}
+}
+
+void ABlasterCharacter::ResetKeybindingsToDefault(ULocalPlayer* LocalPlayer)
+{
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+	{
+		Subsystem->RemoveAllPlayerMappedKeys();
+	}
 }

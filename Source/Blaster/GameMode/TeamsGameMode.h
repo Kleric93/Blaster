@@ -6,6 +6,8 @@
 #include "BlasterGameMode.h"
 #include "TeamsGameMode.generated.h"
 
+class UBlasterUserSettings;
+
 /**
  * 
  */
@@ -18,6 +20,10 @@ public:
 	ATeamsGameMode();
 	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController) override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+	UFUNCTION()
+	void OnTeamChosen(ABlasterPlayerController* BPController, ETeam ChosenTeam);
+
 	virtual void Logout(AController* Exiting) override;
 	virtual float CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage) override;
 

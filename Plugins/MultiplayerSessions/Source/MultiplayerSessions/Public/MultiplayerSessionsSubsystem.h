@@ -49,6 +49,8 @@ public:
 
 	int32 DesiredNumPublicConnections{};
 	FString DesiredMatchType{};
+	IOnlineSessionPtr SessionInterface;
+
 protected:
 
 	//
@@ -63,7 +65,6 @@ protected:
 	void OnStartSessionComplete(FName SessionName, bool bWasSuccessful);
 
 private:
-	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 
@@ -90,6 +91,4 @@ private:
 	bool bCreateSessionOnDestroy{ false };
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
-
-
 };

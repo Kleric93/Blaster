@@ -80,4 +80,7 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* BerserkBuffIcon;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ScoreToWin;
 };

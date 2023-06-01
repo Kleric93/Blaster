@@ -81,7 +81,7 @@ void UPlayerStats::WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPl
             SetupPlayerStatsLineWidget(BlasterPlayerState, InGamePlayer->GetPlayerName());
 
             //PlayerStatsLineWidget->AddToViewport();
-           
+
             if (BlasterPlayerState->GetTeam() == ETeam::ET_RedTeam && PlayerStatsScrollBox_RedTeam)
             {
                 PlayerStatsScrollBox_RedTeam->AddChild(PlayerStatsLineWidget);
@@ -122,7 +122,7 @@ void UPlayerStats::SetupPlayerStatsLineWidget(ABlasterPlayerState* BlasterPlayer
         GameState->OnTeamScoredPoint.AddDynamic(this, &UPlayerStats::UpdateOverallScores);
         GameState->OnPlayerLeft.AddDynamic(this, &UPlayerStats::RemovePlayerFromScoreboard);
         GameState->OnPlayerJoined.AddDynamic(this, &UPlayerStats::AddPlayerToScoreboard);
-    }   
+    }
 }
 
 
@@ -294,7 +294,7 @@ void UPlayerStats::AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining, con
     UPlayerStatsLine* NewStatsLine = CreateWidget<UPlayerStatsLine>(GetWorld(), PlayerStatLine);
     if (NewStatsLine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::Printf(TEXT("Player Name: %s"), *PlayerName));
+       // GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, FString::Printf(TEXT("Player Name: %s"), *PlayerName));
 
         NewStatsLine->DisplayName->SetText(FText::FromString(PlayerName));
         SetupPlayerStatsLineWidget(PlayerJoining, PlayerName);
@@ -316,6 +316,5 @@ void UPlayerStats::AddPlayerToScoreboard(ABlasterPlayerState* PlayerJoining, con
         }
     }
 }
-
 
 

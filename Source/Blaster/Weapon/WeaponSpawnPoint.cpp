@@ -29,7 +29,8 @@ void AWeaponSpawnPoint::BeginPlay()
 
 	// Replicate the pedestal mesh's material
 	PedestalMesh->SetIsReplicated(true);
-	StartSpawnWeaponTimer(EWeaponState::EWS_Initial);
+	//StartSpawnWeaponTimer(EWeaponState::EWS_Initial);
+	SpawnWeaponTimerFinished();
 
 	PedestalParticlesComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), NiagaraSystemParticles, GetActorLocation());
 	if (PedestalParticlesComponent)

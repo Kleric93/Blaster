@@ -6,6 +6,7 @@
 #include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blaster/BlasterUserSettings.h"
 
 ATeamsGameMode::ATeamsGameMode()
 {
@@ -16,26 +17,50 @@ void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
+	ABlasterPlayerController* Controller = Cast<ABlasterPlayerController>(NewPlayer);
 	ABlasterGameState* BGameState = Cast <ABlasterGameState>(UGameplayStatics::GetGameState(this));
+	ABlasterPlayerState* BPState = NewPlayer->GetPlayerState<ABlasterPlayerState>();
+
+	Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
 	if (BGameState)
 	{
-		ABlasterPlayerState* BPState = NewPlayer->GetPlayerState<ABlasterPlayerState>();
-		if (BPState && BPState->GetTeam() == ETeam::ET_NoTeam)
+		if (Controller)
 		{
-			if (BGameState->BlueTeam.Num() >= BGameState->RedTeam.Num())
+			Controller->OnTeamChosen.AddDynamic(this, &ATeamsGameMode::OnTeamChosen);
+			if (BPState->GetTeam() == ETeam::ET_NoTeam)
 			{
-				UE_LOG(LogTemp, Error, TEXT("PostLogin got inside the if check for red team"))
-				BGameState->RedTeam.AddUnique(BPState);
-				BPState->SetTeam(ETeam::ET_RedTeam);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Error, TEXT("PostLogin got inside the if check for blue team"))
-
-				BGameState->BlueTeam.AddUnique(BPState);
-				BPState->SetTeam(ETeam::ET_BlueTeam);
+				if (BGameState->BlueTeam.Num() >= BGameState->RedTeam.Num())
+				{
+					BGameState->RedTeam.AddUnique(BPState);
+					BPState->SetTeam(ETeam::ET_RedTeam);
+				}
+				else
+				{
+					BGameState->BlueTeam.AddUnique(BPState);
+					BPState->SetTeam(ETeam::ET_BlueTeam);
+				}
 			}
 		}
+	}
+}
+
+void ATeamsGameMode::OnTeamChosen(ABlasterPlayerController* BPController, ETeam ChosenTeam)
+{
+	ABlasterGameState* BGameState = Cast <ABlasterGameState>(UGameplayStatics::GetGameState(this));
+	ABlasterPlayerState* BPState = Cast<ABlasterPlayerState>(BPController->PlayerState);
+	if (BPState && BPController)
+	{
+		if (ChosenTeam == ETeam::ET_RedTeam)
+		{
+			BGameState->RedTeam.AddUnique(BPState);
+			BPState->SetTeam(ETeam::ET_RedTeam);
+		}
+		else if (ChosenTeam == ETeam::ET_BlueTeam)
+		{
+			BGameState->BlueTeam.AddUnique(BPState);
+			BPState->SetTeam(ETeam::ET_BlueTeam);
+		}
+	
 	}
 	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
@@ -68,13 +93,13 @@ void ATeamsGameMode::HandleMatchHasStarted()
 		for (auto PState : BGameState->PlayerArray)
 		{
 			ABlasterPlayerState* BPState = Cast<ABlasterPlayerState>(PState.Get());
-			if (BPState && BPState->GetTeam() == ETeam::ET_NoTeam)
+			
+			if (BPState->GetTeam() == ETeam::ET_NoTeam)
 			{
 				if (BGameState->BlueTeam.Num() >= BGameState->RedTeam.Num())
 				{
 					BGameState->RedTeam.AddUnique(BPState);
 					BPState->SetTeam(ETeam::ET_RedTeam);
-
 				}
 				else
 				{
@@ -84,13 +109,14 @@ void ATeamsGameMode::HandleMatchHasStarted()
 			}
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 float ATeamsGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
 {
-	ABlasterPlayerState* AttackerPState = Attacker->GetPlayerState<ABlasterPlayerState>();
-	ABlasterPlayerState* VictimPState = Victim->GetPlayerState<ABlasterPlayerState>();
+	if (!Attacker || !Victim) return BaseDamage;
+
+	ABlasterPlayerState* AttackerPState = Attacker ? Attacker->GetPlayerState<ABlasterPlayerState>() : nullptr;
+	ABlasterPlayerState* VictimPState = Victim ? Victim->GetPlayerState<ABlasterPlayerState>() : nullptr;
 
 	if (AttackerPState == nullptr || VictimPState == nullptr) return BaseDamage;
 
@@ -100,6 +126,7 @@ float ATeamsGameMode::CalculateDamage(AController* Attacker, AController* Victim
 
 	return BaseDamage;
 }
+
 
 void ATeamsGameMode::PlayerEliminated(ABlasterCharacter* ElimmedCharacter, ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController)
 {

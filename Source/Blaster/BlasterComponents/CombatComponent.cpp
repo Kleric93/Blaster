@@ -2,8 +2,10 @@
 
 
 #include "CombatComponent.h"
+#include "EngineUtils.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -15,6 +17,7 @@
 #include "GameFramework/Actor.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
+#include "Blaster/Blaster.h"
 #include "Blaster/Character/BlasterAnimInstance.h"
 #include "Blaster/Weapon/Projectile.h"
 #include "Blaster/Grenade/Grenade.h"
@@ -22,8 +25,15 @@
 #include "Blaster/Pickups/TeamsFlag.h"
 #include "Blaster/HUD/OverheadWidget.h"
 #include "Components/WidgetComponent.h"
+#include "Components/BoxComponent.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
-#include "Components/CapsuleCOmponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/TextBlock.h"
+#include "Blaster/BlasterUserSettings.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+
+
 
 
 
@@ -54,6 +64,11 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (Settings == nullptr)
+	{
+		Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
+	}
+
 	UpdateHUDGrenades();
 
 	if (Character)
@@ -83,8 +98,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		TraceUnderCrosshairs(HitResult);
 		HitTarget = HitResult.ImpactPoint;
 
+		FHitResult ObjectHitResult;
+		TraceForObjects();
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
+		UpdateAim(DeltaTime);
 	}
 }
 
@@ -290,7 +308,7 @@ void UCombatComponent::SwapWeapon()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied || Character == nullptr) return;
 
-	if (bAiming == true)
+	if (!bAiming)
 	{
 		bAiming = false;
 		if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ)
@@ -301,15 +319,14 @@ void UCombatComponent::SwapWeapon()
 		{
 			Character->ShowSniperScopeWidget(false);
 		}
+		Character->PlaySwapMontage();
+		Character->bFinishedSwapping = false;
+		CombatState = ECombatState::ECS_SwappingWeapons;
+
+		AWeapon* TempWeapon = EquippedWeapon;
+		EquippedWeapon = SecondaryWeapon;
+		SecondaryWeapon = TempWeapon;
 	}
-
-	Character->PlaySwapMontage();
-	Character->bFinishedSwapping = false;
-	CombatState = ECombatState::ECS_SwappingWeapons;
-
-	AWeapon* TempWeapon = EquippedWeapon;
-	EquippedWeapon = SecondaryWeapon;
-	SecondaryWeapon = TempWeapon;
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -344,7 +361,6 @@ void UCombatComponent::EquipFlag(class ATeamsFlag* FlagToEquip)
 	AttachFlagToBackpack(EquippedFlag);
 	EquippedFlag->SetOwner(Character);
 	EquippedFlag->GetFlagMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
-	//UE_LOG(LogTemp, Error, TEXT("Flag Was Equipped in UCOMBATCOMPONENT"));
 }
 
 bool UCombatComponent::ShouldSwapWeapons()
@@ -808,6 +824,219 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
+void UCombatComponent::TraceForObjects()
+{
+	
+	// Hide all overhead widgets initially
+	for (TActorIterator<ABlasterCharacter> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+	{
+		ABlasterCharacter* BlasterCharacter = *ActorItr;
+		
+		//BlasterCharacter->GetOverheadWidgetComponent()->SetVisibility(false);
+
+		if (BlasterCharacter->IsLocallyControlled() && Settings->GetbLocalPlayerOverheadWidgetVisibility() == true)
+		{
+			BlasterCharacter->GetOverheadWidgetComponent()->SetVisibility(true);
+		}
+		else if (BlasterCharacter->IsLocallyControlled() && Settings->GetbLocalPlayerOverheadWidgetVisibility() == false)
+		{
+			BlasterCharacter->GetOverheadWidgetComponent()->SetVisibility(false);
+		}
+	}
+
+
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CrosshairLocation,
+		CrosshairWorldPosition,
+		CrosshairWorldDirection
+	);
+
+	if (bScreenToWorld)
+	{
+		FVector Start = CrosshairWorldPosition;
+
+		if (Character)
+		{
+			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 500.f);
+		}
+
+		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		FHitResult HitResult;
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_GameTraceChannel3 // Common channel for both walls and widgets
+		);
+
+		if (bHit)
+		{
+			AActor* HitActor = HitResult.GetActor();
+			if (HitActor == nullptr) return;
+
+			ABlasterCharacter* HitBlasterCharacter = Cast<ABlasterCharacter>(HitActor);
+			if (HitBlasterCharacter == nullptr) { return; }
+
+
+			if (HitBlasterCharacter && HitResult.GetComponent() == HitBlasterCharacter->GetOverheadWidgetBoxComponent())
+			{
+
+				HitBlasterCharacter->GetOverheadWidgetComponent()->SetVisibility(true);
+				// Calculate the distance from the player to the widget
+				float Distance = FVector::Dist(HitBlasterCharacter->GetActorLocation(), Character->GetActorLocation());
+
+				// Clamp the distance between the min and max distances
+				float ClampedDistance = FMath::Clamp(Distance, WidgetMinDistance, WidgetMaxDistance);
+
+				// Normalize the clamped distance to a value between 0 and 1
+				float NormalizedDistance = (ClampedDistance - WidgetMinDistance) / (WidgetMaxDistance - WidgetMinDistance);
+
+				// Invert NormalizedDistance to make text smaller when farther away
+				NormalizedDistance = 1 - NormalizedDistance;
+
+				// Interpolate between the min and max size based on the normalized distance
+				float SizeFloat = FMath::Lerp(WidgetMinSize, WidgetMaxSize, NormalizedDistance);
+
+				// Convert the float size to integer
+				int32 Size = FMath::RoundToInt(SizeFloat);
+
+				// Set the size of the widget
+				UOverheadWidget* OHWidget = Cast<UOverheadWidget>(HitBlasterCharacter->GetOverheadWidgetComponent()->GetUserWidgetObject());
+				if (OHWidget)
+				{
+					OHWidget->SetTextSize(Size);
+					ETeam TeamToSet = HitBlasterCharacter->GetTeam();
+					OHWidget->ChangeOWColor(TeamToSet);
+					//UE_LOG(LogTemp, Warning, TEXT("Setting Draw Size: %f"), SizeFloat);
+					//UE_LOG(LogTemp, Warning, TEXT("Distance from other player: %f"), Distance);
+				}
+				//UE_LOG(LogTemp, Warning, TEXT("Setting timer..."));
+
+				GetWorld()->GetTimerManager().ClearTimer(HitBlasterCharacter->HideWidgetTimerHandle); // Clear any existing timer
+				GetWorld()->GetTimerManager().SetTimer(
+					HitBlasterCharacter->HideWidgetTimerHandle,
+					[HitBlasterCharacter]()
+					{
+						//UE_LOG(LogTemp, Warning, TEXT("Timer expired!"));
+						HitBlasterCharacter->GetOverheadWidgetComponent()->SetVisibility(false);
+					},
+					HideWidgetTimer, false);
+
+			}
+		}
+	}
+}
+
+void UCombatComponent::TraceForAimAssist()
+{
+	TargetAimDirection = FVector::ZeroVector;
+
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CrosshairLocation,
+		CrosshairWorldPosition,
+		CrosshairWorldDirection
+	);
+
+	if (bScreenToWorld)
+	{
+		FVector Start = CrosshairWorldPosition;
+
+		if (Character)
+		{
+			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 400.f);
+		}
+
+		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		FHitResult HitResult;
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Start,
+			End,
+			ECC_EngineTraceChannel4
+		);
+
+		if (bHit)
+		{
+			AActor* HitActor = HitResult.GetActor();
+			if (HitActor == nullptr) return;
+
+			ABlasterCharacter* HitBlasterCharacter = Cast<ABlasterCharacter>(HitActor);
+			if (HitBlasterCharacter == nullptr) { return; }
+
+			if (HitResult.GetComponent() != HitBlasterCharacter->GetAimAssistSphereComponent())
+			{
+				return;
+			}
+
+			if (HitBlasterCharacter && HitResult.GetComponent() == HitBlasterCharacter->GetAimAssistSphereComponent())
+			{
+				// This should be the world location of your target's center
+				FVector TargetCenter = HitBlasterCharacter->GetAimAssistSphereComponent()->GetComponentLocation();
+
+				TargetAimDirection = (TargetCenter - CrosshairWorldPosition).GetSafeNormal();
+			}
+		}
+	}
+}
+
+void UCombatComponent::UpdateAim(float DeltaTime)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+	if (PlayerController == nullptr) return;
+
+	// Step 1: Get player input
+	float InputPitch = Character->GetLastLookInput().Y;
+	float InputYaw = Character->GetLastLookInput().X;
+
+	// Step 3: Use your existing line trace logic to find the enemy
+	TraceForAimAssist();
+
+	// Step 4: If the line trace hits the enemy's aim assist collider, calculate the desired pitch and yaw
+	if (!TargetAimDirection.IsNearlyZero())
+	{
+		FRotator DesiredAimRot = TargetAimDirection.Rotation();
+		FRotator CurrentAimRot = PlayerController->GetControlRotation();
+
+		// Step 5: Calculate the difference between the desired and current rotations
+		FRotator DeltaRot = (DesiredAimRot - CurrentAimRot).GetNormalized();
+
+		// Step 6: Calculate the squared length of the rotation axis
+		float RotationLengthSquared = DeltaRot.Vector().SizeSquared();
+
+		// Step 7: Calculate the interpolation speed based on the squared length of the rotation axis
+		float InterpolationSpeed = FMath::Clamp(RotationLengthSquared / 180.f, 0.f, 1.f) * AimAssistSpeed;
+
+		// Step 8: Interpolate the current pitch and yaw of the player controller towards the desired pitch and yaw
+		FRotator NewAimRot = CurrentAimRot + DeltaRot * InterpolationSpeed * DeltaTime;
+
+		// Apply the new pitch and yaw to the player controller
+		PlayerController->SetControlRotation(NewAimRot);
+	}
+}
+
+
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
 	if (Character == nullptr || Character->Controller == nullptr) return;
@@ -925,15 +1154,18 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	if (bCanReduceAimSpeed)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
+		//UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
 	}
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
+		Controller->SetCharacterOverlayVisibility(!bIsAiming);
 	}
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ)
 	{
 		Character->ShowM4ScopeWidget(bIsAiming);
+		Controller->SetCharacterOverlayVisibility(!bIsAiming);
+
 	}
 	if (Character->IsLocallyControlled()) bAimButtonpressed = bIsAiming;
 }
@@ -1091,7 +1323,7 @@ void UCombatComponent::OnRep_Prone()
 	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
+		//UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
 	}
 }
 
@@ -1105,7 +1337,7 @@ void UCombatComponent::StartProne()
 	{
 		MulticastStartProne();
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void UCombatComponent::StopProne()
@@ -1137,9 +1369,8 @@ void UCombatComponent::MulticastStartProne_Implementation()
 	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = ProneSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void UCombatComponent::MulticastStopProne_Implementation()
@@ -1149,7 +1380,6 @@ void UCombatComponent::MulticastStopProne_Implementation()
 	if (Character && BuffComponent->GetbIsSpeedBuffActive() == false)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("MaxWalkSpeed is now: %f"), Character->GetCharacterMovement()->MaxWalkSpeed);
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }

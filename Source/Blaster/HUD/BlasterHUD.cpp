@@ -91,14 +91,10 @@ void ABlasterHUD::AddPlayerStats()
 	ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(GetOwningPlayerController());
 	if (BlasterPlayerController)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BlasterPlayerController is valid"));
 
 		ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(BlasterPlayerController->GetWorld()->GetGameState());
 		if (BlasterGameState)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("BlasterGameState is valid"));
-			UE_LOG(LogTemp, Warning, TEXT("ABlasterHUD called AddPlayerStats() and created scores overview widget"));
-
 			if (ScoresOverview == nullptr)
 			{
 				ScoresOverview = CreateWidget<UScoresOverview>(GetWorld(), ScoresOverviewWidget);
@@ -114,30 +110,13 @@ void ABlasterHUD::AddPlayerStats()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Warning, TEXT("PlayerControllersArray is empty"));
 			GetWorld()->GetTimerManager().SetTimer(WidgetCreationDelayHandle, this, &ABlasterHUD::AddPlayerStats, 0.5f, false);
 		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BlasterPlayerController is NOT valid"));
+		return;
 	}
-}
-
-void ABlasterHUD::AddAllPlayerStats()
-{
-	/*
-	ABlasterGameState* BlasterGameState = GetWorld()->GetGameState<ABlasterGameState>();
-	if (BlasterGameState)
-	{
-		for (APlayerState* State : BlasterGameState->PlayerArray)
-		{
-			ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(State);
-			if (BlasterPlayerState)
-			{
-			}
-		}
-	}*/
 }
 
 void ABlasterHUD::ElimAnnouncementTimerFinished(UElimAnnouncement* MsgToRemove)

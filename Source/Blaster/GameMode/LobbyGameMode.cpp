@@ -3,6 +3,7 @@
 
 #include "LobbyGameMode.h"
 #include "GameFramework/GameStateBase.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "MultiplayerSessionsSubsystem.h"
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -22,24 +23,40 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 			UWorld* World = GetWorld();
 			if (World)
 			{
-				bUseSeamlessTravel = true;
+				//bUseSeamlessTravel = true;
 
 				FString MatchType = Subsystem->DesiredMatchType;
 				if (MatchType == "FreeForAll")
 				{
 					World->ServerTravel(FString("/Game/Maps/BlasterMap?listen"));
 				}
+				else if (MatchType == "FreeForAllSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/BlasterMapSM?listen"));
+				}
 				else if (MatchType == "Teams")
 				{
 					World->ServerTravel(FString("/Game/Maps/Teams?listen"));
+				}
+				else if (MatchType == "TeamsSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/TeamsSM?listen"));
 				}
 				else if (MatchType == "CaptureTheFlag")
 				{
 					World->ServerTravel(FString("/Game/Maps/CaptureTheFlag?listen"));
 				}
+				else if (MatchType == "CaptureTheFlagSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/CaptureTheFlagSM?listen"));
+				}
 				else if (MatchType == "InstaKill")
 				{
 					World->ServerTravel(FString("/Game/Maps/InstaKillMap?listen"));
+				}
+				else if (MatchType == "InstaKillSM")
+				{
+					World->ServerTravel(FString("/Game/Maps/InstaKillMapSM?listen"));
 				}
 			}
 		}

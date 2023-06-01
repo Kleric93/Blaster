@@ -44,7 +44,8 @@ AWeapon::AWeapon()
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(RootComponent);
 	AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
@@ -74,8 +75,7 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	//AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
 	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
 
@@ -575,7 +575,7 @@ void AWeapon::Dropped()
 		SetWeaponState(EWeaponState::EWS_Dropped);
 		FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 		WeaponMesh->DetachFromComponent(DetachRules);
-	
+
 		SetOwner(nullptr);
 		BlasterOwnerCharacter = nullptr;
 		BlasterOwnerController = nullptr;
@@ -585,16 +585,19 @@ void AWeapon::Dropped()
 		SetWeaponState(EWeaponState::EWS_Dropped);
 		FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 		WeaponMesh->DetachFromComponent(DetachRules);
-		FVector Impulse = BlasterOwnerCharacter->GetActorForwardVector() * 500.f;
 
-		WeaponMesh->AddImpulse(Impulse, NAME_None, true);
+		if (BlasterOwnerCharacter)
+		{
+			FVector Impulse = BlasterOwnerCharacter->GetActorForwardVector() * 500.f; //@TODO, this line was crashing the engine on quit game. check if it's still crashing shit.
+			WeaponMesh->AddImpulse(Impulse, NAME_None, true);
+		}
 
 		SetOwner(nullptr);
 		BlasterOwnerCharacter = nullptr;
 		BlasterOwnerController = nullptr;
 	}
-
 }
+
 
 bool AWeapon::IsEmpty()
 {

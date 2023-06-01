@@ -7,6 +7,9 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Menu.generated.h"
 
+class UButton;
+class USpinBox;
+
 /**
  * 
  */
@@ -18,6 +21,9 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 public:
 	UFUNCTION(BlueprintCallable)
 	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/ThirdPerson/Maps/Lobby")));
+
+	UFUNCTION()
+		void OnDMMatchTimeValueChanged(float InValue);
 
 protected:
 
@@ -39,16 +45,28 @@ protected:
 private:
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* HostButton;
+	UButton* HostButton;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* JoinButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* TrainingButton;
+
+	UPROPERTY(meta = (BindWidget))
+		USpinBox* DMMatchTimeBox;
+
+	UPROPERTY(meta = (BindWidget))
+		USpinBox* DMScoreToWinBox;
 
 	UFUNCTION()
 	void HostButtonClicked();
 
 	UFUNCTION()
 	void JoinButtonClicked();
+
+	UFUNCTION()
+	void TrainingButtonClicked();
 
 	void MenuTearDown();
 

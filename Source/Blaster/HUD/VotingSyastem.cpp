@@ -20,7 +20,7 @@ void UVotingSyastem::NativeConstruct()
 
 void UVotingSyastem::MenuSetup()
 {
-    AddToViewport();
+    AddToViewport(5);
     SetVisibility(ESlateVisibility::Visible);
     bIsFocusable = true;
 
@@ -42,23 +42,32 @@ void UVotingSyastem::MenuSetup()
         if (BlasterGameState)
         {
             BlasterGameState->OnFFAVoteCast.AddDynamic(this, &UVotingSyastem::UpdateFFAText);
+            BlasterGameState->OnFFASMVoteCast.AddDynamic(this, &UVotingSyastem::UpdateFFASMText);
             BlasterGameState->OnTDMVoteCast.AddDynamic(this, &UVotingSyastem::UpdateTDMText);
+            BlasterGameState->OnTDMSMVoteCast.AddDynamic(this, &UVotingSyastem::UpdateTDMSMText);
             BlasterGameState->OnCTFVoteCast.AddDynamic(this, &UVotingSyastem::UpdateCTFText);
+            BlasterGameState->OnCTFSMVoteCast.AddDynamic(this, &UVotingSyastem::UpdateCTFSMText);
             BlasterGameState->OnInstaKillVoteCast.AddDynamic(this, &UVotingSyastem::UpdateInstaKillText);
+            BlasterGameState->OnInstaKillSMVoteCast.AddDynamic(this, &UVotingSyastem::UpdateInstaKillSMText);
         }
     }
 
     if (FFAButton)
     {
         FFAButton->OnClicked.AddDynamic(this, &UVotingSyastem::FFAVoteCast);
+        FFASMButton->OnClicked.AddDynamic(this, &UVotingSyastem::FFASMVoteCast);
         TDMButton->OnClicked.AddDynamic(this, &UVotingSyastem::TDMVoteCast);
+        TDMSMButton->OnClicked.AddDynamic(this, &UVotingSyastem::TDMSMVoteCast);
         CTFButton->OnClicked.AddDynamic(this, &UVotingSyastem::CTFVoteCast);
+        CTFSMButton->OnClicked.AddDynamic(this, &UVotingSyastem::CTFSMVoteCast);
         InstaKillButton->OnClicked.AddDynamic(this, &UVotingSyastem::InstaKillVoteCast);
+        InstaKillSMButton->OnClicked.AddDynamic(this, &UVotingSyastem::InstaKillSMVoteCast);
     }
 }
 
 void UVotingSyastem::MenuTeardown()
 {
+    if (this == nullptr) return;
     RemoveFromParent();
 
     UWorld* World = GetWorld();
@@ -72,27 +81,8 @@ void UVotingSyastem::MenuTeardown()
             PlayerController->SetShowMouseCursor(false);
         }
     }
-    /*
-    BlasterPlayerState = Cast<ABlasterPlayerState>(PlayerController->PlayerState);
-    BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(World));
 
-    if (BlasterGameState)
-    {
-        BlasterGameState->OnFFAVoteCast.RemoveDynamic(this, &UVotingSyastem::UpdateFFAText);
-        BlasterGameState->OnTDMVoteCast.RemoveDynamic(this, &UVotingSyastem::UpdateTDMText);
-        BlasterGameState->OnCTFVoteCast.RemoveDynamic(this, &UVotingSyastem::UpdateCTFText);
-        BlasterGameState->OnInstaKillVoteCast.RemoveDynamic(this, &UVotingSyastem::UpdateInstaKillText);
-    }
-
-    if (FFAButton)
-    {
-        FFAButton->OnClicked.RemoveDynamic(this, &UVotingSyastem::FFAVoteCast);
-        TDMButton->OnClicked.RemoveDynamic(this, &UVotingSyastem::TDMVoteCast);
-        CTFButton->OnClicked.RemoveDynamic(this, &UVotingSyastem::CTFVoteCast);
-        InstaKillButton->OnClicked.RemoveDynamic(this, &UVotingSyastem::InstaKillVoteCast);
-    }*/
-
-    GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+    //GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void UVotingSyastem::FFAVoteCast()
@@ -114,6 +104,25 @@ void UVotingSyastem::FFAVoteCast()
     }
 }
 
+void UVotingSyastem::FFASMVoteCast()
+{
+    if (PlayerController)
+    {
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        if (BlasterPlayerController)
+        {
+            BlasterPlayerController->Server_FFASMVoteCast();
+            UE_LOG(LogTemp, Warning, TEXT("The FFA button was clicked!"));
+        }
+    }
+
+    // disable the button
+    if (FFASMButton)
+    {
+        FFASMButton->SetIsEnabled(false);
+    }
+}
+
 void UVotingSyastem::TDMVoteCast()
 {
     if (PlayerController)
@@ -129,6 +138,24 @@ void UVotingSyastem::TDMVoteCast()
     if (TDMButton)
     {
         TDMButton->SetIsEnabled(false);
+    }
+}
+
+void UVotingSyastem::TDMSMVoteCast()
+{
+    if (PlayerController)
+    {
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        if (BlasterPlayerController)
+        {
+            BlasterPlayerController->Server_TDMSMVoteCast();
+        }
+    }
+
+    // disable the button
+    if (TDMSMButton)
+    {
+        TDMSMButton->SetIsEnabled(false);
     }
 }
 
@@ -150,6 +177,24 @@ void UVotingSyastem::CTFVoteCast()
     }
 }
 
+void UVotingSyastem::CTFSMVoteCast()
+{
+    if (PlayerController)
+    {
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        if (BlasterPlayerController)
+        {
+            BlasterPlayerController->Server_CTFSMVoteCast();
+        }
+    }
+
+    // disable the button
+    if (CTFSMButton)
+    {
+        CTFSMButton->SetIsEnabled(false);
+    }
+}
+
 void UVotingSyastem::InstaKillVoteCast()
 {
     if (PlayerController)
@@ -168,12 +213,38 @@ void UVotingSyastem::InstaKillVoteCast()
     }
 }
 
+void UVotingSyastem::InstaKillSMVoteCast()
+{
+    if (PlayerController)
+    {
+        BlasterPlayerController = Cast<ABlasterPlayerController>(PlayerController);
+        if (BlasterPlayerController)
+        {
+            BlasterPlayerController->Server_InstaKillSMVoteCast();
+        }
+    }
+
+    // disable the button
+    if (InstaKillSMButton)
+    {
+        InstaKillSMButton->SetIsEnabled(false);
+    }
+}
+
 
 void UVotingSyastem::UpdateFFAText(int32 Vote)
 {
     if (FFATotalVotesText)
     {
         FFATotalVotesText->SetText(FText::FromString(FString::FromInt(Vote)));
+    }
+}
+
+void UVotingSyastem::UpdateFFASMText(int32 Vote)
+{
+    if (FFASMTotalVotesText)
+    {
+        FFASMTotalVotesText->SetText(FText::FromString(FString::FromInt(Vote)));
     }
 }
 
@@ -185,6 +256,14 @@ void UVotingSyastem::UpdateTDMText(int32 Vote)
     }
 }
 
+void UVotingSyastem::UpdateTDMSMText(int32 Vote)
+{
+    if (TDMSMTotalVotesText)
+    {
+        TDMSMTotalVotesText->SetText(FText::FromString(FString::FromInt(Vote)));
+    }
+}
+
 void UVotingSyastem::UpdateCTFText(int32 Vote)
 {
     if (CTFTotalVotesText)
@@ -193,10 +272,26 @@ void UVotingSyastem::UpdateCTFText(int32 Vote)
     }
 }
 
+void UVotingSyastem::UpdateCTFSMText(int32 Vote)
+{
+    if (CTFSMTotalVotesText)
+    {
+        CTFSMTotalVotesText->SetText(FText::FromString(FString::FromInt(Vote)));
+    }
+}
+
 void UVotingSyastem::UpdateInstaKillText(int32 Vote)
 {
     if (InstaKillTotalVotesText)
     {
         InstaKillTotalVotesText->SetText(FText::FromString(FString::FromInt(Vote)));
+    }
+}
+
+void UVotingSyastem::UpdateInstaKillSMText(int32 Vote)
+{
+    if (InstaKillSMTotalVotesText)
+    {
+        InstaKillSMTotalVotesText->SetText(FText::FromString(FString::FromInt(Vote)));
     }
 }

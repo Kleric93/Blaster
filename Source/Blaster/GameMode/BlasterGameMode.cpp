@@ -14,6 +14,7 @@
 #include "Blaster/KillBox.h"
 #include "Blaster/HUD/VotingSyastem.h"
 #include "Blaster/HUD/VotingSyastem.h"
+#include "Blaster/BlasterUserSettings.h"
 
 namespace MatchState
 {
@@ -30,15 +31,33 @@ void ABlasterGameMode::BeginPlay()
     Super::BeginPlay();
 
     LevelStartingTime = GetWorld()->GetTimeSeconds();
+
+    if (Settings == nullptr)
+    {
+        Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
+    }
+
+    MatchTime = Settings->GetGameTime();
+
 }
+
 
 void ABlasterGameMode::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+    float NewTimeElapsed = BlasterGameState->GetTimeElapsed() + DeltaTime;
+
+    if (MatchState != MatchState::Cooldown)
+    {
+        BlasterGameState->SetTimeElapsed(NewTimeElapsed);
+
+    }
 
     if (MatchState == MatchState::WaitingToStart)
     {
         CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+
         if (CountdownTime <= 0.f)
         {
             StartMatch();
@@ -46,6 +65,30 @@ void ABlasterGameMode::Tick(float DeltaTime)
     }
     else if (MatchState == MatchState::InProgress)
     {
+
+        float RedScore = BlasterGameState->RedTeamScore;
+        float BlueScore = BlasterGameState->BlueTeamScore;
+        float TopScoringPlayerScore = BlasterGameState->TopScore;
+
+        if (!bTeamsMatch && !bCaptureTheFlagMatch)
+        {
+            if (TopScoringPlayerScore >= Settings->GetMaxScore())
+            {
+                SetMatchState(MatchState::Cooldown);
+                BlasterGameState->SetHasMatchEndedAbruptly(true);
+            }
+        }
+        else
+        {
+            if (RedScore >= Settings->GetMaxScore() || BlueScore >= Settings->GetMaxScore())
+            {
+                SetMatchState(MatchState::Cooldown);
+                BlasterGameState->SetHasMatchEndedAbruptly(true);
+            }
+        }
+
+        //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("MaxScore IS %f"), Settings->GetMaxScore()));
+
         CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
         if (CountdownTime <= 0.f)
         {
@@ -54,14 +97,20 @@ void ABlasterGameMode::Tick(float DeltaTime)
     }
     else if (MatchState == MatchState::Cooldown)
     {
-        CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+        if (BlasterGameState->HasMatchEndedAbruptly())
+        {
+            CountdownTime = CooldownTime + WarmupTime  + BlasterGameState->GetTimeElapsed() - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+        }
+        else
+        {
+            CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+        }
 
         if (CountdownTime <= 0.f)
         {
-            ABlasterGameState * GS = GetGameState<ABlasterGameState>();
-            if (GS == nullptr) return;
+            if (BlasterGameState == nullptr) return;
 
-            FString mapName = GS->CompareVotesAndLog();
+            FString mapName = BlasterGameState->CompareVotesAndLog();
 
             ABlasterPlayerController* BlasterPlayerController = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
             if (BlasterPlayerController && BlasterPlayerController->VotingSystem)
@@ -80,7 +129,6 @@ void ABlasterGameMode::Tick(float DeltaTime)
         }
     }
 }
-
 
 void ABlasterGameMode::OnMatchStateSet()
 {
@@ -225,11 +273,12 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
             if (MatchState == MatchState::Cooldown && BlasterCharacter)
             {
                 BlasterCharacter->bDisableGameplay = true;
+                BlasterCharacter->DisableInput(BlasterCharacter->GetPlayerState()->GetPlayerController());
             }
         }
 
         // If no suitable spawn location is found, use a default location or return an error
-        UE_LOG(LogTemp, Warning, TEXT("No suitable spawn location found for player %s"), *ElimmedController->GetName());
+        //UE_LOG(LogTemp, Warning, TEXT("No suitable spawn location found for player %s"), *ElimmedController->GetName());
         FRotator DefaultRotation = FRotator(0.0f, 0.0f, 0.0f);
         RestartPlayerAtTransform(ElimmedController, FTransform(DefaultRotation, DefaultLocation));
     }
@@ -249,7 +298,7 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
     {
         CharacterLeaving->Elim(true);
         BlasterGameState->Multicast_RemovePlayerLeft(PlayerLeaving);
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("PlayerLeftGame: PlayerLeaving is %s"), *PlayerLeaving->GetName()));
+        //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("PlayerLeftGame: PlayerLeaving is %s"), *PlayerLeaving->GetName()));
     }
 }
 
