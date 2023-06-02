@@ -89,6 +89,12 @@ public:
 	UFUNCTION(BlueprintPure)
 		ETeam GetTeamToChoose() const;
 
+	UFUNCTION(BlueprintPure)
+		bool GetIsUsingKBM() const { return bIsUsingKBM; }
+
+	UFUNCTION(BlueprintCallable)
+		void SetIsUsingKBM(bool IsUsingKBM);
+
 	void SetCustomKeyboardConfig(TMap<FName, FKey> CustomMKConfig);
 
 	UFUNCTION(BlueprintPure)
@@ -125,6 +131,9 @@ protected:
 
 	UPROPERTY(Config)
 		bool bLocalPlayerOverheadWidgetVisibility;
+
+	UPROPERTY(Config)
+		bool bIsUsingKBM;
 
 	UPROPERTY(Config)
 		ETeam TeamChosen;

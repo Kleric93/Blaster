@@ -9,6 +9,9 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSpeedBuffSpawned, APickupSpawnPoint*, SpawnPoint);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJumpBuffSpawned, APickupSpawnPoint*, SpawnPoint);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBerserkBuffSpawned, APickupSpawnPoint*, SpawnPoint);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthBuffSpawned, APickupSpawnPoint*, SpawnPoint);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShieldBuffSpawned, APickupSpawnPoint*, SpawnPoint);
+
 
 
 
@@ -23,6 +26,8 @@ public:
 	FOnSpeedBuffSpawned OnSpeedBuffSpawned;
 	FOnJumpBuffSpawned OnJumpBuffSpawned;
 	FOnBerserkBuffSpawned OnBerserkBuffSpawned;
+	FOnHealthBuffSpawned OnHealthBuffSpawned;
+	FOnShieldBuffSpawned OnShieldBuffSpawned;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSetPedestalDefaultMaterial();

@@ -80,12 +80,18 @@ public:
 	//Berserk buff functions for Icon update
 
 	UFUNCTION()
-		void OnBerserkBuffPickedUp(float BuffTime);
+	void OnBerserkBuffPickedUp(float BuffTime);
 
 	UFUNCTION()
-		void OnBerserkBuffEnd();
+	void OnBerserkBuffEnd();
 
 	void RegisterBuffSpawnPoints();
+
+	UFUNCTION()
+	void OnHealthBuffPickedUp();
+
+	UFUNCTION()
+	void OnShieldBuffPickedUp();
 
 
 

@@ -38,6 +38,8 @@
 #include "EngineUtils.h"
 #include "Blaster/BlasterUserSettings.h"
 #include "Blaster/HUD/TeamChoice.h"
+#include "Blaster/BlasterComponents/BuffComponent.h"
+
 
 ABlasterPlayerController::ABlasterPlayerController()
 {
@@ -416,21 +418,35 @@ void ABlasterPlayerController::BeginPlay()
 	{
 		Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
 	}
+	if (Settings->GetIsUsingKBM() == true)
+	{
+		IMCSelector(BlasterMappingContextKBM, BlasterMappingContextController);
+	}
+	else
+	{
+		IMCSelector(BlasterMappingContextController, BlasterMappingContextKBM);
+	}
 
 	AddChatBox();
 
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckmatchState();
 
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetLocalPlayer()))
-	{
-		Subsystem->AddMappingContext(BlasterMappingContext, 0);
-	}
+
 
 	ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(this->PlayerState);
 	if (BlasterPlayerState)
 	{
 		BlasterPlayerState->RegisterBuffSpawnPoints();
+	}
+}
+
+void ABlasterPlayerController::IMCSelector(UInputMappingContext* MappingContexttoAdd, UInputMappingContext* MappingContexttoRemove)
+{
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetLocalPlayer()))
+	{
+		Subsystem->AddMappingContext(MappingContexttoAdd, 0);
+		Subsystem->RemoveMappingContext(MappingContexttoRemove);
 	}
 }
 
@@ -677,7 +693,6 @@ void ABlasterPlayerController::HighPingWarning()
 			0.f,
 			5);
 	}
-
 }
 
 void ABlasterPlayerController::StopHighPingWarning()
@@ -696,6 +711,105 @@ void ABlasterPlayerController::StopHighPingWarning()
 		{
 			BlasterHUD->CharacterOverlay->StopAnimation(BlasterHUD->CharacterOverlay->HighPingAnimation);
 		}
+	}
+}
+
+void ABlasterPlayerController::EventBorderDamage_Implementation()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->EventBorderImage &&
+		BlasterHUD->CharacterOverlay->DamageBorderAnimation;
+
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->EventBorderImage->SetColorAndOpacity(FLinearColor::Red);
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->DamageBorderAnimation,
+			0.f,
+			1);
+	}
+}
+
+void ABlasterPlayerController::EventBorderHeal_Implementation()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->EventBorderImage &&
+		BlasterHUD->CharacterOverlay->EventBorderAnimation;
+
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->EventBorderImage->SetColorAndOpacity(FLinearColor::Green);
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->EventBorderAnimation,
+			0.f,
+			1);
+	}
+}
+
+void ABlasterPlayerController::EventBorderShield_Implementation()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->EventBorderImage &&
+		BlasterHUD->CharacterOverlay->EventBorderAnimation;
+
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->EventBorderImage->SetColorAndOpacity(FLinearColor::Blue);
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->EventBorderAnimation,
+			0.f,
+			1);
+	}
+}
+
+void ABlasterPlayerController::EventBorderPowerUp_Implementation()
+{
+	FLinearColor PowerupColor{ 0.0f, 0.6f , 1.0f , 1.0f };
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->EventBorderImage &&
+		BlasterHUD->CharacterOverlay->EventBorderAnimation;
+
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->EventBorderImage->SetColorAndOpacity(PowerupColor);
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->EventBorderAnimation,
+			0.f,
+			1);
+	}
+}
+
+void ABlasterPlayerController::EventBorderDeath_Implementation()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->EventBorderImage &&
+		BlasterHUD->CharacterOverlay->DeathBorderAnimation &&
+		BlasterHUD->CharacterOverlay->YouDiedText;
+
+	if (bHUDValid)
+	{
+
+		BlasterHUD->CharacterOverlay->EventBorderImage->SetColorAndOpacity(FLinearColor::Red);
+		BlasterHUD->CharacterOverlay->YouDiedText->SetColorAndOpacity(FLinearColor::Red);
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->DeathBorderAnimation,
+			0.f,
+			1);
 	}
 }
 
@@ -1134,6 +1248,7 @@ void ABlasterPlayerController::PollInit()
 				if (bInitializeHealth) SetHUDHealth(HUDHealth, HUDMaxHealth);
 				if (bInitializeShield) SetHUDShield(HUDShield, HUDMaxShield);
 				if (bInitializeScore) SetHUDScore(HUDScore);
+				if (bInitializeDefeats) SetHUDDefeats(HUDDefeats);
 				if (bInitializeDefeats) SetHUDDefeats(HUDDefeats);
 				if (bInitializeWeaponType) SetHUDWeaponType(HUDWeaponType);
 				if (bInitializeCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);

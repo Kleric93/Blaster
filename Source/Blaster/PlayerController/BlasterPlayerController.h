@@ -34,6 +34,9 @@ public:
 	UPROPERTY()
 		UBlasterUserSettings* Settings;
 
+	void IMCSelector(UInputMappingContext* MappingContexttoAdd, UInputMappingContext* MappingContexttoRemove);
+	UInputMappingContext* GetKBMMappingContext() const { return BlasterMappingContextKBM; }
+	UInputMappingContext* GetControllerMappingContext() const { return BlasterMappingContextController; }
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
@@ -87,7 +90,20 @@ public:
 	UFUNCTION(Client, Reliable)
 	void UpdateBerserkBuffIcon(bool bIsBuffActive);
 
+	UFUNCTION(Client, Reliable)
+		void EventBorderDamage();
 
+	UFUNCTION(Client, Reliable)
+		void EventBorderHeal();
+
+	UFUNCTION(Client, Reliable)
+		void EventBorderShield();
+
+	UFUNCTION(Client, Reliable)
+		void EventBorderPowerUp();
+
+	UFUNCTION(Client, Reliable)
+		void EventBorderDeath();
 	//
 	/// chat box
 	//
@@ -179,7 +195,10 @@ protected:
 	//
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
-	UInputMappingContext* BlasterMappingContext;
+	UInputMappingContext* BlasterMappingContextKBM;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputMappingContext* BlasterMappingContextController;
 
 	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;

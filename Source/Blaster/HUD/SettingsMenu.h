@@ -78,6 +78,13 @@ protected:
 	UFUNCTION()
 		void OnQuitButtonClicked();
 
+	UFUNCTION()
+		void OnMousenKeyboardInputButtonClicked();
+
+	UFUNCTION()
+		void OnControllerInputButtonClicked();
+
+
 
 	UFUNCTION()
 	void OnMasterSliderValueChanged(float Value);
@@ -123,6 +130,12 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* QuitButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* MousenKeyboardInputButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* ControllerInputButton;
 
 	UPROPERTY(meta = (BindWidget))
 		USpinBox* MasterVolumeSpinBox;

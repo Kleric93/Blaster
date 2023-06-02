@@ -3,6 +3,7 @@
 
 #include "HealthPickup.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerStates/BlasterPlayerState.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
 
 AHealthPickup::AHealthPickup()
@@ -22,6 +23,13 @@ void AHealthPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AA
 		if (Buff)
 		{
 			Buff->Heal(HealAmount, HealingTime);
+			
+			ABlasterPlayerState* PS = Cast<ABlasterPlayerState>(BlasterCharacter->GetPlayerState());
+
+			if (PS)
+			{
+				PS->OnHealthBuffPickedUp();
+			}
 		}
 	}
 	Destroy();

@@ -6,6 +6,8 @@
 #include "Pickup.h"
 #include "ShieldPickup.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShieldBuffPickedUp);
+
 /**
  * 
  */
@@ -13,6 +15,10 @@ UCLASS()
 class BLASTER_API AShieldPickup : public APickup
 {
 	GENERATED_BODY()
+
+public:
+
+	FOnShieldBuffPickedUp OnShieldBuffPickedUp;
 
 protected:
 

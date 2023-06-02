@@ -15,8 +15,12 @@ class BLASTER_API UCharacterOverlay : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* HealthBar;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* YouDiedText;
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HealthText;
@@ -71,6 +75,18 @@ public:
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* HighPingAnimation;
+
+	UPROPERTY(meta = (BindWidget))
+		class UImage* EventBorderImage;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		UWidgetAnimation* EventBorderAnimation;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		UWidgetAnimation* DamageBorderAnimation;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		UWidgetAnimation* DeathBorderAnimation;
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* SpeedBuffIcon;

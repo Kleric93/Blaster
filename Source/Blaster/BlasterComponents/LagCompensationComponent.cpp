@@ -250,8 +250,8 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 
 			if (ConfirmHitResult.bBlockingHit) TraceEnd = ConfirmHitResult.ImpactPoint;
 
-			DrawDebugSphere(GetWorld(), TraceStart, 10.f, 10, FColor::Orange, false, 10.f);
-			DrawDebugSphere(GetWorld(), TraceEnd, 5000.f, 10, FColor::Blue, false, 10.f);
+			//DrawDebugSphere(GetWorld(), TraceStart, 10.f, 10, FColor::Orange, false, 10.f);
+			//DrawDebugSphere(GetWorld(), TraceEnd, 5000.f, 10, FColor::Blue, false, 10.f);
 
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(ConfirmHitResult.GetActor());
 			if (BlasterCharacter)
@@ -261,7 +261,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 					if (Box)
 					{
-						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
+						//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.f);
 					}
 				}
 				if (ShotgunResult.HeadShots.Contains(BlasterCharacter))
@@ -320,7 +320,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
 					if (Box)
 					{
-						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+						//DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
 					}
 				}
 				if (ShotgunResult.BodyShots.Contains(BlasterCharacter))
@@ -417,6 +417,7 @@ void ULagCompensationComponent::EnableCharacterMeshCollision(ABlasterCharacter* 
 
 void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, const FColor Color)
 {
+	/*
 	for (auto& BoxInfo : Package.HitBoxInfo)
 	{
 		DrawDebugBox(
@@ -428,7 +429,7 @@ void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, c
 			false,
 			4.f
 		);
-	}
+	}*/
 }
 
 FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
@@ -605,10 +606,10 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABla
 
 
 		// Draw debug sphere for TraceStart
-		DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
+		//DrawDebugSphere(GetWorld(), TraceStart, 10.f, 16, FColor::Orange, false, 20.f);
 
 		// Draw debug sphere for HitLocation
-		DrawDebugSphere(GetWorld(), Location, 1000.f, 16, FColor::Blue, false, 20.f);
+		//DrawDebugSphere(GetWorld(), Location, 1000.f, 16, FColor::Blue, false, 20.f);
 	}
 }
 

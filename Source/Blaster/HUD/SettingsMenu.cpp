@@ -106,32 +106,24 @@ void USettingsMenu::MenuSetup()
 		QuitButton->OnClicked.AddDynamic(this, &USettingsMenu::OnQuitButtonClicked);
 	}
 
-	if (GEngine)
+	if (Settings->GetFullscreenMode() == EWindowMode::Fullscreen)
 	{
-		UGameUserSettings* UserSettings = GEngine->GameUserSettings;
-		if (UserSettings)
-		{
-			if (UserSettings->GetFullscreenMode() == EWindowMode::Fullscreen)
-			{
-				FullscreenButton->SetBackgroundColor(SelectedColor);
-				WindowedButton->SetBackgroundColor(NotSelectedColor);
-				FullscreenWindowedButton->SetBackgroundColor(NotSelectedColor);
-			}
-			else if (UserSettings->GetFullscreenMode() == EWindowMode::Windowed)
-			{
-				FullscreenButton->SetBackgroundColor(NotSelectedColor);
-				WindowedButton->SetBackgroundColor(SelectedColor);
-				FullscreenWindowedButton->SetBackgroundColor(NotSelectedColor);
-			}
-			else if (UserSettings->GetFullscreenMode() == EWindowMode::WindowedFullscreen)
-			{
-				FullscreenButton->SetBackgroundColor(NotSelectedColor);
-				WindowedButton->SetBackgroundColor(NotSelectedColor);
-				FullscreenWindowedButton->SetBackgroundColor(SelectedColor);
-			}
-		}
+		FullscreenButton->SetBackgroundColor(SelectedColor);
+		WindowedButton->SetBackgroundColor(NotSelectedColor);
+		FullscreenWindowedButton->SetBackgroundColor(NotSelectedColor);
 	}
-	//CurrentMasterVolume = MasterSoundClass ? MasterSoundClass->Properties.Volume : 1.0f;  // Set to default volume if MasterSoundClass is null
+	else if (Settings->GetFullscreenMode() == EWindowMode::Windowed)
+	{
+		FullscreenButton->SetBackgroundColor(NotSelectedColor);
+		WindowedButton->SetBackgroundColor(SelectedColor);
+		FullscreenWindowedButton->SetBackgroundColor(NotSelectedColor);
+	}
+	else if (Settings->GetFullscreenMode() == EWindowMode::WindowedFullscreen)
+	{
+		FullscreenButton->SetBackgroundColor(NotSelectedColor);
+		WindowedButton->SetBackgroundColor(NotSelectedColor);
+		FullscreenWindowedButton->SetBackgroundColor(SelectedColor);
+	}
 
 	if (MasterVolumeSpinBox)
 	{
@@ -177,19 +169,59 @@ void USettingsMenu::MenuSetup()
 		OverheadWidgetVisibilityCheckBox->SetIsChecked(Settings->GetbLocalPlayerOverheadWidgetVisibility());
 		OverheadWidgetVisibilityCheckBox->OnCheckStateChanged.AddDynamic(this, &USettingsMenu::OnOverheadWidgetVisibilityCheckBoxStatusChange);
 	}
+
+	if (Settings->GetIsUsingKBM() == true)
+	{
+		MousenKeyboardInputButton->SetIsEnabled(false);
+		ControllerInputButton->SetIsEnabled(true);
+	}
+	else if (Settings->GetIsUsingKBM() == false)
+	{
+		MousenKeyboardInputButton->SetIsEnabled(true);
+		ControllerInputButton->SetIsEnabled(false);
+	}
+	if (MousenKeyboardInputButton)
+	{
+		MousenKeyboardInputButton->OnPressed.AddDynamic(this, &USettingsMenu::OnMousenKeyboardInputButtonClicked);
+	}
+
+	if (ControllerInputButton)
+	{
+		ControllerInputButton->OnPressed.AddDynamic(this, &USettingsMenu::OnControllerInputButtonClicked);
+	}
+}
+
+void USettingsMenu::OnMousenKeyboardInputButtonClicked()
+{
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
+	if (PC)
+	{
+		PC->IMCSelector(PC->GetKBMMappingContext(), PC->GetControllerMappingContext());
+	}
+	MousenKeyboardInputButton->SetIsEnabled(false);
+	ControllerInputButton->SetIsEnabled(true);
+	Settings->SetIsUsingKBM(true);
+	Settings->SaveSettings();
+}
+
+void USettingsMenu::OnControllerInputButtonClicked()
+{
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
+	if (PC)
+	{
+		PC->IMCSelector(PC->GetControllerMappingContext(), PC->GetKBMMappingContext());
+	}
+	MousenKeyboardInputButton->SetIsEnabled(true);
+	ControllerInputButton->SetIsEnabled(false);
+	Settings->SetIsUsingKBM(false);
+	Settings->SaveSettings();
 }
 
 void USettingsMenu::OnFullscreenButtonClicked()
 {
-	if (GEngine)
-	{
-		UGameUserSettings* UserSettings = GEngine->GameUserSettings;
-		if (UserSettings)
-		{
-			UserSettings->SetFullscreenMode(EWindowMode::Fullscreen);
-			UserSettings->ApplySettings(true);
-		}
-	}
+	Settings->SetFullscreenMode(EWindowMode::Fullscreen);
+	Settings->ApplySettings(true);
+	
 	FullscreenButton->SetBackgroundColor(SelectedColor);
 	WindowedButton->SetBackgroundColor(NotSelectedColor);
 	FullscreenWindowedButton->SetBackgroundColor(NotSelectedColor);
@@ -197,15 +229,9 @@ void USettingsMenu::OnFullscreenButtonClicked()
 
 void USettingsMenu::OnWindowedButtonClicked()
 {
-	if (GEngine)
-	{
-		UGameUserSettings* UserSettings = GEngine->GameUserSettings;
-		if (UserSettings)
-		{
-			UserSettings->SetFullscreenMode(EWindowMode::Windowed);
-			UserSettings->ApplySettings(true);
-		}
-	}
+	Settings->SetFullscreenMode(EWindowMode::Windowed);
+	Settings->ApplySettings(true);
+
 	FullscreenButton->SetBackgroundColor(NotSelectedColor);
 	WindowedButton->SetBackgroundColor(SelectedColor);
 	FullscreenWindowedButton->SetBackgroundColor(NotSelectedColor);
@@ -213,15 +239,9 @@ void USettingsMenu::OnWindowedButtonClicked()
 
 void USettingsMenu::OnFullscreenWindowedButtonClicked()
 {
-	if (GEngine)
-	{
-		UGameUserSettings* UserSettings = GEngine->GameUserSettings;
-		if (UserSettings)
-		{
-			UserSettings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
-			UserSettings->ApplySettings(true);
-		}
-	}
+	Settings->SetFullscreenMode(EWindowMode::WindowedFullscreen);
+	Settings->ApplySettings(true);
+
 	FullscreenButton->SetBackgroundColor(NotSelectedColor);
 	WindowedButton->SetBackgroundColor(NotSelectedColor);
 	FullscreenWindowedButton->SetBackgroundColor(SelectedColor);

@@ -6,6 +6,8 @@
 #include "Pickup.h"
 #include "HealthPickup.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthBuffPickedUp);
+
 /**
  * 
  */
@@ -17,6 +19,8 @@ class BLASTER_API AHealthPickup : public APickup
 public:
 
 	AHealthPickup();
+
+	FOnHealthBuffPickedUp OnHealthBuffPickedUp;
 
 protected:
 

@@ -36,6 +36,9 @@ void UOverheadWidget::ShowPlayerName(APawn* InPawn)
 
 void UOverheadWidget::ChangeOWColor(ETeam Team)
 {
+	FLinearColor Cyan = { 0.1f, 0.5f, 1.f, 1.f };
+	FLinearColor LightRed = { 1.f, 0.15f, 0.15f, 1.f };
+
 	if (Team == ETeam::ET_NoTeam)
 	{
 		OverheadWidgetBorder->SetColorAndOpacity(FLinearColor::White);
@@ -44,12 +47,12 @@ void UOverheadWidget::ChangeOWColor(ETeam Team)
 	else if (Team == ETeam::ET_RedTeam)
 	{
 		OverheadWidgetBorder->SetColorAndOpacity(FLinearColor::Red);
-		DisplayText->SetColorAndOpacity(FLinearColor::Red);
+		DisplayText->SetColorAndOpacity(LightRed);
 	}
 	else if (Team == ETeam::ET_BlueTeam)
 	{
 		OverheadWidgetBorder->SetColorAndOpacity(FLinearColor::Blue);
-		DisplayText->SetColorAndOpacity(FLinearColor::Blue);
+		DisplayText->SetColorAndOpacity(Cyan);
 	}
 }
 

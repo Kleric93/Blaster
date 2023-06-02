@@ -38,7 +38,6 @@ void ABlasterGameMode::BeginPlay()
     }
 
     MatchTime = Settings->GetGameTime();
-
 }
 
 
@@ -279,8 +278,11 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 
         // If no suitable spawn location is found, use a default location or return an error
         //UE_LOG(LogTemp, Warning, TEXT("No suitable spawn location found for player %s"), *ElimmedController->GetName());
-        FRotator DefaultRotation = FRotator(0.0f, 0.0f, 0.0f);
-        RestartPlayerAtTransform(ElimmedController, FTransform(DefaultRotation, DefaultLocation));
+        //FRotator DefaultRotation = FRotator(0.0f, 0.0f, 0.0f);
+        //RestartPlayerAtTransform(ElimmedController, FTransform(DefaultRotation, DefaultLocation));
+        int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
+        RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+
     }
 }
 

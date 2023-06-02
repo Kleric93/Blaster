@@ -10,6 +10,8 @@
 #include "Components/CheckBox.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blaster/Pickups/HealthPickup.h"
+#include "Blaster/Pickups/ShieldPickup.h"
 #include "Blaster/Pickups/SpeedPickup.h"
 #include "Blaster/Pickups/JumpPickup.h"
 #include "Blaster/Pickups/BerserkPickup.h"
@@ -167,6 +169,8 @@ void ABlasterPlayerState::RegisterBuffSpawnPoints()
 		It->OnSpeedBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
 		It->OnJumpBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
 		It->OnBerserkBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
+		It->OnHealthBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
+		It->OnShieldBuffSpawned.AddDynamic(this, &ABlasterPlayerState::OnBuffSpawned);
 	}
 }
 
@@ -178,6 +182,8 @@ void ABlasterPlayerState::OnBuffSpawned(APickupSpawnPoint* SpawnPoint)
 		ASpeedPickup* SpeedPickup = Cast<ASpeedPickup>(SpawnPoint->SpawnedPickup);
 		AJumpPickup* JumpPickup = Cast<AJumpPickup>(SpawnPoint->SpawnedPickup);
 		ABerserkPickup* BerserkPickup = Cast<ABerserkPickup>(SpawnPoint->SpawnedPickup);
+		AHealthPickup* HealthPickup = Cast<AHealthPickup>(SpawnPoint->SpawnedPickup);
+		AShieldPickup* ShieldPickup = Cast<AShieldPickup>(SpawnPoint->SpawnedPickup);
 
 		if (SpeedPickup)
 		{
@@ -191,6 +197,14 @@ void ABlasterPlayerState::OnBuffSpawned(APickupSpawnPoint* SpawnPoint)
 		{
 			BerserkPickup->OnBerserkBuffPickedUp.AddDynamic(this, &ABlasterPlayerState::OnBerserkBuffPickedUp);
 		}
+		if (HealthPickup)
+		{
+			HealthPickup->OnHealthBuffPickedUp.AddDynamic(this, &ABlasterPlayerState::OnHealthBuffPickedUp);
+		}
+		if (ShieldPickup)
+		{
+			ShieldPickup->OnShieldBuffPickedUp.AddDynamic(this, &ABlasterPlayerState::OnShieldBuffPickedUp);
+		}
 	}
 }
 
@@ -199,6 +213,7 @@ void ABlasterPlayerState::OnSpeedBuffPickedUp(float BuffTime)
 	if (Controller)
 	{
 		Controller->UpdateSpeedBuffIcon(true);
+		Controller->EventBorderPowerUp();
 		GetWorldTimerManager().SetTimer(TimerHandle_SpeedBuffDuration, this, &ABlasterPlayerState::OnSpeedBuffEnd, BuffTime, false);
 	}
 }
@@ -217,6 +232,7 @@ void ABlasterPlayerState::OnJumpBuffPickedUp(float BuffTime)
 	if (Controller)
 	{
 		Controller->UpdateJumpBuffIcon(true);
+		Controller->EventBorderPowerUp();
 		GetWorldTimerManager().SetTimer(TimerHandle_JumpBuffDuration, this, &ABlasterPlayerState::OnJumpBuffEnd, BuffTime, false);
 	}
 }
@@ -234,6 +250,7 @@ void ABlasterPlayerState::OnBerserkBuffPickedUp(float BuffTime)
 	if (Controller)
 	{
 		Controller->UpdateBerserkBuffIcon(true);
+		Controller->EventBorderPowerUp();
 		GetWorldTimerManager().SetTimer(TimerHandle_BerserkBuffDuration, this, &ABlasterPlayerState::OnBerserkBuffEnd, BuffTime, false);
 	}
 }
@@ -243,6 +260,22 @@ void ABlasterPlayerState::OnBerserkBuffEnd()
 	if (Controller)
 	{
 		Controller->UpdateBerserkBuffIcon(false);
+	}
+}
+
+void ABlasterPlayerState::OnHealthBuffPickedUp()
+{
+	if (Controller)
+	{
+		Controller->EventBorderHeal();
+	}
+}
+
+void ABlasterPlayerState::OnShieldBuffPickedUp()
+{
+	if (Controller)
+	{
+		Controller->EventBorderShield();
 	}
 }
 

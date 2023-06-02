@@ -102,7 +102,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		TraceForObjects();
 		SetHUDCrosshairs(DeltaTime);
 		InterpFOV(DeltaTime);
-		UpdateAim(DeltaTime);
+
+		if (Settings->GetIsUsingKBM() == false)
+		{
+			UpdateAim(DeltaTime);
+		}
 	}
 }
 

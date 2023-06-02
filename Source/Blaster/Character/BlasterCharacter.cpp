@@ -363,6 +363,11 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 			return;  // @TODO Test if it crashes without this line. (it shouldn't)
 		}*/
 	}
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Controller);
+	if (PC)
+	{
+		PC->EventBorderDeath();
+	}
 	MulticastElim(bPlayerLeftGame);
 }
 
@@ -1190,6 +1195,12 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatorController);
 			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
 		}
+	}
+
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(this->GetController());
+	if (PC)
+	{
+		PC->EventBorderDamage();
 	}
 }
 

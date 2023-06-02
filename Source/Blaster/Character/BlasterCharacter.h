@@ -17,6 +17,7 @@ class UInputConfig;
 class UBlasterUserSettings;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDamageReceived);
 
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
@@ -79,6 +80,8 @@ public:
 	void ServerLeaveGame();
 
 	FOnLeftGame OnLeftGame;
+
+	FOnDamageReceived OnDamageReceived;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastGainedTheLead();

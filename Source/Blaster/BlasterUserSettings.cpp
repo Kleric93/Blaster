@@ -18,6 +18,7 @@ UBlasterUserSettings::UBlasterUserSettings(const FObjectInitializer& ObjectIniti
 	MaxScore = 10.f;
 	ScoreToWin = 30;
 	TeamChosen = ETeam::ET_NoTeam;
+	bIsUsingKBM = true;
 
 }
 
@@ -60,6 +61,11 @@ void UBlasterUserSettings::SetTeamToChoose(ETeam TeamOfChoice)
 ETeam UBlasterUserSettings::GetTeamToChoose() const
 {
 	return TeamChosen;
+}
+
+void UBlasterUserSettings::SetIsUsingKBM(bool IsUsingKBM)
+{
+	bIsUsingKBM = IsUsingKBM;
 }
 
 void UBlasterUserSettings::SetCustomKeyboardConfig(TMap<FName, FKey> CustomMKConfig)
