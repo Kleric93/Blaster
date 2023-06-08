@@ -133,6 +133,8 @@ void ABlasterGameMode::OnMatchStateSet()
 {
     Super::OnMatchStateSet();
 
+    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
+
     for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
         ABlasterPlayerController* BlasterPlayer = Cast<ABlasterPlayerController>(*It);
@@ -175,6 +177,7 @@ void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacte
         }
 
         AttackerPlayerState->AddToScore(1.f);
+        AttackerPlayerState->EventKilledPlayer();
         BlasterGameState->UpdateTopScore(AttackerPlayerState);
         if (BlasterGameState->TopScoringPlayers.Contains(AttackerPlayerState))
         {

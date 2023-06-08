@@ -4,14 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "TeamChoice.generated.h"
 
 class APlayerController;
 class ABlasterPlayerController;
 class ABlasterGameState;
+class UTeamChoiceLine;
 
 class UScrollBox;
 class UButton;
+class UScrollBox;
 
 
 /**
@@ -23,6 +26,14 @@ class BLASTER_API UTeamChoice : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(meta = (BindWidget))
+		UScrollBox* RedTeamChosenScrollBox;
+
+	UPROPERTY(meta = (BindWidget))
+		UScrollBox* BlueTeamChosenScrollBox;
+
+	UPROPERTY(meta = (BindWidget))
+		UScrollBox* NoTeamScrollBox;
 
 	UPROPERTY(meta = (BindWidget))
 		UButton* RedTeamButton;
@@ -34,6 +45,13 @@ public:
 		UButton* CloseButton;
 
 	void WidgetSetup();
+
+	UFUNCTION()
+	void InitNoTeamScrollBox();
+
+	void InitRedTeamScrollBox();
+
+	void UpdateScrollBoxes();
 
 	UFUNCTION()
 	void WidgetTeardown();
@@ -50,4 +68,11 @@ public:
 
 	UPROPERTY()
 	ABlasterPlayerController* BlasterPlayerController;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<class UTeamChoiceLine> TeamChoiceLine;
+
+	UPROPERTY()
+		UTeamChoiceLine* TeamChoiceLineWidget;
+
 };

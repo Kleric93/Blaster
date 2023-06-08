@@ -4,6 +4,7 @@
 #include "ReturnToMainMenu.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "InputMappingContext.h"
 #include "OnlineSubsystem.h"
 #include "GameFramework/PlayerController.h"
 #include "Components/Button.h"
@@ -20,6 +21,8 @@
 #include "Blaster/HUD/SettingsMenu.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/BlasterUserSettings.h"
+#include "Blaster/BlasterSaveGame.h"
+#include "Blaster/Input/BlasterGameplayTags.h"
 
 void UReturnToMainMenu::MenuSetup()
 {
@@ -33,10 +36,12 @@ void UReturnToMainMenu::MenuSetup()
 		PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
 		if (PlayerController)
 		{
+
 			FInputModeGameAndUI InputModeData;
 			InputModeData.SetWidgetToFocus(TakeWidget());
 			PlayerController->SetInputMode(InputModeData);
 			PlayerController->SetShowMouseCursor(true);
+			PlayerController->DisableInput(PlayerController);
 		}
 	}
 
@@ -124,6 +129,7 @@ void UReturnToMainMenu::MenuTearDown()
 			FInputModeGameOnly InputModeData;
 			PlayerController->SetInputMode(InputModeData);
 			PlayerController->SetShowMouseCursor(false);
+			PlayerController->EnableInput(PlayerController);
 			}
 			if (PC)
 			{
@@ -222,6 +228,8 @@ void UReturnToMainMenu::OnPlayerLeftGame()
 
 void UReturnToMainMenu::Rebinding()
 {
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetOwningPlayerPawn()) : Character;
+
 	if (KeybindingsScrollBox)
 	{
 		if (Settings == nullptr)
@@ -230,92 +238,107 @@ void UReturnToMainMenu::Rebinding()
 		}
 		KeybindingsScrollBox->ClearChildren();
 
-		Character = Character == nullptr ? Cast<ABlasterCharacter>(GetOwningPlayerPawn()) : Character;
+		ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
+		UInputMappingContext* KBMMappings = Cast<UInputMappingContext>(PC->GetKBMMappingContext());
+		UInputMappingContext* ControllerMappings = Cast<UInputMappingContext>(PC->GetControllerMappingContext());
+		if (PC == nullptr) return;
+		UE_LOG(LogTemp, Error, TEXT("Rebinding did not returned due to PC null"));
 
-		if (Character == nullptr) return;
-
-		//InputConfig = Cast<UInputConfig>(Character->GetInputConfig());
-		//if (InputConfig == nullptr) return;
-		FText ConfigName = Config->GetDisplayName();
-		UE_LOG(LogTemp, Error, TEXT("CONFIG NAME: %s"), *ConfigName.ToString());
-
-
-		// Proceed only if Character, InputConfig, and PlayermappableConfig are not nullptr
-		if (Config)
+		if (Settings->GetIsUsingKBM() == true)
 		{
-			// Populate the keybinding scrollbox
-			for (const FEnhancedActionKeyMapping& Mapping : Config->GetPlayerMappableKeys())
+			UE_LOG(LogTemp, Error, TEXT("Rebinding got into 1st check"));
+
+			for (const FEnhancedActionKeyMapping Keys : PMIConfigKeyboard->GetPlayerMappableKeys())
+			{
+				KeymapLineWidget = CreateWidget<UKeymapLine>(GetOwningPlayer(), KeymapLine);
+
+				if (KeymapLineWidget == nullptr) continue;
+				
+				KeymapLineWidget->KeyName->SetText(Keys.PlayerMappableOptions.DisplayName);
+
+				KeymapLineWidget->KeyboardKeySelector->SetSelectedKey(Keys.Key);
+				KeymapLineWidget->KeyboardKeySelector->OnKeySelected.AddDynamic(this, &UReturnToMainMenu::OnKeySelected);
+				//WidgetToActionMap.Add(KeymapLineWidget, Keys.PlayerMappableOptions.Name);
+
+				KeybindingsScrollBox->AddChild(KeymapLineWidget);
+			}
+		}
+		if (Settings->GetIsUsingKBM() == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Rebinding got into 1st check"));
+
+			for (const FEnhancedActionKeyMapping Keys : PMIConfigController->GetPlayerMappableKeys())
 			{
 				KeymapLineWidget = CreateWidget<UKeymapLine>(GetOwningPlayer(), KeymapLine);
 				if (KeymapLineWidget == nullptr) continue;
 
-				// Set the name of the action
-				// Set the name of the action
-				if (Mapping.PlayerMappableOptions.Name != NAME_None)
-				{
-					Settings->GetCustomKeyboardConfig().Add(Mapping.PlayerMappableOptions.Name, Mapping.Key);
-					KeymapLineWidget->KeyName->SetText(Mapping.PlayerMappableOptions.DisplayName);
+				KeymapLineWidget = CreateWidget<UKeymapLine>(GetOwningPlayer(), KeymapLine);
 
-					KeymapLineWidget->KeyboardKeySelector->OnKeySelected.AddDynamic(this, &UReturnToMainMenu::OnKeySelected);
-					WidgetToActionMap.Add(KeymapLineWidget, Mapping.PlayerMappableOptions.Name);
-				}
+				if (KeymapLineWidget == nullptr) continue;
 
+				KeymapLineWidget->KeyName->SetText(Keys.PlayerMappableOptions.DisplayName);
 
+				KeymapLineWidget->KeyboardKeySelector->SetSelectedKey(Keys.Key);
 				KeymapLineWidget->KeyboardKeySelector->OnKeySelected.AddDynamic(this, &UReturnToMainMenu::OnKeySelected);
-
-
-				// Initialize the key selectors
-				// This is a placeholder, you would need to fetch the actual keys associated with the action
-				FKey DefaultKey = Mapping.Key;
-				FName DefaultMappingName = Mapping.Key.GetFName();
-
-				// Bind OnKeySelectedDelegate to OnKeySelected function
-
-				// Set the selected key
-				KeymapLineWidget->KeyboardKeySelector->SetSelectedKey(DefaultKey);
+				//WidgetToActionMap.Add(KeymapLineWidget, Keys.PlayerMappableOptions.Name);
 
 				KeybindingsScrollBox->AddChild(KeymapLineWidget);
 
-				// TODO: Bind the reset button to a function that resets the keybinds to the default ones
-
-				/*
-				if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetOwningLocalPlayer()))
-				{
-					Subsystem->AddPlayerMappedKey(DefaultMappingName, DefaultKey);
-				}*/
-
-				KeybindingsScrollBox->AddChild(KeymapLineWidget);
 			}
-
-
 		}
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void UReturnToMainMenu::OnKeySelected(FInputChord SelectedKey)
 {
-	UE_LOG(LogTemp, Error, TEXT("KeySelectedDelegate"));
-	if (Settings == nullptr)
-	{
-		Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
-	}
+    ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
+    UInputMappingContext* KBMMappings = Cast<UInputMappingContext>(PC->GetKBMMappingContext());
+    UInputMappingContext* ControllerMappings = Cast<UInputMappingContext>(PC->GetControllerMappingContext());
 
-	FKey NewKey = SelectedKey.Key;
-	FName ActionName = WidgetToActionMap[KeymapLineWidget];
-	if (Settings->GetCustomKeyboardConfig().Contains(ActionName))
+	if (Settings->GetIsUsingKBM())
 	{
-		Settings->GetCustomKeyboardConfig()[ActionName] = NewKey;
+		PC->UpdateInputMapping(SelectedKey.Key.GetFName(), SelectedKey.Key);
 	}
 	else
 	{
-		Settings->GetCustomKeyboardConfig().Add(ActionName, NewKey);
+		PC->UpdateInputMapping(SelectedKey.Key.GetFName(), SelectedKey.Key);
+
 	}
-	// And also update the mapped key in the subsystem
+	/*
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetOwningLocalPlayer()))
 	{
-		Subsystem->AddPlayerMappedKey(ActionName, NewKey);
-	}
+		if (Settings->GetIsUsingKBM())
+		{
+			//Subsystem->ClearAllMappings();
+			Subsystem->AddPlayerMappedKey(SelectedKey.Key.GetFName(), SelectedKey.Key);
+		}
+		else
+		{
+			// Iterate through the mappings to find the InputAction associated with the selected key
+			for (const FEnhancedActionKeyMapping& Mapping : ControllerMappings->GetMappings())
+			{
+				if (Mapping.Key == SelectedKey.Key)
+				{
+					if (Mapping.Key == SelectedKey.Key)
+					{
+						const FName ActionName = Mapping.PlayerMappableOptions.Name;
+
+						Subsystem->AddPlayerMappedKey(ActionName, SelectedKey.Key);
+
+						//Settings->GetCustomKeyboardConfig()[ActionName] = NewKey;
+						UE_LOG(LogTemp, Warning, TEXT("UpdateInputMapping: %s > %s"), *ActionName.ToString(), *Mapping.Key.GetDisplayName(true).ToString());
+
+
+						break;
+					}
+				}
+			}
+		}
+	}*/
 }
+
+
 
 // SAFEKEEPING
 /*

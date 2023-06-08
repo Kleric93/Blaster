@@ -369,11 +369,19 @@ private:
 	UPROPERTY(EditAnywhere)
 	float HideWidgetTimer = 0.5f;
 
+	UPROPERTY()
 	FVector TargetAimDirection;
+	UPROPERTY()
 	FVector CurrentAimDirection;
 
 	UPROPERTY(EditAnywhere)
-	float AimAssistSpeed;
+	float AimAssistSpeed = 1000.f;
+
+	UPROPERTY(EditAnywhere)
+		float AimAssistmultiplierControl = 30.f;
+
+	UPROPERTY(EditAnywhere)
+	float AimAssistTraceStartLocation = 300.f;
 
 public:	
 

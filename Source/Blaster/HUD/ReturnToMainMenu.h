@@ -46,6 +46,7 @@ protected:
 	UFUNCTION()
 	void OnKeySelected(FInputChord SelectedKey);
 
+
 private:
 
 	UPROPERTY(meta = (BindWidget))
@@ -62,6 +63,7 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UScrollBox* KeybindingsScrollBox;
+
 
 	UFUNCTION()
 	void ReturnButtonClicked();
@@ -91,7 +93,10 @@ private:
 	UInputConfig* InputConfig;
 
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UPlayerMappableInputConfig> Config;
+	TObjectPtr<UPlayerMappableInputConfig> PMIConfigKeyboard;
+
+	UPROPERTY(EditAnywhere)
+		TObjectPtr<UPlayerMappableInputConfig> PMIConfigController;
 
 	TMap<UKeymapLine*, FName> WidgetToActionMap;
 

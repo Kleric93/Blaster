@@ -7,6 +7,8 @@
 #include "TeamsGameMode.generated.h"
 
 class UBlasterUserSettings;
+class ABlasterPlayerController;
+class ABlasterGameState;
 
 /**
  * 
@@ -31,4 +33,9 @@ public:
 protected:
 
 	virtual void HandleMatchHasStarted() override;
+
+private:
+
+	ABlasterPlayerController* BlasterController;
+	ABlasterGameState* BlasterGameState;
 };

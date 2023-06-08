@@ -23,11 +23,5 @@ public:
 	UInputKeySelector* KeyboardKeySelector;
 
 	UPROPERTY(meta = (BindWidget))
-	UInputKeySelector* GamePadKeySelector;
-
-	UPROPERTY(meta = (BindWidget))
-	UButton* ResetButton;
-
-	UPROPERTY(meta = (BindWidget))
 	UTextBlock* KeyName;
 };

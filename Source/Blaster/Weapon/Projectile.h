@@ -16,7 +16,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 	
-	UFUNCTION(Server, Reliable, WithValidation)
+	UFUNCTION(Server, Reliable)
 		void ServerSpawnBulletHoles(const FHitResult& Hit);
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -56,6 +56,9 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ImpactSound;
+
+	UPROPERTY(EditAnywhere)
+	class USoundBase* PlayerHitSound;
 
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;

@@ -89,6 +89,10 @@ ABlasterCharacter::ABlasterCharacter()
 	OverheadWidgetComponent->SetVisibility(false);
 	OverheadWidgetComponent->SetPivot(FVector2D(0.5f, 0.5f));
 
+	//OverheadBuffComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Overhead Buff Component"));
+	//OverheadBuffComponent->SetupAttachment(GetRootComponent());
+	//OverheadBuffComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 140.0f));
+
 	AimAssistSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AimAssistSphere"));
 	AimAssistSphere->SetupAttachment(GetMesh());
 	AimAssistSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -453,6 +457,11 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	{
 		CrownComponent->DestroyComponent();
 	}
+
+	if (OverheadBuffComponent)
+	{
+		OverheadBuffComponent->DestroyComponent();
+	}
 	
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -710,6 +719,17 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	HideCharacterAndWeaponsIfScopingOrCameraClose();
 	PollInit();
 	UpdateHUDFlag();
+
+	/*
+	if (CurrentBuffComponent.IsValid())
+	{
+		FVector Location = CurrentBuffComponent->GetComponentLocation();
+		UE_LOG(LogTemp, Warning, TEXT("CurrentBuffComponent is valid. Location: %s"), *Location.ToString());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CurrentBuffComponent is NULL."));
+	}*/
 }
 
 #pragma region EnhancedInput
@@ -969,12 +989,9 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 {
 
 	UBlasterEnhancedInputComponent* EnhancedInputComponent = Cast<UBlasterEnhancedInputComponent>(PlayerInputComponent);
-
-	//Make sure to set your input component class in the InputSettings->DefaultClasses
 	check(EnhancedInputComponent);
 
 	const FBlasterGameplayTags& GameplayTags = FBlasterGameplayTags::Get();
-
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Move, ETriggerEvent::Triggered, this, &ABlasterCharacter::Movement);
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Look_Mouse, ETriggerEvent::Triggered, this, &ABlasterCharacter::Look);
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Jump, ETriggerEvent::Triggered, this, &ABlasterCharacter::Jump);
@@ -1186,7 +1203,11 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 
 	UpdateHUDHealth();
 	UpdateHUDShield();
-	PlayHitReactMontage();
+	if (Combat->CombatState == ECombatState::ECS_Unoccupied)
+	{
+		PlayHitReactMontage();
+	}
+
 	if (Health == 0.f)
 	{
 		if (BlasterGameMode)
@@ -1201,6 +1222,10 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	if (PC)
 	{
 		PC->EventBorderDamage();
+		UGameplayStatics::PlaySound2D(
+			GetWorld(),
+			DamageReceivedSound);
+		ShowDamageIndicator(DamagedActor, DamageCauser);
 	}
 }
 
@@ -1515,7 +1540,6 @@ bool ABlasterCharacter::IsLocallyReloading()
 
 void ABlasterCharacter::AddOrUpdateCustomKeyboardBindings(const FName MappingName, const FKey NewKey, ULocalPlayer* LocalPlayer)
 {
-
 	for (const FEnhancedActionKeyMapping& Mapping : Config->GetPlayerMappableKeys())
 	{
 		// Make sure that the mapping has a valid name, its possible to have an empty name
@@ -1556,5 +1580,181 @@ void ABlasterCharacter::ResetKeybindingsToDefault(ULocalPlayer* LocalPlayer)
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
 	{
 		Subsystem->RemoveAllPlayerMappedKeys();
+	}
+}
+
+void ABlasterCharacter::SpawnOverheadBuff(UNiagaraSystem* BuffType)
+{
+	if (OverheadBuffComponent == nullptr)
+	{
+		OverheadBuffComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			BuffType,
+			GetMesh(),
+			FName(),
+			GetActorLocation() + FVector(0.f, 0.f, 110.f),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
+	if (OverheadBuffComponent)
+	{
+		OverheadBuffComponent->SetAsset(BuffType);
+		OverheadBuffComponent->Activate();
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void ABlasterCharacter::DeactivateOverheadBuffComponent()
+{
+	if (OverheadBuffComponent)
+	{
+		OverheadBuffComponent->DestroyComponent();
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+/*
+UNiagaraComponent* ABlasterCharacter::SpawnOverheadBuff(UNiagaraSystem* BuffType, float BuffTime)
+{
+	UE_LOG(LogTemp, Warning, TEXT("SpawnOverheadBuff called."));
+
+	if (BuffType)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuffType: %s"), *BuffType->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuffType is null."));
+	}
+
+	if (CurrentBuffComponent.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(BuffTimerHandle);
+		CurrentBuffComponent->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+		CurrentBuffComponent->DestroyComponent();
+		CurrentBuffComponent = nullptr;
+	}
+
+	UNiagaraComponent* NewBuffComponent = NewObject<UNiagaraComponent>(this->GetRootComponent());
+
+	if (NewBuffComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NewBuffComponent created: %s"), *NewBuffComponent->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NewBuffComponent is null."));
+		return nullptr;
+	}
+
+	NewBuffComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 140.0f));
+	NewBuffComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	if (NewBuffComponent->GetAttachParent())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Buff's parent after attaching: %s"), *NewBuffComponent->GetAttachParent()->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Buff's parent is null after attaching."));
+	}
+
+	if (GetRootComponent())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Root Component: %s"), *GetRootComponent()->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Root Component is null."));
+	}
+
+	NewBuffComponent->SetAsset(BuffType);
+	NewBuffComponent->RegisterComponent();
+	NewBuffComponent->Activate();
+
+	if (GetWorld())
+	{
+		CurrentBuffComponent = NewBuffComponent;
+		GetWorldTimerManager().SetTimer(
+			BuffTimerHandle,
+			[this]()
+			{
+				if (BuffTimerHandle.IsValid() && CurrentBuffComponent.IsValid())
+				{
+					CurrentBuffComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+					CurrentBuffComponent->DestroyComponent();
+					UE_LOG(LogTemp, Warning, TEXT("Buff timer expired and CurrentBuffComponent destroyed."));
+					CurrentBuffComponent = nullptr;
+				}
+			},
+			BuffTime,
+				false);
+	}
+
+
+	return NewBuffComponent;
+}
+
+
+void ABlasterCharacter::ClearBuff()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ClearBuff called."));
+	if (BuffTimerHandle.IsValid())
+	{
+		GetWorldTimerManager().ClearTimer(BuffTimerHandle);
+		if (CurrentBuffComponent.IsValid())
+		{
+			CurrentBuffComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+			UE_LOG(LogTemp, Warning, TEXT("About to destroy CurrentBuffComponent."));
+			CurrentBuffComponent->DestroyComponent();
+			CurrentBuffComponent = nullptr;
+		}
+		BuffTimerHandle.Invalidate();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BuffTimerHandle is not valid."));
+	}
+}*/
+
+
+
+void ABlasterCharacter::ShowDamageIndicator(AActor* DamagedActor, AActor* DamageCauser)
+{
+	ABlasterCharacter* DamagedCharacter = Cast<ABlasterCharacter>(DamagedActor);
+	if (DamagedCharacter && DamageCauser)
+	{
+		FRotator Direction = UKismetMathLibrary::FindLookAtRotation(DamagedActor->GetActorLocation(), DamageCauser->GetActorLocation());
+		FRotator PlayerRot = DamagedCharacter->GetControlRotation();
+		float Angle = Direction.Yaw - PlayerRot.Yaw;
+
+		FVector CameraLocation = DamagedCharacter->GetFollowCamera()->GetComponentLocation();
+		//DamagedCharacter->PlayCameraShake(HitCameraShake, CameraLocation);
+		ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(DamagedCharacter->Controller);
+		if (PlayerController)
+		{
+			PlayerController->SetHUDDamageIndicator(Angle);
+		}
+	}
+	MulticastShowDamageIndicator(DamagedActor, DamageCauser);
+}
+
+void ABlasterCharacter::MulticastShowDamageIndicator_Implementation(AActor* DamagedActor, AActor* DamageCauser)
+{
+	ABlasterCharacter* DamagedCharacter = Cast<ABlasterCharacter>(DamagedActor);
+	if (DamagedCharacter && DamageCauser)
+	{
+		FRotator Direction = UKismetMathLibrary::FindLookAtRotation(DamagedActor->GetActorLocation(), DamageCauser->GetActorLocation());
+		FRotator PlayerRot = DamagedCharacter->GetControlRotation();
+		float Angle = Direction.Yaw - PlayerRot.Yaw;
+
+		FVector CameraLocation = DamagedCharacter->GetFollowCamera()->GetComponentLocation();
+		//DamagedCharacter->PlayCameraShake(HitCameraShake, CameraLocation);
+		ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(DamagedCharacter->Controller);
+		if (PlayerController)
+		{
+			PlayerController->SetHUDDamageIndicator(Angle);
+		}
 	}
 }

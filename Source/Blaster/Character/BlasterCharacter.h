@@ -469,6 +469,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* DroppedFlag;
 
+	UPROPERTY(EditAnywhere)
+		USoundCue* DamageReceivedSound;
+
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 
@@ -505,6 +508,29 @@ private:
 	UPROPERTY()
 	FVector2D LastLookInput;
 
+	UPROPERTY(EditAnywhere, Category = NiagaraBuffs)
+	UNiagaraComponent* OverheadBuffComponent;
+
+	FTimerHandle BuffTimerHandle;
+	TWeakObjectPtr<UNiagaraComponent> CurrentBuffComponent;
+
+	UPROPERTY(EditAnywhere, Category = NiagaraBuffs)
+	UNiagaraSystem* HealthBuffSystem;
+
+	UPROPERTY(EditAnywhere, Category = NiagaraBuffs)
+	UNiagaraSystem* ShieldBuffSystem;
+
+	UPROPERTY(EditAnywhere, Category = NiagaraBuffs)
+	UNiagaraSystem* JumpBuffSystem;
+
+	UPROPERTY(EditAnywhere, Category = NiagaraBuffs)
+	UNiagaraSystem* SpeedBuffSystem;
+
+	UPROPERTY(EditAnywhere, Category = NiagaraBuffs)
+	UNiagaraSystem* BerserkBuffSystem;
+
+	//void ClearBuff();
+
 public:	
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -533,6 +559,12 @@ public:
 	FORCEINLINE ULagCompensationComponent* GetlagCompensation() const { return LagCompensation; }
 	FORCEINLINE UInputConfig* GetInputConfig() const { return InputConfig; }
 	FORCEINLINE FVector2D GetLastLookInput() { return LastLookInput; }
+	FORCEINLINE UNiagaraSystem* GetJumpBuffSystem() { return JumpBuffSystem; }
+	FORCEINLINE UNiagaraSystem* GetSpeedBuffSystem() { return SpeedBuffSystem; }
+	FORCEINLINE UNiagaraSystem* GetBerserkBuffSystem() { return BerserkBuffSystem; }
+	FORCEINLINE UNiagaraComponent* GetOverheadBuffComponent() { return OverheadBuffComponent; }
+
+
 	//FORCEINLINE float GetTurnSpeedMultiplier() { return BaseTurnSpeedMultiplier; }
 	//FORCEINLINE void SetTurnSpeedMultiplier(float Value) { BaseTurnSpeedMultiplier = Value; }
 
@@ -568,4 +600,13 @@ public:
 
 	void ResetKeybindingsToDefault(ULocalPlayer* LocalPlayer);
 
+	//UNiagaraComponent* SpawnOverheadBuff(UNiagaraSystem* BuffType, float BuffTime);
+	void SpawnOverheadBuff(UNiagaraSystem* BuffType);
+
+	void DeactivateOverheadBuffComponent();
+
+	void ShowDamageIndicator(AActor* DamagedActor, AActor* DamageCauser);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastShowDamageIndicator(AActor* DamagedActor, AActor* DamageCauser);
 };

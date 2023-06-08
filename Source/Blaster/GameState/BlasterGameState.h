@@ -21,7 +21,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInstaKillSMVoteCast, int32, Vote)
 
 
 
-
+UENUM(BlueprintType)
+enum class EStatTypes : uint8
+{
+	EST_Score UMETA(DisplayName = "Score"),
+	EST_Kills UMETA(DisplayName = "Kills"),
+	EST_Deaths UMETA(DisplayName = "Deaths"),
+	EST_KD UMETA(DisplayName = "KD"),
+};
 
 
 /**
@@ -40,15 +47,42 @@ public:
 	UPROPERTY(Replicated)
 		TArray<class ABlasterPlayerState*> TopScoringPlayers;
 
+	UPROPERTY()
+	TMap<EStatTypes, float> PlayerStatistics;
+
+	UPROPERTY(Replicated)
+	TArray<APlayerState*> PendingChoicePlayerArray;
+
+	UPROPERTY(Replicated)
+	TArray<APlayerState*> RedPlayersArray;
+	UPROPERTY(Replicated)
+	TArray<APlayerState*> BluePlayersArray;
+
+	UPROPERTY(Replicated, BlueprintReadWrite)
+	float MaxScore;
+
 	//
 	/// Teams
 	//
+
 
 	void RedTeamScores(ABlasterPlayerState* ScoringPlayerState);
 	void BlueTeamScores(ABlasterPlayerState* ScoringPlayerState);
 
 	UFUNCTION(BlueprintPure)
 	float GetScoreToWinFromServer();
+
+	UFUNCTION(Server, Reliable)
+	void ServerChosenRed(APlayerState* PState);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFillRedPlayerStatesArray(APlayerState* PState);
+
+	UFUNCTION(Server, Reliable)
+	void ServerFillPendingPlayerStatesArray();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFillPendingPlayerStatesArray();
 
 	TArray<ABlasterPlayerState*> RedTeam;
 	TArray<ABlasterPlayerState*> BlueTeam;

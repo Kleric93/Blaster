@@ -17,26 +17,28 @@ void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
 
-	ABlasterPlayerController* Controller = Cast<ABlasterPlayerController>(NewPlayer);
-	ABlasterGameState* BGameState = Cast <ABlasterGameState>(UGameplayStatics::GetGameState(this));
+	BlasterController = Cast<ABlasterPlayerController>(NewPlayer);
+	BlasterGameState = Cast <ABlasterGameState>(UGameplayStatics::GetGameState(this));
 	ABlasterPlayerState* BPState = NewPlayer->GetPlayerState<ABlasterPlayerState>();
 
 	Settings = Cast<UBlasterUserSettings>(GEngine->GameUserSettings);
-	if (BGameState)
+	if (BlasterGameState)
 	{
-		if (Controller)
+		if (BlasterController)
 		{
-			Controller->OnTeamChosen.AddDynamic(this, &ATeamsGameMode::OnTeamChosen);
+			BlasterController->OnTeamChosen.AddDynamic(this, &ATeamsGameMode::OnTeamChosen);
 			if (BPState->GetTeam() == ETeam::ET_NoTeam)
 			{
-				if (BGameState->BlueTeam.Num() >= BGameState->RedTeam.Num())
+				BlasterGameState->ServerFillPendingPlayerStatesArray();
+
+				if (BlasterGameState->BlueTeam.Num() >= BlasterGameState->RedTeam.Num())
 				{
-					BGameState->RedTeam.AddUnique(BPState);
+					BlasterGameState->RedTeam.AddUnique(BPState);
 					BPState->SetTeam(ETeam::ET_RedTeam);
 				}
 				else
 				{
-					BGameState->BlueTeam.AddUnique(BPState);
+					BlasterGameState->BlueTeam.AddUnique(BPState);
 					BPState->SetTeam(ETeam::ET_BlueTeam);
 				}
 			}
@@ -54,6 +56,7 @@ void ATeamsGameMode::OnTeamChosen(ABlasterPlayerController* BPController, ETeam 
 		{
 			BGameState->RedTeam.AddUnique(BPState);
 			BPState->SetTeam(ETeam::ET_RedTeam);
+			
 		}
 		else if (ChosenTeam == ETeam::ET_BlueTeam)
 		{
@@ -62,7 +65,7 @@ void ATeamsGameMode::OnTeamChosen(ABlasterPlayerController* BPController, ETeam 
 		}
 	
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ATeamsGameMode::Logout(AController* Exiting)

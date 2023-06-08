@@ -14,6 +14,8 @@ class ABlasterPlayerState;
 class USettingsMenu;
 class UBlasterUserSettings;
 class UTeamChoice;
+class UInputAction;
+class USoundCue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamChosen, ABlasterPlayerController*, BPController, ETeam, ChosenTeam);
@@ -66,6 +68,8 @@ public:
 
 	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim);
 
+	void SetMaxScore(float ScoreMax);
+
 	void HideTeamScores();
 	void HideTeamFlagIcons();
 	void InitTeamScores();
@@ -104,6 +108,9 @@ public:
 
 	UFUNCTION(Client, Reliable)
 		void EventBorderDeath();
+
+	UFUNCTION(Client, Reliable)
+		void EventPlayerEliminated();
 	//
 	/// chat box
 	//
@@ -160,15 +167,31 @@ public:
 	UFUNCTION(Server, Reliable)
 		void Server_BlueTeamChosen();
 
+	UFUNCTION(Server, Reliable)
+		void Server_UpdateScrollBoxes();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_UpdateScrollBoxes();
+
 	void SetCharacterOverlayVisibility(bool BCharOverlayVisible);
 
-
 	void SetHUDTime();
+
+	void SetHUDDamageIndicator(float Angle);
+
+	void SavePlayerInputMapping(FName MappingName, FKey Key);
+
+	void UpdateInputMapping(FName MappingName, FKey Key);
+
+	void LoadPlayerOverriddenInputMappings();
 
 	bool bReturnToMainMenuOpen = false;
 	bool bSettingsMenuOpen = false;
 
 	FORCEINLINE float GetWarmupTime() const { return WarmupTime; };
+
+	UPROPERTY(EditAnywhere)
+		UInputAction* Jump;
 private:
 
 	UPROPERTY(EditAnywhere, Category = HUD)
@@ -267,8 +290,6 @@ protected:
 	void ShowMatchStats();
 
 	void HideMatchStats();
-
-
 
 private:
 
@@ -396,4 +417,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		UTexture2D* BerserkBuffIconOff;
+
+	FString InputMappingSlot = "InputMappingSlot";
 };

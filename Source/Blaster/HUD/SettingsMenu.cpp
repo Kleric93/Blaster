@@ -16,6 +16,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Components/ComboBoxString.h"
+#include "Components/InputKeySelector.h"
 #include "RHI.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundClass.h"
@@ -25,6 +26,9 @@
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Components/CheckBox.h"
 #include "Components/SpinBox.h"
+#include "InputMappingContext.h"
+#include "Blaster/InputConfig.h"
+#include "Blaster/Input/BlasterGameplayTags.h"
 
 
 void USettingsMenu::MenuSetup()
@@ -36,7 +40,9 @@ void USettingsMenu::MenuSetup()
 
 	AddToViewport(3);
 	SetVisibility(ESlateVisibility::Visible);
+	PlayAnimation(QuitButtonAnimation, 0.f, 0);
 	bIsFocusable = true;
+
 	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
 	Character = Cast<ABlasterCharacter>(PC->GetPawn());
 	if (PC)
@@ -148,19 +154,19 @@ void USettingsMenu::MenuSetup()
 	if (Character == nullptr) return;
 	if (AimSpeedMultiplierSlider && Character && Settings)
 	{
-		AimSpeedMultiplierSlider->SetValue(Settings->GetBaseTurnRate());
+		//AimSpeedMultiplierSlider->SetValue(Settings->GetBaseTurnRate());
 		AimSpeedMultiplierSlider->OnValueChanged.AddDynamic(this, &USettingsMenu::OnAimSpeedMultiplierSliderValueChanged);
 	}
 
 	if (AimedRotationSpeedLZSlider && Character && Settings)
 	{
-		AimedRotationSpeedLZSlider->SetValue(Settings->GetAimingTurnRateForLongZoom());
+		//AimedRotationSpeedLZSlider->SetValue(Settings->GetAimingTurnRateForLongZoom());
 		AimedRotationSpeedLZSlider->OnValueChanged.AddDynamic(this, &USettingsMenu::OnAimedRotationSpeedLZSliderValueChanged);
 	}
 
 	if (AimedRotationSpeedSZSlider && Character && Settings)
 	{
-		AimedRotationSpeedSZSlider->SetValue(Settings->GetAimingTurnRateForShortZoom());
+		//AimedRotationSpeedSZSlider->SetValue(Settings->GetAimingTurnRateForShortZoom());
 		AimedRotationSpeedSZSlider->OnValueChanged.AddDynamic(this, &USettingsMenu::OnAimedRotationSpeedSZSliderValueChanged);
 	}
 
@@ -189,6 +195,31 @@ void USettingsMenu::MenuSetup()
 	{
 		ControllerInputButton->OnPressed.AddDynamic(this, &USettingsMenu::OnControllerInputButtonClicked);
 	}
+
+	//
+	/// Keys Remapping
+	//
+	if (PC)
+	{
+		if (JumpKeySelector)
+		{
+			if (Settings->GetIsUsingKBM() == true)
+			{
+			//	JumpKeySelector->SetSelectedKey(PC->GetKBMMappingContext()->GetMapping(5).PlayerMappableOptions.DisplayName(FName("Jump")));
+			}
+			JumpKeySelector->OnKeySelected.AddDynamic(this, &USettingsMenu::OnJumpKeyChanged);
+		}
+		if (FireKeySelector)
+		{
+			if (Settings->GetIsUsingKBM() == true)
+			{
+		//		JumpKeySelector->SetSelectedKey(PC->GetKBMMappingContext()->GetMapping(14).Key);
+			}
+		//	JumpKeySelector->OnKeySelected.AddDynamic(this, &USettingsMenu::OnJumpKeyChanged);
+		}
+	}
+
+
 }
 
 void USettingsMenu::OnMousenKeyboardInputButtonClicked()
@@ -406,5 +437,44 @@ void USettingsMenu::OnOverheadWidgetVisibilityCheckBoxStatusChange(bool IsOHBoxC
 	}
 }
 
+void USettingsMenu::OnJumpKeyChanged(FInputChord KeyChanged)
+{
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
+	if (JumpKeySelector && PC && Settings)
+	{
+		//FName JumpKey;
+		//PC->UpdateInputMapping(JumpKey, KeyChanged.Key);
+		if (Settings->GetIsUsingKBM() == true)
+		{
+			const UInputAction* IA_Jump = PC->GetKBMMappingContext()->GetMapping(5).Action.Get();
+			//PC->GetKBMMappingContext()->UnmapKey(IA_Jump, PC->GetKBMMappingContext()->GetMapping(5).Key);
 
+			PC->GetKBMMappingContext()->MapKey(IA_Jump, KeyChanged.Key);
+		}
+
+	}
+}
+
+void USettingsMenu::OnFireKeyChanged(FInputChord KeyChanged)
+{
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
+	if (FireKeySelector && PC && Settings)
+	{
+		//FName JumpKey;
+		//PC->UpdateInputMapping(JumpKey, KeyChanged.Key);
+		if (Settings->GetIsUsingKBM() == true)
+		{
+			/*
+			const UInputAction* IA_FirePressed = PC->GetKBMMappingContext()->GetMapping(14).Action.Get();
+			const UInputAction* IA_FireReleased = PC->GetKBMMappingContext()->GetMapping(15).Action.Get();
+			PC->GetKBMMappingContext()->UnmapKey(IA_FirePressed, PC->GetKBMMappingContext()->GetMapping(14).Key);
+			PC->GetKBMMappingContext()->UnmapKey(IA_FireReleased, PC->GetKBMMappingContext()->GetMapping(15).Key);
+
+			PC->GetKBMMappingContext()->MapKey(IA_FirePressed, KeyChanged.Key);
+			PC->GetKBMMappingContext()->MapKey(IA_FireReleased, KeyChanged.Key);
+			*/
+		}
+
+	}
+}
 

@@ -32,10 +32,4 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = DamageMultipliers)
 	float LeastDamageDistance = 60;
-
-	UPROPERTY(EditAnywhere)
-	USoundBase* PlayerHitSound;
-
-	UPROPERTY(EditAnywhere)
-	USoundBase* PlayerHitSoundHeadshot;
 };

@@ -969,7 +969,7 @@ void UCombatComponent::TraceForAimAssist()
 		if (Character)
 		{
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
-			Start += CrosshairWorldDirection * (DistanceToCharacter + 400.f);
+			Start += CrosshairWorldDirection * (DistanceToCharacter + AimAssistTraceStartLocation);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
@@ -988,6 +988,9 @@ void UCombatComponent::TraceForAimAssist()
 
 			ABlasterCharacter* HitBlasterCharacter = Cast<ABlasterCharacter>(HitActor);
 			if (HitBlasterCharacter == nullptr) { return; }
+
+			if (HitBlasterCharacter->GetTeam() == ETeam::ET_BlueTeam &&  Character->GetTeam() == ETeam::ET_BlueTeam) return;
+			if (HitBlasterCharacter->GetTeam() == ETeam::ET_RedTeam && Character->GetTeam() == ETeam::ET_RedTeam) return;
 
 			if (HitResult.GetComponent() != HitBlasterCharacter->GetAimAssistSphereComponent())
 			{
@@ -1029,8 +1032,21 @@ void UCombatComponent::UpdateAim(float DeltaTime)
 		// Step 6: Calculate the squared length of the rotation axis
 		float RotationLengthSquared = DeltaRot.Vector().SizeSquared();
 
-		// Step 7: Calculate the interpolation speed based on the squared length of the rotation axis
-		float InterpolationSpeed = FMath::Clamp(RotationLengthSquared / 180.f, 0.f, 1.f) * AimAssistSpeed;
+		float MinBaseTurnRate = 1.f;
+		float MaxBaseTurnRate = 10.f;
+		float BaseTurnRate = Settings->GetBaseTurnRate();
+
+		// Normalize BaseTurnRate to a [0, 1] range according to its possible range
+		float normalizedTurnRate = (BaseTurnRate - MinBaseTurnRate) / (MaxBaseTurnRate - MinBaseTurnRate);
+
+		// Now map this to the range of AimAssistMultiplier [100, 600]
+		float AimAssistMultiplier = FMath::Clamp(1 + (normalizedTurnRate * (30 - 1)), 1.f, AimAssistmultiplierControl);
+
+		float InterpolationSpeed = FMath::Clamp(RotationLengthSquared / 180.f, 0.f, 1.f) * AimAssistSpeed + AimAssistMultiplier;
+
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("InterpolationSpeed: %f"), InterpolationSpeed));
+
+
 
 		// Step 8: Interpolate the current pitch and yaw of the player controller towards the desired pitch and yaw
 		FRotator NewAimRot = CurrentAimRot + DeltaRot * InterpolationSpeed * DeltaTime;

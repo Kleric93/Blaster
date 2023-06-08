@@ -17,7 +17,9 @@
 #include "Blaster/Pickups/BerserkPickup.h"
 #include "Blaster/Pickups/PickupSpawnPoint.h"
 #include "Blaster/BlasterUserSettings.h"
+#include "Sound/SoundCue.h"
 #include "EngineUtils.h"
+#include "NiagaraComponent.h"
 
 
 ABlasterPlayerState::ABlasterPlayerState()
@@ -208,6 +210,25 @@ void ABlasterPlayerState::OnBuffSpawned(APickupSpawnPoint* SpawnPoint)
 	}
 }
 
+void ABlasterPlayerState::MulticastSpawnOverheadBuff_Implementation(UNiagaraSystem* BuffType)
+{
+	if (Character)
+	{
+		Character->SpawnOverheadBuff(BuffType);
+
+		//UNiagaraComponent* SpeedBuffComponent = Character->SpawnOverheadBuff(BuffType, BuffTime);
+		//SpeedBuffComponents.Add(SpeedBuffComponent);
+	}
+}
+
+void ABlasterPlayerState::MulticastDeactivateOverheadBuff_Implementation()
+{
+	if (Character)
+	{
+		Character->DeactivateOverheadBuffComponent();
+	}
+}
+
 void ABlasterPlayerState::OnSpeedBuffPickedUp(float BuffTime)
 {
 	if (Controller)
@@ -216,6 +237,10 @@ void ABlasterPlayerState::OnSpeedBuffPickedUp(float BuffTime)
 		Controller->EventBorderPowerUp();
 		GetWorldTimerManager().SetTimer(TimerHandle_SpeedBuffDuration, this, &ABlasterPlayerState::OnSpeedBuffEnd, BuffTime, false);
 	}
+	if (Character)
+	{
+		MulticastSpawnOverheadBuff(Character->GetSpeedBuffSystem());
+	}
 }
 
 void ABlasterPlayerState::OnSpeedBuffEnd()
@@ -223,6 +248,10 @@ void ABlasterPlayerState::OnSpeedBuffEnd()
 	if (Controller)
 	{
 		Controller->UpdateSpeedBuffIcon(false);
+	}
+	if (Character)
+	{
+		MulticastDeactivateOverheadBuff();
 	}
 }
 
@@ -235,6 +264,10 @@ void ABlasterPlayerState::OnJumpBuffPickedUp(float BuffTime)
 		Controller->EventBorderPowerUp();
 		GetWorldTimerManager().SetTimer(TimerHandle_JumpBuffDuration, this, &ABlasterPlayerState::OnJumpBuffEnd, BuffTime, false);
 	}
+	if (Character)
+	{
+		MulticastSpawnOverheadBuff(Character->GetJumpBuffSystem());
+	}
 }
 
 void ABlasterPlayerState::OnJumpBuffEnd()
@@ -242,6 +275,10 @@ void ABlasterPlayerState::OnJumpBuffEnd()
 	if (Controller)
 	{
 		Controller->UpdateJumpBuffIcon(false);
+	}
+	if (Character)
+	{
+		MulticastDeactivateOverheadBuff();
 	}
 }
 
@@ -253,6 +290,10 @@ void ABlasterPlayerState::OnBerserkBuffPickedUp(float BuffTime)
 		Controller->EventBorderPowerUp();
 		GetWorldTimerManager().SetTimer(TimerHandle_BerserkBuffDuration, this, &ABlasterPlayerState::OnBerserkBuffEnd, BuffTime, false);
 	}
+	if (Character)
+	{
+		MulticastSpawnOverheadBuff(Character->GetBerserkBuffSystem());
+	}
 }
 
 void ABlasterPlayerState::OnBerserkBuffEnd()
@@ -260,6 +301,10 @@ void ABlasterPlayerState::OnBerserkBuffEnd()
 	if (Controller)
 	{
 		Controller->UpdateBerserkBuffIcon(false);
+	}
+	if (Character)
+	{
+		MulticastDeactivateOverheadBuff();
 	}
 }
 
@@ -293,4 +338,11 @@ void ABlasterPlayerState::ServerSetTeamChoice_Implementation()
 void ABlasterPlayerState::OnRep_TeamChoice()
 {
 	SetTeam(TeamChoice);
+}
+
+void ABlasterPlayerState::EventKilledPlayer_Implementation()
+{
+	UGameplayStatics::PlaySound2D(GetWorld(), KillSound);
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetPlayerController());
+	PC->EventPlayerEliminated();
 }

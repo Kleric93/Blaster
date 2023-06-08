@@ -50,10 +50,7 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
             {
                 if (Damage)
                 {
-                    UGameplayStatics::PlaySound2D(
-                        GetWorld(),
-                        PlayerHitSound
-                    );
+                    UGameplayStatics::PlaySound2D(GetWorld(), PlayerHitSound);
                 }
             }
             // Calculate the distance traveled by the bullet

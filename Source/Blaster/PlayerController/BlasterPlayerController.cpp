@@ -39,6 +39,9 @@
 #include "Blaster/BlasterUserSettings.h"
 #include "Blaster/HUD/TeamChoice.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
+#include "Blaster/BlasterSaveGame.h"
+#include "InputMappingContext.h"
+#include "Sound/SoundCue.h"
 
 
 ABlasterPlayerController::ABlasterPlayerController()
@@ -50,6 +53,21 @@ ABlasterPlayerController::ABlasterPlayerController()
 void ABlasterPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim)
 {
 	ClientElimAnnouncement(Attacker, Victim);
+}
+
+void ABlasterPlayerController::SetMaxScore(float ScoreMax)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->ScoreToWin;
+
+	if (bHUDValid)
+	{
+		FString ScoreText = FString::Printf(TEXT("%d"), ScoreMax);
+		BlasterHUD->CharacterOverlay->ScoreToWin->SetText(FText::FromString(ScoreText));
+	}
 }
 
 void ABlasterPlayerController::HideTeamScores()
@@ -376,39 +394,47 @@ void ABlasterPlayerController::UpdateBlueFlagStateInHUD(EFlagState NewFlagState)
 void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
 {
 	APlayerState* Self = GetPlayerState<APlayerState>();
-	ABlasterCharacter* AttackerCharacter = Cast<ABlasterCharacter>(Attacker->GetPawn());
-	AWeapon* Weapon = AttackerCharacter->GetEquippedWeapon();
-	UTexture2D* WeaponIcon = Weapon->GetWeaponTypeIcon();
 
 	if (Attacker && Victim && Self)
 	{
-		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-		if (BlasterHUD)
+		ABlasterCharacter* AttackerCharacter = Attacker->GetPawn() ? Cast<ABlasterCharacter>(Attacker->GetPawn()) : nullptr;
+		if (AttackerCharacter)
 		{
-			if (Attacker == Self && Victim != Self)
+			AWeapon* Weapon = AttackerCharacter->GetEquippedWeapon();
+			UTexture2D* WeaponIcon = Weapon ? Weapon->GetWeaponTypeIcon() : nullptr;
+
+			if (Weapon && WeaponIcon)
 			{
-				BlasterHUD->AddElimAnnouncement("You", Victim->GetPlayerName(), WeaponIcon);
-				return;
+				BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+				if (BlasterHUD)
+				{
+					if (Attacker == Self && Victim != Self)
+					{
+						BlasterHUD->AddElimAnnouncement("You", Victim->GetPlayerName(), WeaponIcon);
+						return;
+					}
+					if (Victim == Self && Attacker != Self)
+					{
+						BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you", WeaponIcon);
+						return;
+					}
+					if (Attacker == Victim && Attacker == Self)
+					{
+						BlasterHUD->AddElimAnnouncement("You", "Yourself", WeaponIcon);
+						return;
+					}
+					if (Attacker == Victim && Attacker != Self)
+					{
+						BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves", WeaponIcon);
+						return;
+					}
+					BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName(), WeaponIcon);
+				}
 			}
-			if (Victim == Self && Attacker != Self)
-			{
-				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you", WeaponIcon);
-				return;
-			}
-			if (Attacker == Victim && Attacker == Self)
-			{
-				BlasterHUD->AddElimAnnouncement("You", "Yourself", WeaponIcon);
-				return;
-			}
-			if (Attacker == Victim && Attacker != Self)
-			{
-				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves", WeaponIcon);
-				return;
-			}
-			BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName(), WeaponIcon);
 		}
 	}
 }
+
 
 void ABlasterPlayerController::BeginPlay()
 {
@@ -432,13 +458,13 @@ void ABlasterPlayerController::BeginPlay()
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckmatchState();
 
-
-
 	ABlasterPlayerState* BlasterPlayerState = Cast<ABlasterPlayerState>(this->PlayerState);
 	if (BlasterPlayerState)
 	{
 		BlasterPlayerState->RegisterBuffSpawnPoints();
 	}
+	LoadPlayerOverriddenInputMappings();
+
 }
 
 void ABlasterPlayerController::IMCSelector(UInputMappingContext* MappingContexttoAdd, UInputMappingContext* MappingContexttoRemove)
@@ -627,13 +653,13 @@ void ABlasterPlayerController::Server_InstaKillSMVoteCast_Implementation()
 void ABlasterPlayerController::Server_RedTeamChosen_Implementation()
 {
 	OnTeamChosen.Broadcast(this, ETeam::ET_RedTeam);
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerController::Server_BlueTeamChosen_Implementation()
 {
 	OnTeamChosen.Broadcast(this, ETeam::ET_BlueTeam);
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterPlayerController::OnRep_ShowTeamScores()
@@ -810,6 +836,23 @@ void ABlasterPlayerController::EventBorderDeath_Implementation()
 			BlasterHUD->CharacterOverlay->DeathBorderAnimation,
 			0.f,
 			1);
+	}
+}
+
+void ABlasterPlayerController::EventPlayerEliminated_Implementation()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->PlayerEliminatedText &&
+		BlasterHUD->CharacterOverlay->PlayerEliminatedAnimation;
+
+	if (bHUDValid)
+	{
+
+		BlasterHUD->CharacterOverlay->PlayerEliminatedText->SetColorAndOpacity(FLinearColor::Green);
+		BlasterHUD->CharacterOverlay->PlayAnimation(BlasterHUD->CharacterOverlay->PlayerEliminatedAnimation, 0.f, 1);
 	}
 }
 
@@ -1581,6 +1624,76 @@ void ABlasterPlayerController::UpdateBerserkBuffIcon_Implementation(bool bIsBuff
 		//UE_LOG(LogTemp, Warning, TEXT("Controller %s updated BerserkBuffIcon to %s"), *GetName(), bIsBuffActive ? TEXT("On") : TEXT("Off"));
 	}
 
+}
+
+void ABlasterPlayerController::SetHUDDamageIndicator(float Angle)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->DamageIndicator && BlasterHUD->CharacterOverlay->DamageIndicatorAnim;
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->DamageIndicator->SetColorAndOpacity(FLinearColor::Red);
+		BlasterHUD->CharacterOverlay->PlayAnimation(BlasterHUD->CharacterOverlay->DamageIndicatorAnim, -1.f, 1);
+		BlasterHUD->CharacterOverlay->DamageIndicator->SetRenderTransformAngle(Angle);
+	}
+}
+
+void ABlasterPlayerController::Server_UpdateScrollBoxes_Implementation()
+{
+	Multicast_UpdateScrollBoxes();
+}
+
+void ABlasterPlayerController::Multicast_UpdateScrollBoxes_Implementation()
+{
+	// Assuming UTeamChoice is a UPROPERTY in your player controller class
+	if (TeamChoiceWidget)
+	{
+		TeamChoiceWidget->UpdateScrollBoxes();
+	}
+}
+
+void ABlasterPlayerController::SavePlayerInputMapping(FName MappingName, FKey Key)
+{
+	UBlasterSaveGame* SaveGame = Cast<UBlasterSaveGame>(UGameplayStatics::LoadGameFromSlot(InputMappingSlot, 0));
+	if (!SaveGame)
+	{
+		SaveGame = Cast<UBlasterSaveGame>(UGameplayStatics::CreateSaveGameObject(UBlasterSaveGame::StaticClass()));
+	}
+	SaveGame->AddPlayerMapping(MappingName, Key);
+	const bool IsSaved = UGameplayStatics::SaveGameToSlot(SaveGame, InputMappingSlot, 0);
+}
+
+void ABlasterPlayerController::UpdateInputMapping(FName MappingName, FKey Key)
+{
+	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetLocalPlayer()))
+	{
+		
+		FModifyContextOptions Options;
+		Options.bForceImmediately = true;
+		Options.bIgnoreAllPressedKeysUntilRelease = true;
+		Subsystem->AddPlayerMappedKey(MappingName, Key, Options);
+		SavePlayerInputMapping(MappingName, Key);
+	}
+}
+
+void ABlasterPlayerController::LoadPlayerOverriddenInputMappings()
+{
+	UBlasterSaveGame* SaveGame = Cast<UBlasterSaveGame>(UGameplayStatics::LoadGameFromSlot(InputMappingSlot, 0));
+	if (SaveGame)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(this->GetLocalPlayer()))
+		{
+			FModifyContextOptions Options;
+				Options.bForceImmediately = true;
+				Options.bIgnoreAllPressedKeysUntilRelease = true;
+				for (auto Mapping : SaveGame->PlayerMappings)
+				{
+					Subsystem->AddPlayerMappedKey(Mapping.Key, Mapping.Value, Options);			
+				}
+		}
+	}
+	
 }
 
 

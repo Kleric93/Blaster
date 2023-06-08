@@ -23,6 +23,10 @@ void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION_NOTIFY(ABlasterGameState, TimeElapsed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME(ABlasterGameState, bMatchEndedAbruptly);
 	DOREPLIFETIME(ABlasterGameState, ScoreToWin);
+	DOREPLIFETIME(ABlasterGameState, PendingChoicePlayerArray);
+	DOREPLIFETIME(ABlasterGameState, RedPlayersArray);
+	DOREPLIFETIME(ABlasterGameState, BluePlayersArray);
+	DOREPLIFETIME(ABlasterGameState, MaxScore);
 }
 
 void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* ScoringPlayer)
@@ -67,6 +71,7 @@ void ABlasterGameState::RedTeamScores(ABlasterPlayerState* ScoringPlayerState)
 	FString PlayerName = ScoringPlayerState->GetPlayerName();
 	//UE_LOG(LogTemp, Error, TEXT("Player %s scored a point"), *PlayerName);
 	int32& PlayerScore = PlayerScores.FindOrAdd(PlayerName);
+
 	PlayerScore++;
 	Multicast_UpdatePlayerScorePoints(PlayerName, ETeam::ET_RedTeam, PlayerScore);
 	Multicast_UpdateTeamScorePoints(ETeam::ET_RedTeam, RedTeamScore);
@@ -401,9 +406,69 @@ void ABlasterGameState::OnRep_MatchHasEndedAbruptly()
 float ABlasterGameState::GetScoreToWinFromServer()
 {
 	ABlasterPlayerController* BPlayer = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
-	if (BPlayer && BPlayer->Settings)
+	if (BPlayer && BPlayer->Settings && BPlayer->HasAuthority())
 	{
 		ScoreToWin = BPlayer->Settings->GetMaxScore();
 	}
 	return ScoreToWin;
 }
+/* this works just fine, for server though.
+float ABlasterGameState::GetScoreToWinFromServer()
+{
+	ABlasterPlayerController* BPlayer = Cast<ABlasterPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (BPlayer && BPlayer->Settings)
+	{
+		ScoreToWin = BPlayer->Settings->GetMaxScore();
+	}
+	return ScoreToWin;
+}*/
+
+void ABlasterGameState::ServerFillPendingPlayerStatesArray_Implementation()
+{
+	MulticastFillPendingPlayerStatesArray();
+}
+
+void ABlasterGameState::MulticastFillPendingPlayerStatesArray_Implementation()
+{
+	PendingChoicePlayerArray.Empty(); // Clear the array before populating
+
+	// Retrieve the game state
+	AGameStateBase* GameState = GetWorld()->GetGameState();
+	if (GameState)
+	{
+
+		// Loop through each player state and add it to the pending choice array
+		for (APlayerState* PlayerState : PlayerArray)
+		{
+			if (PlayerState)
+			{
+				PendingChoicePlayerArray.Add(PlayerState);
+			}
+		}
+	}
+}
+
+void ABlasterGameState::ServerChosenRed_Implementation(APlayerState* PState)
+{
+	MulticastFillRedPlayerStatesArray(PState);
+}
+
+void ABlasterGameState::MulticastFillRedPlayerStatesArray_Implementation(APlayerState* PState)
+{
+	// Retrieve the game state
+	AGameStateBase* GameState = GetWorld()->GetGameState();
+	if (GameState)
+	{
+		// Loop through each player state and add it to the pending choice array
+		for (APlayerState* PlayerState : RedPlayersArray)
+		{
+			if (PlayerState)
+			{
+				RedPlayersArray.Add(PState);
+			}
+		}
+	}
+}
+
+
+

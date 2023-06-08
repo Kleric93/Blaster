@@ -23,6 +23,9 @@ public:
 	class UTextBlock* YouDiedText;
 
 	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* PlayerEliminatedText;
+
+	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HealthText;
 
 	UPROPERTY(meta = (BindWidget))
@@ -88,6 +91,12 @@ public:
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 		UWidgetAnimation* DeathBorderAnimation;
 
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		UWidgetAnimation* PlayerEliminatedAnimation;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		UWidgetAnimation* DamageIndicatorAnim;
+
 	UPROPERTY(meta = (BindWidget))
 	UImage* SpeedBuffIcon;
 
@@ -96,6 +105,9 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* BerserkBuffIcon;
+
+	UPROPERTY(meta = (BindWidget))
+		UImage* DamageIndicator;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreToWin;

@@ -75,9 +75,16 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
-	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
+	if (AreaSphere)
+	{
+		//AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AWeapon::OnSphereEndOverlap);
+	}
+	else
+	{
+
+	}
 
 	if (WeaponMesh)
 	{
@@ -315,7 +322,11 @@ void AWeapon::SetWeaponState(EWeaponState State)
 
 void AWeapon::DestroyActor()
 {
-	// Call Destroy to remove the actor from the world
+	if (AreaSphere)
+	{
+		AreaSphere->OnComponentBeginOverlap.RemoveDynamic(this, &AWeapon::OnSphereOverlap);
+		AreaSphere->OnComponentEndOverlap.RemoveDynamic(this, &AWeapon::OnSphereEndOverlap);
+	}
 	Destroy();
 }
 

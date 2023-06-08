@@ -14,4 +14,11 @@ class BLASTER_API UBlasterSaveGame : public USaveGame
 {
 	GENERATED_BODY()
 	
+public:
+
+	void AddPlayerMapping(FName Name, FKey Key);
+
+	UPROPERTY(SaveGame)
+	TMap<FName, FKey> PlayerMappings;
+
 };

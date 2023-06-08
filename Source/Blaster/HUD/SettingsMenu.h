@@ -23,6 +23,7 @@ class ABlasterCharacter;
 class UBlasterUserSettings;
 class UCheckBox;
 class USpinBox;
+class UInputKeySelector;
 
 /**
  * 
@@ -110,6 +111,14 @@ protected:
 	UFUNCTION()
 	void OnOverheadWidgetVisibilityCheckBoxStatusChange(bool IsOHBoxChecked);
 
+	//
+	/// Keys rebind
+	//
+	UFUNCTION()
+	void OnJumpKeyChanged(FInputChord KeyChanged);
+
+	UFUNCTION()
+		void OnFireKeyChanged(FInputChord KeyChanged);
 
 private:
 
@@ -130,6 +139,9 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* QuitButton;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* QuitButtonAnimation;
 
 	UPROPERTY(meta = (BindWidget))
 	UButton* MousenKeyboardInputButton;
@@ -186,6 +198,16 @@ private:
 
 	UPROPERTY()
 		ABlasterCharacter* Character;
+
+	//
+	/// Keys remapping
+	//
+
+	UPROPERTY(meta = (BindWidget))
+	UInputKeySelector* JumpKeySelector;
+
+	UPROPERTY(meta = (BindWidget))
+	UInputKeySelector* FireKeySelector;
 
 public:
 

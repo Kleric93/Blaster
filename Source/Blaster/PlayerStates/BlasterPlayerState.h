@@ -9,6 +9,7 @@
 
 
 class UBlasterUserSettings;
+class USoundCue;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerScoredKill, const FString&, PlayerName, int32, NewKills);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPlayerDeath, const FString&, PlayerName, int32, NewDeaths);
@@ -60,6 +61,12 @@ public:
 	UFUNCTION()
 		void OnBuffSpawned(APickupSpawnPoint* SpawnPoint);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSpawnOverheadBuff(UNiagaraSystem* BuffType);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastDeactivateOverheadBuff();
+
 	UFUNCTION()
 		void OnSpeedBuffPickedUp(float BuffTime);
 
@@ -110,6 +117,10 @@ public:
 	UPROPERTY(ReplicatedUsing = OnRep_TeamChoice)
 	ETeam TeamChoice = ETeam::ET_NoTeam;
 
+	UFUNCTION(Client, Reliable)
+	void EventKilledPlayer();
+
+
 private:
 
 	UPROPERTY()
@@ -117,6 +128,9 @@ private:
 
 	UPROPERTY()
 		class ABlasterPlayerController* Controller;
+
+	UPROPERTY(EditAnywhere)
+		USoundCue* KillSound;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 		int32 Defeats;
@@ -139,6 +153,8 @@ private:
 	FTimerHandle TimerHandle_JumpBuffDuration;
 
 	FTimerHandle TimerHandle_BerserkBuffDuration;
+
+	TArray<class UNiagaraComponent*> SpeedBuffComponents;
 
 	UPROPERTY()
 	UBlasterUserSettings* Settings;

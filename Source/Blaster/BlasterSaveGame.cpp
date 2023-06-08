@@ -3,3 +3,7 @@
 
 #include "BlasterSaveGame.h"
 
+void UBlasterSaveGame::AddPlayerMapping(FName Name, FKey Key)
+{
+	PlayerMappings.Add(Name, Key);
+}
