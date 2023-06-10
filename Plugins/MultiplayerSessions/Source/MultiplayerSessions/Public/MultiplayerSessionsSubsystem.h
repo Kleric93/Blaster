@@ -7,6 +7,28 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "MultiplayerSessionsSubsystem.generated.h"
 
+USTRUCT(BlueprintType)
+struct FServerData 
+{
+
+	GENERATED_BODY()
+
+		int32 ConnNum;
+
+	float MatchTimeFloat;
+
+	FString MatchTimeStr;
+
+	FString MatchType;
+
+	FString MatchMap;
+
+	FString ServersName;
+
+	FString MatchStatus;
+
+};
+
 //
 // Declaring our own custom delegates for the menu class to bind callbacks to
 //
@@ -17,7 +39,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
@@ -31,7 +53,7 @@ public:
 	//to handle session functionality. the menu class will call these
 	//
 	UFUNCTION(BlueprintCallable)
-	void CreateSession(int32 NumPublicConnections, FString MatchType);
+	void CreateSession(int32 NumPublicConnections, FString MatchType, FString ServersName);
 	void FindSessions(int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
 	void DestroySession();
@@ -49,6 +71,7 @@ public:
 
 	int32 DesiredNumPublicConnections{};
 	FString DesiredMatchType{};
+	FString ServerName{};
 	IOnlineSessionPtr SessionInterface;
 
 protected:
@@ -90,5 +113,7 @@ private:
 
 	bool bCreateSessionOnDestroy{ false };
 	int32 LastNumPublicConnections;
+	FServerData LastSessionConfig;
 	FString LastMatchType;
+	FString LastServerName;
 };

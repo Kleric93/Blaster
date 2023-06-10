@@ -7,14 +7,19 @@
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "Components/SpinBox.h"
+#include "ServerListLine.h"
+#include "Components/TextBlock.h"
+#include "Components/ScrollBox.h"
+#include "Components/EditableTextBox.h"
 
 
-void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FString LobbyPath)
+void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FString LobbyPath, FString ServerNameChosen)
 {
 
 	PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	NumPublicConnections = NumberOfPublicConnections;
 	MatchType = TypeOfMatch;
+	ServerName = ServerNameChosen;
 
 	AddToViewport();
 	SetVisibility(ESlateVisibility::Visible);
@@ -47,11 +52,41 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FStr
 		MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSession);
 		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
 		MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
+
 	}
 
 	if (DMMatchTimeBox)
 	{
 		//DMMatchTimeBox->OnValueCommitted.AddDynamic(this, &ThisClass::OnDMMatchTimeValueChanged);
+	}
+}
+
+void UMenu::RefreshServerList()
+{
+	if (ServerSelectionBox)
+	{
+		ServerSelectionBox->ClearChildren();
+		if (MultiplayerSessionsSubsystem)
+		{
+			MultiplayerSessionsSubsystem->FindSessions(10000);
+		}
+		if (SessionSearchResults != nullptr && SessionSearchResults->Num() > 0)
+		{
+			for (FOnlineSessionSearchResult& SessionSearchResult : *SessionSearchResults)
+			{
+				ServerListLineWidget = CreateWidget<UServerListLine>(GetWorld(), ServerListLine);
+
+				if (ServerListLineWidget == nullptr) continue;
+
+				//ServerListLineWidget->HostNameText->SetText(FText::FromString(SessionSearchResult.Session.OwningUserName));
+
+				ServerSelectionBox->AddChild(ServerListLineWidget);
+			}
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("SessionResults was either nullptr or no sessions were found nigga")));
+		}
 	}
 }
 
@@ -81,6 +116,11 @@ bool UMenu::Initialize()
 	{
 		TrainingButton->OnClicked.AddDynamic(this, &ThisClass::TrainingButtonClicked);
 	}
+
+	if (RefreshServers)
+	{
+		RefreshServers->OnClicked.AddDynamic(this, &ThisClass::RefreshServerList);
+	}
 	return true;
 }
 
@@ -95,22 +135,23 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("Session Created Successfully")));
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("Session Created Successfully")));
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			World->ServerTravel(PathToLobby);
+		}
+		else
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Failed to create session!")));
+			}
+			HostButton->SetIsEnabled(true);
+		}
 	}
 
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		World->ServerTravel(PathToLobby);
-	}
-	else
-	{
-		if (GEngine)
-		{
-			//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Failed to create session!")));
-		}
-		HostButton->SetIsEnabled(true);
-	}
+	
 }
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
@@ -120,13 +161,16 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		return;
 	}
 
-	for (auto Result : SessionResults)
+	// Allocate memory for SessionSearchResults and assign the SessionResults.
+	SessionSearchResults = new TArray<FOnlineSessionSearchResult>(SessionResults);
+
+	for (const auto& Result : *SessionSearchResults)
 	{
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
 		if (SettingsValue == MatchType)
 		{
-			MultiplayerSessionsSubsystem->JoinSession(Result);
+			//MultiplayerSessionsSubsystem->JoinSession(Result);
 			return;
 		}
 	}
@@ -135,6 +179,8 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 		JoinButton->SetIsEnabled(true);
 	}
 }
+
+
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 {
@@ -173,7 +219,11 @@ void UMenu::HostButtonClicked()
 	HostButton->SetIsEnabled(false);
 	if (MultiplayerSessionsSubsystem)
 	{
-		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);
+		//FServerData ServerDataCreation;
+		//ServerDataCreation.ConnNum = 5;
+		//ServerDataCreation.ServerName = ServerNameTextBox->GetText().ToString();
+		//ServerDataCreation.MatchType = ("FreeForAllSM");
+		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, ServerName);
 	}
 }
 

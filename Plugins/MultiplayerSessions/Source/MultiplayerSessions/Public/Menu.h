@@ -9,9 +9,12 @@
 
 class UButton;
 class USpinBox;
+class UEditableTextBox;
+class UScrollBox;
+class UServerListLine;
 
 /**
- * 
+ *
  */
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
@@ -20,7 +23,7 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/ThirdPerson/Maps/Lobby")));
+		void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")), FString ServerNameChosen = FString(TEXT("Server")));
 
 	UFUNCTION()
 		void OnDMMatchTimeValueChanged(float InValue);
@@ -34,24 +37,27 @@ protected:
 	// Callbacks for the custom deleates on the MultiplayerSessionsSubsystem
 	//
 	UFUNCTION()
-	void OnCreateSession(bool bWasSuccessful);
+		void OnCreateSession(bool bWasSuccessful);
 	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
 	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
 	UFUNCTION()
-	void OnDestroySession(bool bWasSuccessful);
+		void OnDestroySession(bool bWasSuccessful);
 	UFUNCTION()
-	void OnStartSession(bool bWasSuccessful);
+		void OnStartSession(bool bWasSuccessful);
 
 private:
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* HostButton;
+		UButton* HostButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* JoinButton;
+		UButton* JoinButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UButton* TrainingButton;
+		UButton* TrainingButton;
+
+	UPROPERTY(meta = (BindWidget))
+		UButton* RefreshServers;
 
 	UPROPERTY(meta = (BindWidget))
 		USpinBox* DMMatchTimeBox;
@@ -59,14 +65,32 @@ private:
 	UPROPERTY(meta = (BindWidget))
 		USpinBox* DMScoreToWinBox;
 
-	UFUNCTION()
-	void HostButtonClicked();
+	UPROPERTY(meta = (BindWidget))
+		UEditableTextBox* ServerNameTextBox;
+
+	UPROPERTY(meta = (BindWidget))
+		UScrollBox* ServerSelectionBox;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<UServerListLine> ServerListLine;
+
+	TArray<FOnlineSessionSearchResult>* SessionSearchResults;
+
+	UPROPERTY()
+		UServerListLine* ServerListLineWidget;
 
 	UFUNCTION()
-	void JoinButtonClicked();
+		void HostButtonClicked();
 
 	UFUNCTION()
-	void TrainingButtonClicked();
+		void JoinButtonClicked();
+
+	UFUNCTION()
+		void TrainingButtonClicked();
+
+	UFUNCTION()
+	void RefreshServerList();
+
 
 	void MenuTearDown();
 
@@ -74,9 +98,19 @@ private:
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 NumPublicConnections{ 4 };
+		int32 NumPublicConnections {
+		4
+	};
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	FString MatchType{ TEXT("FreeForALl") };
+	FString MatchType { 
+		TEXT("FreeForALl") 
+	};
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FString ServerName {
+		TEXT("ServerName")
+	};
+
 	FString PathToLobby{ TEXT("") };
 };
