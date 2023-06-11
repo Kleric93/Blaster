@@ -56,13 +56,16 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 				//GameMode->bUseSeamlessTravel = true;
 
 				FString MatchType = Subsystem->DesiredMatchType;
+				FString Message = FString::Printf(TEXT("match type: %s"), *MatchType);
+				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, Message);
+
 				FString TravelURL;
 
 				if (MatchType == "FreeForAll")
 				{
 					World->ServerTravel(FString("/Game/Maps/BlasterMap?listen"));
 				}
-				if (MatchType == "FreeForAllSM")
+				else if (MatchType == "FreeForAllSM")
 				{
 					World->ServerTravel(FString("/Game/Maps/BlasterMapSM?listen"));
 				}
@@ -88,6 +91,8 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 				}
 				else if (MatchType == "InstaKillSM")
 				{
+					FString MessageIF = FString::Printf(TEXT("got inside instakillmapSM if check with match type: %s"), *MatchType);
+					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, MessageIF);
 					World->ServerTravel(FString("/Game/Maps/InstaKillMapSM?listen"));
 				}
 

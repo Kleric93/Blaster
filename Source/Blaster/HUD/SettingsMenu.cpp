@@ -195,31 +195,6 @@ void USettingsMenu::MenuSetup()
 	{
 		ControllerInputButton->OnPressed.AddDynamic(this, &USettingsMenu::OnControllerInputButtonClicked);
 	}
-
-	//
-	/// Keys Remapping
-	//
-	if (PC)
-	{
-		if (JumpKeySelector)
-		{
-			if (Settings->GetIsUsingKBM() == true)
-			{
-			//	JumpKeySelector->SetSelectedKey(PC->GetKBMMappingContext()->GetMapping(5).PlayerMappableOptions.DisplayName(FName("Jump")));
-			}
-			JumpKeySelector->OnKeySelected.AddDynamic(this, &USettingsMenu::OnJumpKeyChanged);
-		}
-		if (FireKeySelector)
-		{
-			if (Settings->GetIsUsingKBM() == true)
-			{
-		//		JumpKeySelector->SetSelectedKey(PC->GetKBMMappingContext()->GetMapping(14).Key);
-			}
-		//	JumpKeySelector->OnKeySelected.AddDynamic(this, &USettingsMenu::OnJumpKeyChanged);
-		}
-	}
-
-
 }
 
 void USettingsMenu::OnMousenKeyboardInputButtonClicked()
@@ -434,47 +409,6 @@ void USettingsMenu::OnOverheadWidgetVisibilityCheckBoxStatusChange(bool IsOHBoxC
 	{
 		Settings->SetbLocalPlayerOverheadWidgetVisibility(IsOHBoxChecked);
 		Settings->SaveSettings();
-	}
-}
-
-void USettingsMenu::OnJumpKeyChanged(FInputChord KeyChanged)
-{
-	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
-	if (JumpKeySelector && PC && Settings)
-	{
-		//FName JumpKey;
-		//PC->UpdateInputMapping(JumpKey, KeyChanged.Key);
-		if (Settings->GetIsUsingKBM() == true)
-		{
-			const UInputAction* IA_Jump = PC->GetKBMMappingContext()->GetMapping(5).Action.Get();
-			//PC->GetKBMMappingContext()->UnmapKey(IA_Jump, PC->GetKBMMappingContext()->GetMapping(5).Key);
-
-			PC->GetKBMMappingContext()->MapKey(IA_Jump, KeyChanged.Key);
-		}
-
-	}
-}
-
-void USettingsMenu::OnFireKeyChanged(FInputChord KeyChanged)
-{
-	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(GetOwningPlayer());
-	if (FireKeySelector && PC && Settings)
-	{
-		//FName JumpKey;
-		//PC->UpdateInputMapping(JumpKey, KeyChanged.Key);
-		if (Settings->GetIsUsingKBM() == true)
-		{
-			/*
-			const UInputAction* IA_FirePressed = PC->GetKBMMappingContext()->GetMapping(14).Action.Get();
-			const UInputAction* IA_FireReleased = PC->GetKBMMappingContext()->GetMapping(15).Action.Get();
-			PC->GetKBMMappingContext()->UnmapKey(IA_FirePressed, PC->GetKBMMappingContext()->GetMapping(14).Key);
-			PC->GetKBMMappingContext()->UnmapKey(IA_FireReleased, PC->GetKBMMappingContext()->GetMapping(15).Key);
-
-			PC->GetKBMMappingContext()->MapKey(IA_FirePressed, KeyChanged.Key);
-			PC->GetKBMMappingContext()->MapKey(IA_FireReleased, KeyChanged.Key);
-			*/
-		}
-
 	}
 }
 

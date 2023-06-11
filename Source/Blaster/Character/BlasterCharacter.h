@@ -193,6 +193,9 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
+	UFUNCTION(Client, Reliable)
+	void ClientPlayDamageReceivedSound();
+
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
 

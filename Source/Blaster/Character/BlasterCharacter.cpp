@@ -1222,11 +1222,16 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	if (PC)
 	{
 		PC->EventBorderDamage();
-		UGameplayStatics::PlaySound2D(
-			GetWorld(),
-			DamageReceivedSound);
+		ClientPlayDamageReceivedSound();
 		ShowDamageIndicator(DamagedActor, DamageCauser);
 	}
+}
+
+void ABlasterCharacter::ClientPlayDamageReceivedSound_Implementation()
+{
+	UGameplayStatics::PlaySound2D(
+		GetWorld(),
+		DamageReceivedSound);
 }
 
 float ABlasterCharacter::CalculateSpeed()

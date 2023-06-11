@@ -111,15 +111,6 @@ protected:
 	UFUNCTION()
 	void OnOverheadWidgetVisibilityCheckBoxStatusChange(bool IsOHBoxChecked);
 
-	//
-	/// Keys rebind
-	//
-	UFUNCTION()
-	void OnJumpKeyChanged(FInputChord KeyChanged);
-
-	UFUNCTION()
-		void OnFireKeyChanged(FInputChord KeyChanged);
-
 private:
 
 	FLinearColor SelectedColor{ 0.0f, 0.6f , 1.0f , 1.0f };					// cyan
@@ -199,15 +190,6 @@ private:
 	UPROPERTY()
 		ABlasterCharacter* Character;
 
-	//
-	/// Keys remapping
-	//
-
-	UPROPERTY(meta = (BindWidget))
-	UInputKeySelector* JumpKeySelector;
-
-	UPROPERTY(meta = (BindWidget))
-	UInputKeySelector* FireKeySelector;
 
 public:
 
