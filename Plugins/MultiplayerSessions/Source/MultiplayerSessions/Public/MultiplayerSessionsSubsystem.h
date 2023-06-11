@@ -8,7 +8,7 @@
 #include "MultiplayerSessionsSubsystem.generated.h"
 
 USTRUCT(BlueprintType)
-struct FServerData 
+struct FServerData
 {
 
 	GENERATED_BODY()
@@ -53,9 +53,10 @@ public:
 	//to handle session functionality. the menu class will call these
 	//
 	UFUNCTION(BlueprintCallable)
-	void CreateSession(int32 NumPublicConnections, FString MatchType, FString ServersName);
+		void CreateSession(int32 NumPublicConnections, FString MatchType, FString ServersName);
 	void FindSessions(int32 MaxSearchResults);
 	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
+	void JoinSessionByID(const FText& ServerIDText);
 	void DestroySession();
 	void StartSession();
 

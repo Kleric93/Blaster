@@ -25,6 +25,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/Maps/Lobby")), FString ServerNameChosen = FString(TEXT("Server")));
 
+	void JoinSessionByID(const FText& ServerIDText);
+
+	UFUNCTION()
+	void OnServerIDConfirmed(const FText& ServerIDText);
+
 	UFUNCTION()
 		void OnDMMatchTimeValueChanged(float InValue);
 
@@ -69,6 +74,9 @@ private:
 		UEditableTextBox* ServerNameTextBox;
 
 	UPROPERTY(meta = (BindWidget))
+		UEditableTextBox* ServerIDInputBox;
+
+	UPROPERTY(meta = (BindWidget))
 		UScrollBox* ServerSelectionBox;
 
 	UPROPERTY(EditAnywhere)
@@ -78,6 +86,8 @@ private:
 
 	UPROPERTY()
 		UServerListLine* ServerListLineWidget;
+
+	FString ServerID;
 
 	UFUNCTION()
 		void HostButtonClicked();
@@ -89,8 +99,7 @@ private:
 		void TrainingButtonClicked();
 
 	UFUNCTION()
-	void RefreshServerList();
-
+		void RefreshServerList();
 
 	void MenuTearDown();
 
@@ -103,8 +112,8 @@ private:
 	};
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	FString MatchType { 
-		TEXT("FreeForALl") 
+		FString MatchType {
+		TEXT("FreeForALl")
 	};
 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

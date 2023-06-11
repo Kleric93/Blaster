@@ -59,6 +59,37 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FStr
 	{
 		//DMMatchTimeBox->OnValueCommitted.AddDynamic(this, &ThisClass::OnDMMatchTimeValueChanged);
 	}
+	if (ServerIDInputBox)
+	{
+		ServerIDInputBox->OnTextChanged.AddDynamic(this, &ThisClass::OnServerIDConfirmed);
+	}
+}
+
+void UMenu::OnServerIDConfirmed(const FText& ServerIDText)
+{
+	FString ServerIDString = ServerIDText.ToString();
+	FOnlineSessionSearchResult* SessionToJoin = nullptr;
+
+	// Find the correct session based on ServerID
+	for (FOnlineSessionSearchResult& SessionSearchResult : *SessionSearchResults)
+	{
+		if (SessionSearchResult.GetSessionIdStr() == ServerIDString)
+		{
+			SessionToJoin = &SessionSearchResult;
+			break;
+		}
+	}
+
+	// If a matching session was found, attempt to join it
+	if (SessionToJoin != nullptr)
+	{
+		MultiplayerSessionsSubsystem->JoinSession(*SessionToJoin);
+	}
+	else
+	{
+		// Handle case where no matching session was found
+		return;
+	}
 }
 
 void UMenu::RefreshServerList()
@@ -78,9 +109,14 @@ void UMenu::RefreshServerList()
 
 				if (ServerListLineWidget == nullptr) continue;
 
-				//ServerListLineWidget->HostNameText->SetText(FText::FromString(SessionSearchResult.Session.OwningUserName));
+				ServerID = SessionSearchResult.GetSessionIdStr();
 
+				ServerListLineWidget->HostNameText->SetText(FText::FromString(SessionSearchResult.Session.OwningUserName));
+				ServerListLineWidget->MaxPlayersText->SetText(FText::FromString(FString::FromInt(SessionSearchResult.Session.SessionSettings.NumPublicConnections)));
+				ServerListLineWidget->ServerPingText->SetText(FText::FromString(FString::FromInt(SessionSearchResult.PingInMs)));
+				ServerListLineWidget->ServerIDText->SetText(FText::FromString(SessionSearchResult.GetSessionIdStr()));
 				ServerSelectionBox->AddChild(ServerListLineWidget);
+
 			}
 		}
 		else
@@ -150,8 +186,6 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 			HostButton->SetIsEnabled(true);
 		}
 	}
-
-	
 }
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
@@ -224,6 +258,7 @@ void UMenu::HostButtonClicked()
 		//ServerDataCreation.ServerName = ServerNameTextBox->GetText().ToString();
 		//ServerDataCreation.MatchType = ("FreeForAllSM");
 		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType, ServerName);
+		UE_LOG(LogTemp, Error, TEXT("Match Type: %s"), *MatchType);
 	}
 }
 
