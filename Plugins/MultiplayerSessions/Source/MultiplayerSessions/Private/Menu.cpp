@@ -73,10 +73,15 @@ void UMenu::OnServerIDConfirmed(const FText& ServerIDText)
 	// Find the correct session based on ServerID
 	for (FOnlineSessionSearchResult& SessionSearchResult : *SessionSearchResults)
 	{
-		if (SessionSearchResult.GetSessionIdStr() == ServerIDString)
+		FString ServerNameSearched;
+		if (SessionSearchResult.Session.SessionSettings.Get(TEXT("ServerName"), ServerNameSearched))
 		{
-			SessionToJoin = &SessionSearchResult;
-			break;
+			// Here, ServerName contains the server name value you set previously.
+			if (ServerNameSearched == ServerIDString)
+			{
+				SessionToJoin = &SessionSearchResult;
+				break;
+			}
 		}
 	}
 
@@ -114,14 +119,22 @@ void UMenu::RefreshServerList()
 				ServerListLineWidget->HostNameText->SetText(FText::FromString(SessionSearchResult.Session.OwningUserName));
 				ServerListLineWidget->MaxPlayersText->SetText(FText::FromString(FString::FromInt(SessionSearchResult.Session.SessionSettings.NumPublicConnections)));
 				ServerListLineWidget->ServerPingText->SetText(FText::FromString(FString::FromInt(SessionSearchResult.PingInMs)));
-				ServerListLineWidget->ServerIDText->SetText(FText::FromString(SessionSearchResult.GetSessionIdStr()));
+				//ServerListLineWidget->ServerIDText->SetText(FText::FromString(SessionSearchResult.GetSessionIdStr()));
+				//ServerListLineWidget->ServerIDText->SetText(FText::FromString(SessionSearchResult.Session.SessionSettings.SessionIdOverride));
 				ServerSelectionBox->AddChild(ServerListLineWidget);
+
+				
+				if (SessionSearchResult.Session.SessionSettings.Get(TEXT("ServerName"), ServerName))
+				{
+					ServerListLineWidget->ServerIDText->SetText(FText::FromString(ServerName));
+				}
+
 
 			}
 		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("SessionResults was either nullptr or no sessions were found nigga")));
+			//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("SessionResults was either nullptr or no sessions were found nigga")));
 		}
 	}
 }
@@ -171,7 +184,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("Session Created Successfully")));
+		//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("Session Created Successfully")));
 		UWorld* World = GetWorld();
 		if (World)
 		{
@@ -181,7 +194,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		{
 			if (GEngine)
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Failed to create session!")));
+				//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Failed to create session!")));
 			}
 			HostButton->SetIsEnabled(true);
 		}

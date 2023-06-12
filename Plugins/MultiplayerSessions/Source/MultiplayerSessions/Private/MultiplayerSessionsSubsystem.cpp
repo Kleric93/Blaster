@@ -54,6 +54,12 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->bUsesPresence = true;
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->Set(FName("ServerName"), ServersName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+
+	FString FormattedString = FString::Printf(TEXT("IHAZTHEGEH"));
+
+	LastSessionSettings->SessionIdOverride = FormattedString;
+
 	//LastSessionSettings->Set(FName("ServerName"), ServersName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	//LastSessionSettings->BuildUniqueId = 1;
@@ -94,25 +100,6 @@ void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 		MultiplayerOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
 	}
 }
-/*
-void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionResult)
-{
-	if (!SessionInterface.IsValid())
-	{
-		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
-		return;
-	}
-
-	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
-
-	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SessionResult))
-	{
-		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
-
-		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
-	}
-}*/
 
 void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionToJoin)
 {
