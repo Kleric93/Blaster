@@ -11,6 +11,8 @@
 #include "Blaster/HUD/BlasterHUD.h"
 #include "MultiplayerSessionsSubsystem.h"
 #include "Blaster/BlasterUserSettings.h"
+#include "Components/AudioComponent.h"
+
 
 
 void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -469,6 +471,4 @@ void ABlasterGameState::MulticastFillRedPlayerStatesArray_Implementation(APlayer
 		}
 	}
 }
-
-
 

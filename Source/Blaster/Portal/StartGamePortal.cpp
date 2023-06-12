@@ -57,7 +57,7 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 
 				FString MatchType = Subsystem->DesiredMatchType;
 				FString Message = FString::Printf(TEXT("match type: %s"), *MatchType);
-				GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, Message);
+				//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, Message);
 
 				FString TravelURL;
 
@@ -92,7 +92,7 @@ void AStartGamePortal::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 				else if (MatchType == "InstaKillSM")
 				{
 					FString MessageIF = FString::Printf(TEXT("got inside instakillmapSM if check with match type: %s"), *MatchType);
-					GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, MessageIF);
+					//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, MessageIF);
 					World->ServerTravel(FString("/Game/Maps/InstaKillMapSM?listen"));
 				}
 

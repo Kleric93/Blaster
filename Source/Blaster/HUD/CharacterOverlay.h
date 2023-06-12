@@ -23,6 +23,9 @@ public:
 	class UTextBlock* YouDiedText;
 
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ClientJoinedText;
+
+	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* PlayerEliminatedText;
 
 	UPROPERTY(meta = (BindWidget))
@@ -78,6 +81,9 @@ public:
 
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* HighPingAnimation;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* ClientJoinAnim;
 
 	UPROPERTY(meta = (BindWidget))
 		class UImage* EventBorderImage;

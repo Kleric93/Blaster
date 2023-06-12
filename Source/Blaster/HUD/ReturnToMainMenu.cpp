@@ -26,7 +26,7 @@
 
 void UReturnToMainMenu::MenuSetup()
 {
-	AddToViewport(3);
+	AddToViewport(10);
 	SetVisibility(ESlateVisibility::Visible);
 	bIsFocusable = true;
 
@@ -287,7 +287,7 @@ void UReturnToMainMenu::Rebinding()
 			}
 		}
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void UReturnToMainMenu::OnKeySelected(FInputChord SelectedKey)

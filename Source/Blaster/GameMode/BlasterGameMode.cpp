@@ -15,6 +15,8 @@
 #include "Blaster/HUD/VotingSyastem.h"
 #include "Blaster/HUD/VotingSyastem.h"
 #include "Blaster/BlasterUserSettings.h"
+#include "Components/AudioComponent.h"
+
 
 namespace MatchState
 {
@@ -38,13 +40,30 @@ void ABlasterGameMode::BeginPlay()
     }
 
     MatchTime = Settings->GetGameTime();
+
+    BlasterGameState = GetGameState<ABlasterGameState>();
 }
 
+void ABlasterGameMode::PostLogin(APlayerController* NewPlayer)
+{
+    Super::PostLogin(NewPlayer);
+
+    // Start the soundtrack when a player logs in and the match state is InProgress
+    if (GetMatchState() == MatchState::InProgress)
+    {
+        ABlasterPlayerController* PlayerController = Cast<ABlasterPlayerController>(NewPlayer);
+        if (PlayerController && !PlayerController->bSoundtrackHasStarted) // We check that the soundtrack hasn't started for this player yet.
+        {
+            PlayerController->Client_BeginSoundtrack();
+            PlayerController->bSoundtrackHasStarted = true;
+            PlayerController->ServerClientJoined(NewPlayer->PlayerState->GetPlayerName());
+        }
+    }
+}
 
 void ABlasterGameMode::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
     float NewTimeElapsed = BlasterGameState->GetTimeElapsed() + DeltaTime;
 
     if (MatchState != MatchState::Cooldown)
@@ -85,10 +104,10 @@ void ABlasterGameMode::Tick(float DeltaTime)
                 BlasterGameState->SetHasMatchEndedAbruptly(true);
             }
         }
+        CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 
         //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, FString::Printf(TEXT("MaxScore IS %f"), Settings->GetMaxScore()));
 
-        CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
         if (CountdownTime <= 0.f)
         {
             SetMatchState(MatchState::Cooldown);
@@ -133,7 +152,6 @@ void ABlasterGameMode::OnMatchStateSet()
 {
     Super::OnMatchStateSet();
 
-    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
 
     for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
@@ -166,7 +184,6 @@ void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacte
     ABlasterPlayerState* AttackerPlayerState = AttackerController ? Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
     ABlasterPlayerState* VictimPlayerState = VictimController ? Cast<ABlasterPlayerState>(VictimController->PlayerState) : nullptr;
 
-    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
 
     if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState && BlasterGameState)
     {
@@ -292,7 +309,6 @@ void ABlasterGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController*
 void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
 {
     if (PlayerLeaving == nullptr) return;
-    ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
     if (BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(PlayerLeaving))
     {
         BlasterGameState->TopScoringPlayers.Remove(PlayerLeaving);

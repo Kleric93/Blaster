@@ -281,7 +281,7 @@ void USettingsMenu::MenuTearDown()
 		PC->bSettingsMenuOpen = false;
 		UE_LOG(LogTemp, Error, TEXT("MenuTeardown got inside the PC"))
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 

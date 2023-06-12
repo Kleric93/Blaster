@@ -7,6 +7,9 @@
 #include "BlasterGameMode.generated.h"
 
 class UBlasterUserSettings;
+class ABlasterGameState;
+class UAudioComponent;
+class USoundCue;
 
 namespace MatchState
 {
@@ -25,9 +28,14 @@ public:
 
 	ABlasterGameMode();
 
+	ABlasterGameState* BlasterGameState;
+
 	UPROPERTY()
 	UBlasterUserSettings* Settings;
 
+public:
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void PlayerEliminated(class ABlasterCharacter* ElimmedCharacter, class ABlasterPlayerController* VictimController, ABlasterPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);

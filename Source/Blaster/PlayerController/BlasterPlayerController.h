@@ -16,6 +16,7 @@ class UBlasterUserSettings;
 class UTeamChoice;
 class UInputAction;
 class USoundCue;
+class UAudioComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTeamChosen, ABlasterPlayerController*, BPController, ETeam, ChosenTeam);
@@ -50,6 +51,13 @@ public:
 	void SetHUDAnnouncementCountdown(float CountdownTime);
 	void SetHUDGrenades(int32 Grenades);
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(Server, Reliable)
+	void ServerClientJoined(const FString& PlayerName);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastClientJoined(const FString& PlayerName);
+
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual float GetServerTime(); // synced with server world clock
 	virtual void ReceivedPlayer() override; // Sync with server clock as soon as possible.
@@ -111,6 +119,9 @@ public:
 
 	UFUNCTION(Client, Reliable)
 		void EventPlayerEliminated();
+
+	void ClientJoinedAnimation(FString ClientName);
+
 	//
 	/// chat box
 	//
@@ -192,6 +203,32 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		UInputAction* Jump;
+
+	UFUNCTION(Client, Reliable)
+		void Client_BeginSoundtrack();
+
+	UFUNCTION(Client, Reliable)
+		void Client_BeginEndSoundtrack();
+
+	UFUNCTION(Client, Reliable)
+		void Client_StopSoundtrack();
+
+	UPROPERTY()
+		UAudioComponent* SoundtrackAudioComponent;
+
+	UPROPERTY()
+		UAudioComponent* EndSoundtrackAudioComponent;
+
+	UPROPERTY(EditAnywhere)
+		USoundBase* MainSoundtrack;
+
+	UPROPERTY(EditAnywhere)
+		USoundBase* EndSoundtrack;
+
+	bool bEndSoundtrackHasStarted = false;
+
+	bool bSoundtrackHasStarted = false;
+
 private:
 
 	UPROPERTY(EditAnywhere, Category = HUD)
@@ -224,6 +261,8 @@ protected:
 	UInputMappingContext* BlasterMappingContextController;
 
 	virtual void BeginPlay() override;
+	void CheckMatchState();
+	void CheckCountdownAndChangeSoundtrack();
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 	void PollInit();

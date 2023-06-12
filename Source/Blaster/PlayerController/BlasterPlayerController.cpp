@@ -42,6 +42,8 @@
 #include "Blaster/BlasterSaveGame.h"
 #include "InputMappingContext.h"
 #include "Sound/SoundCue.h"
+#include "Components/AudioComponent.h"
+
 
 
 ABlasterPlayerController::ABlasterPlayerController()
@@ -465,6 +467,41 @@ void ABlasterPlayerController::BeginPlay()
 	}
 	LoadPlayerOverriddenInputMappings();
 
+	FTimerHandle MatchStateTimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(MatchStateTimerHandle, this, &ABlasterPlayerController::CheckMatchState, 1.0f, true);
+
+}
+
+void ABlasterPlayerController::CheckMatchState()
+{
+	// Start the soundtrack and the countdown timer when the match state changes to InProgress
+	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode && GameMode->GetMatchState() == MatchState::InProgress)
+	{
+		if (!bSoundtrackHasStarted)
+		{
+			FTimerHandle CountdownTimerHandle;
+
+			GetWorld()->GetTimerManager().SetTimer(CountdownTimerHandle, this, &ABlasterPlayerController::CheckCountdownAndChangeSoundtrack, 1.0f, true);
+			Client_BeginSoundtrack();
+			bSoundtrackHasStarted = true; // We can add this boolean to know when the soundtrack has started, and avoid repeating it.
+		}
+	}
+}
+
+void ABlasterPlayerController::CheckCountdownAndChangeSoundtrack()
+{
+	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
+	if (GameMode && GameMode->GetMatchState() == MatchState::InProgress)
+	{
+		float CDTimer = GameMode->GetCountdownTime();
+		if (CDTimer <= 65.f && !bEndSoundtrackHasStarted)
+		{
+			Client_StopSoundtrack();
+			Client_BeginEndSoundtrack();
+			bEndSoundtrackHasStarted = true;
+		}
+	}
 }
 
 void ABlasterPlayerController::IMCSelector(UInputMappingContext* MappingContexttoAdd, UInputMappingContext* MappingContexttoRemove)
@@ -493,6 +530,8 @@ void ABlasterPlayerController::Tick(float DeltaTime)
 	CheckTimeSync(DeltaTime);
 	PollInit();
 	CheckPing(DeltaTime);
+
+
 }
 
 void ABlasterPlayerController::CheckPing(float DeltaTime)
@@ -740,6 +779,29 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
+void ABlasterPlayerController::ClientJoinedAnimation(FString ClientName)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->ClientJoinedText &&
+		BlasterHUD->CharacterOverlay->ClientJoinAnim;
+
+	if (bHUDValid)
+	{
+
+		BlasterHUD->CharacterOverlay->ClientJoinedText->SetOpacity(1.f);
+		BlasterHUD->CharacterOverlay->ClientJoinedText->SetText(FText::Format(FText::FromString("{0} Has Joined the Match!"), FText::FromString(ClientName)));
+
+
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->ClientJoinAnim,
+			0.f,
+			1);
+	}
+}
+
 void ABlasterPlayerController::EventBorderDamage_Implementation()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -904,8 +966,17 @@ void ABlasterPlayerController::ClientJoinMidgame_Implementation(FName StateOfMat
 					}, WarmupTime, false);
 			}
 		}
-			
 	}
+}
+
+void ABlasterPlayerController::ServerClientJoined_Implementation(const FString& PlayerName)
+{
+	MulticastClientJoined(PlayerName);
+}
+
+void ABlasterPlayerController::MulticastClientJoined_Implementation(const FString& PlayerName)
+{
+	ClientJoinedAnimation(PlayerName);
 }
 
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
@@ -1696,4 +1767,27 @@ void ABlasterPlayerController::LoadPlayerOverriddenInputMappings()
 	
 }
 
+void ABlasterPlayerController::Client_BeginSoundtrack_Implementation()
+{
+	SoundtrackAudioComponent = UGameplayStatics::SpawnSound2D(GetWorld(), MainSoundtrack, 1.f);
 
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Begin Soundtrack"));
+
+}
+
+void ABlasterPlayerController::Client_BeginEndSoundtrack_Implementation()
+{
+	EndSoundtrackAudioComponent = UGameplayStatics::SpawnSound2D(GetWorld(), EndSoundtrack, 1.f);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Begin Soundtrack"));
+
+}
+
+void ABlasterPlayerController::Client_StopSoundtrack_Implementation()
+{
+	if (SoundtrackAudioComponent && SoundtrackAudioComponent->IsPlaying())
+	{
+		// set your desired fade duration in seconds
+		float FadeDuration = 3.0f;
+		SoundtrackAudioComponent->FadeOut(FadeDuration, 0.0f);
+	}
+}
