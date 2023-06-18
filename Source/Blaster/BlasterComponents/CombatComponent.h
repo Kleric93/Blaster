@@ -12,6 +12,9 @@
 
 class UBlasterUserSettings;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhantomStrideActivated, float, Duration);
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 
 class BLASTER_API UCombatComponent : public UActorComponent
@@ -22,6 +25,8 @@ public:
 	UCombatComponent();
 	friend class ABlasterCharacter;
 
+	FOnPhantomStrideActivated OnPhantomStrideActivated;
+
 	UPROPERTY()
 		UBlasterUserSettings* Settings;
 
@@ -29,6 +34,16 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+
+	void EquipBladeStart();
+
+	UFUNCTION(Server, Reliable)
+	void Server_EquipBladeStart();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_EquipBladeStart();
+
+	void SheatheBladeAndPickMainWeapon();
 
 	void EquipFlag(class ATeamsFlag* FlagToEquip);
 
@@ -58,6 +73,27 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Launchgrenade();
+
+	UFUNCTION(Server, Reliable)
+		void Server_PhantomStride();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PhantomStride();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void Multicast_PhantomStrideFinished();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_PhantomStrideFinishedAnim();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void SpawnBlade();
+
+	UFUNCTION()
+	void ReEnableInput();
+
+	UFUNCTION()
+	void FinishPhantomStrideTrail();
 
 	UFUNCTION(Server, Reliable)
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
@@ -148,10 +184,14 @@ protected:
 	UFUNCTION()
 		void OnRep_SecondaryWeapon();
 
+	UFUNCTION()
+	void OnRep_TertiaryWeapon();
+
 	void Fire();
 	void FireProjectileWeapon();
 	void FireHitScanWeapon();
 	void FireShotgun();
+	void FireBlade();
 	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
 	void LocalShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 
@@ -206,6 +246,7 @@ protected:
 	void DropEquippedWeapon();
 	void AttachActorToRighthand(AActor* ActorToAttach);
 	void AttachActorToLeftHand(AActor* ActorToAttach);
+	void AttachActorToBackpackUlt(AActor* ActorToAttach);
 	void AttachActorToBackpack(AActor* ActorToAttach);
 	void UpdateCarriedAmmo();
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip);
@@ -213,6 +254,7 @@ protected:
 	void ShowAttachedGrenade(bool bShowGrenade);
 	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
+	void EquipTertiaryWeapon(AWeapon* WeaponToEquip);
 
 private:
 
@@ -234,10 +276,16 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
 
+	UPROPERTY(ReplicatedUsing = OnRep_TertiaryWeapon)
+	AWeapon* TertiaryWeapon;
+
 	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
 	bool bAiming = false;
 
 	bool bAimButtonpressed = false;
+
+	bool bInitiatingPhantomStride;
+	bool bEndingPhantomStride;
 
 	UFUNCTION()
 	void OnRep_Aiming();
@@ -333,6 +381,12 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenadeLauncherAmmo = 0;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> PhantomStrideStartShake;
+
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<UCameraShakeBase> DeathCameraShake;
+
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState, VisibleAnywhere)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
@@ -383,13 +437,21 @@ private:
 	UPROPERTY(EditAnywhere)
 	float AimAssistTraceStartLocation = 300.f;
 
+	UPROPERTY(EditAnywhere)
+	float BladeSpawnerTimer = 1.3f;
+
+	UPROPERTY(EditAnywhere)
+	float PhantomStrideAbilityDuration = 20.f;
+
 public:	
 
 	FORCEINLINE bool IsAiming() const { return bAiming; }
 
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	FORCEINLINE AWeapon* GetEquippedWeapon() const { return EquippedWeapon; }
-
+	FORCEINLINE bool GetbInitiatingPhantomStride() const { return bInitiatingPhantomStride; }
+	FORCEINLINE bool GetbEndingPhantomStride() const { return bEndingPhantomStride; }
+	FORCEINLINE float GetPhantomStrideAbilityDuration() const { return PhantomStrideAbilityDuration; }
 	bool ShouldSwapWeapons();
 	
 

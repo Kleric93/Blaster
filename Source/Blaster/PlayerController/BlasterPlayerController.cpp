@@ -470,6 +470,8 @@ void ABlasterPlayerController::BeginPlay()
 	FTimerHandle MatchStateTimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(MatchStateTimerHandle, this, &ABlasterPlayerController::CheckMatchState, 1.0f, true);
 
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn());
+	UCombatComponent* CombatComponent = BlasterCharacter->GetCombat();
 }
 
 void ABlasterPlayerController::CheckMatchState()
@@ -918,6 +920,45 @@ void ABlasterPlayerController::EventPlayerEliminated_Implementation()
 	}
 }
 
+void ABlasterPlayerController::EventPhantomStrideReady_Implementation()
+{
+	FLinearColor PhantomStrideColor{ 0.0f, 0.6f , 1.0f , 1.0f };
+	FLinearColor Opacity1{ 1.0f, 1.0f , 1.0f , 1.0f };
+
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->EventBorderImage &&
+		BlasterHUD->CharacterOverlay->EventBorderAnimation &&
+		BlasterHUD->CharacterOverlay->PhantomStrideReadyImage &&
+		BlasterHUD->CharacterOverlay->PhantomStrideCallAnim;
+
+	if (bHUDValid)
+	{
+		BlasterHUD->CharacterOverlay->EventBorderImage->SetColorAndOpacity(PhantomStrideColor);
+		BlasterHUD->CharacterOverlay->PhantomStrideReadyImage->SetColorAndOpacity(Opacity1);
+
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->EventBorderAnimation,
+			0.f,
+			1);
+
+		BlasterHUD->CharacterOverlay->PlayAnimation(
+			BlasterHUD->CharacterOverlay->PhantomStrideCallAnim,
+			0.f,
+			1);
+
+		UGameplayStatics::PlaySound2D(
+			GetWorld(),
+			KillStreakReady,
+			1.f,
+			1.f,
+			0.f
+		);
+	}
+}
+
 void ABlasterPlayerController::ServerCheckmatchState_Implementation()
 {
 	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
@@ -1110,6 +1151,25 @@ void ABlasterPlayerController::SetHUDDefeats(int32 Defeats)
 	}
 }
 
+void ABlasterPlayerController::SetHUDKillStreak(int32 InKillStreak)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->KillStreak;
+
+	if (bHUDValid)
+	{
+		FString KillStreakText = FString::Printf(TEXT("%d"), InKillStreak);
+		BlasterHUD->CharacterOverlay->KillStreak->SetText(FText::FromString(KillStreakText));
+	}
+	else
+	{
+		bInitializeKillStreak = true;
+		HUDKillStreak = InKillStreak;
+	}
+}
+
 void ABlasterPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -1201,6 +1261,9 @@ void ABlasterPlayerController::SetHUDWeaponType(EWeaponType WeaponType)
 			break;
 		case EWeaponType::EWT_GrenadeLauncher:
 			EquippedWeaponType = FString::Printf(TEXT("Grenade Launcher"));
+			break;
+		case EWeaponType::EWT_PhantomBlade:
+			EquippedWeaponType = FString::Printf(TEXT("Phantom Blade"));
 			break;
 		case EWeaponType::EWT_MAX:
 			break;
@@ -1364,6 +1427,7 @@ void ABlasterPlayerController::PollInit()
 				if (bInitializeScore) SetHUDScore(HUDScore);
 				if (bInitializeDefeats) SetHUDDefeats(HUDDefeats);
 				if (bInitializeDefeats) SetHUDDefeats(HUDDefeats);
+				if (bInitializeKillStreak) SetHUDKillStreak(HUDKillStreak);
 				if (bInitializeWeaponType) SetHUDWeaponType(HUDWeaponType);
 				if (bInitializeCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);
 				if (bInitializeWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
@@ -1691,6 +1755,23 @@ void ABlasterPlayerController::UpdateBerserkBuffIcon_Implementation(bool bIsBuff
 	if (BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->BerserkBuffIcon)
 	{
 		BlasterHUD->CharacterOverlay->BerserkBuffIcon->SetBrushFromTexture(bIsBuffActive ? BerserkBuffIconOn : BerserkBuffIconOff);
+
+		//UE_LOG(LogTemp, Warning, TEXT("Controller %s updated BerserkBuffIcon to %s"), *GetName(), bIsBuffActive ? TEXT("On") : TEXT("Off"));
+	}
+
+}
+
+void ABlasterPlayerController::UpdatePhantomStrideIcon_Implementation(bool bIsBuffActive)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bHUDValid = BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->PhantomStrideBuffIcon;
+
+	if (BlasterHUD && BlasterHUD->CharacterOverlay && BlasterHUD->CharacterOverlay->PhantomStrideBuffIcon)
+	{
+		BlasterHUD->CharacterOverlay->PhantomStrideBuffIcon->SetBrushFromTexture(bIsBuffActive ? PhantomStrideBuffIconON : PhantomStrideBuffIconOFF);
 
 		//UE_LOG(LogTemp, Warning, TEXT("Controller %s updated BerserkBuffIcon to %s"), *GetName(), bIsBuffActive ? TEXT("On") : TEXT("Off"));
 	}

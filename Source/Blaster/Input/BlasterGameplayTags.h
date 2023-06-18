@@ -32,6 +32,8 @@ public:
 	FGameplayTag InputTag_Fire;
 	FGameplayTag InputTag_Reload;
 	FGameplayTag InputTag_Grenade;
+	FGameplayTag InputTag_PhantomStride;
+
 
 protected:
 

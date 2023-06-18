@@ -32,10 +32,7 @@
 #include "Blaster/BlasterUserSettings.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-
-
-
-
+#include "Blaster/Weapon/Blade.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -51,6 +48,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
+	DOREPLIFETIME(UCombatComponent, TertiaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UCombatComponent, CombatState);
@@ -58,6 +56,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bLocallyReloading);
 	DOREPLIFETIME(UCombatComponent, bIsSliding);
 	DOREPLIFETIME(UCombatComponent, bIsProne);
+
 }
 
 void UCombatComponent::BeginPlay()
@@ -108,6 +107,8 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			UpdateAim(DeltaTime);
 		}
 	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("Initiate Phantom Stride is: %s"), bInitiatingPhantomStride ? TEXT("True") : TEXT("False"));
 }
 
 void UCombatComponent::FireButtonPressed(bool bPressed)
@@ -137,6 +138,12 @@ void UCombatComponent::Fire()
 		{
 			CrosshairShootingFactor = .75f;
 
+			if (Character && EquippedWeapon->FireCameraShake)
+			{
+				FVector CameraLocation = Character->GetFollowCamera()->GetComponentLocation();
+				Character->PlayCameraShake(EquippedWeapon->FireCameraShake, CameraLocation);
+			}
+
 			switch (EquippedWeapon->FireType)
 			{
 			case EFireType::EFT_Projectile:
@@ -149,6 +156,10 @@ void UCombatComponent::Fire()
 
 			case EFireType::EFT_Shotgun:
 				FireShotgun();
+				break;
+
+			case EFireType::EFT_Blade:
+				FireBlade();
 				break;
 			}
 		}
@@ -183,6 +194,14 @@ void UCombatComponent::FireShotgun()
 		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
 		if (!Character->HasAuthority()) LocalShotgunFire(HitTargets);
 		ServerShotgunFire(HitTargets, EquippedWeapon->FireDelay);
+	}
+}
+void UCombatComponent::FireBlade()
+{
+	if (EquippedWeapon && Character)
+	{
+		if (!Character->HasAuthority()) LocalFire(HitTarget);
+		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -255,10 +274,29 @@ void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr) return;
-	if (Character && CombatState == ECombatState::ECS_Unoccupied)
+	if (EquippedWeapon->GetWeaponType() != EWeaponType::EWT_PhantomBlade)
 	{
-		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
+		if (Character && CombatState == ECombatState::ECS_Unoccupied)
+		{
+			Character->PlayFireMontage(bAiming);
+			EquippedWeapon->Fire(TraceHitTarget);
+		}
+	}
+	else
+	{
+		if (Character && CombatState == ECombatState::ECS_PhantomStride)
+		{
+			Character->PlayPhantomStrideAttackMontage();
+			Character->MulticastPhantomStrideTrail();
+			Character->DisableInput(Character->GetPlayerState()->GetPlayerController());
+			FTimerHandle TimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UCombatComponent::ReEnableInput, 1.f, false);
+			EquippedWeapon->Fire(TraceHitTarget);
+
+			FTimerHandle TimerHandleTrail;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandleTrail, this, &UCombatComponent::FinishPhantomStrideTrail, 2.5f, false);
+
+		}
 	}
 }
 
@@ -297,6 +335,16 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	SecondaryWeapon->SetOwner(Character);
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBackpack(WeaponToEquip);
+	PlayEquipWeaponSound(WeaponToEquip);
+}
+
+void UCombatComponent::EquipTertiaryWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr) return;
+	TertiaryWeapon = WeaponToEquip;
+	TertiaryWeapon->SetOwner(Character);
+	TertiaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedTertiary);
+	AttachActorToBackpackUlt(WeaponToEquip);
 	PlayEquipWeaponSound(WeaponToEquip);
 }
 
@@ -357,6 +405,81 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->bUseControllerRotationYaw = true;
 }
 
+void UCombatComponent::EquipBladeStart()
+{
+	UE_LOG(LogTemp, Warning, TEXT("EquipBladeStart called by: %s"), *FString(__FUNCTION__));
+
+	if (Character == nullptr) return;
+
+	if (!bAiming)
+	{
+		bAiming = false;
+		if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_M4AZ)
+		{
+			Character->ShowM4ScopeWidget(false);
+		}
+		else if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+		{
+			Character->ShowSniperScopeWidget(false);
+		}
+		//Character->PlaySwapMontage();
+		//Character->bFinishedSwapping = false;
+		//CombatState = ECombatState::ECS_SwappingWeapons;
+
+		AWeapon* TempWeapon = EquippedWeapon;
+		EquippedWeapon = TertiaryWeapon;
+		TertiaryWeapon = TempWeapon;
+
+		TertiaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedTertiary);
+		AttachActorToBackpackUlt(TertiaryWeapon);
+
+		/*
+		if (IsValid(EquippedWeapon)) 
+		{
+			EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		}*/
+
+		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToRighthand(EquippedWeapon);
+		//EquippedWeapon->SetHUDAmmo();
+		SetWeaponTypeOnHUD();
+		//UpdateCarriedAmmo();
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void UCombatComponent::Server_EquipBladeStart_Implementation()
+{
+	Multicast_EquipBladeStart();
+}
+
+void UCombatComponent::Multicast_EquipBladeStart_Implementation()
+{
+	EquipBladeStart();
+}
+
+void UCombatComponent::SheatheBladeAndPickMainWeapon()
+{
+	if (CombatState != ECombatState::ECS_PhantomStride || Character == nullptr) return;
+
+	Character->PlaySwapMontage();
+	Character->bFinishedSwapping = false;
+	CombatState = ECombatState::ECS_SwappingWeapons;
+
+	AWeapon* TempWeapon = EquippedWeapon;
+	EquippedWeapon = TertiaryWeapon;
+	TertiaryWeapon = TempWeapon;
+
+	TertiaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedTertiary);
+	AttachActorToBackpackUlt(TertiaryWeapon);
+
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRighthand(EquippedWeapon);
+	EquippedWeapon->SetHUDAmmo();
+	SetWeaponTypeOnHUD();
+	UpdateCarriedAmmo();
+}
+
 void UCombatComponent::EquipFlag(class ATeamsFlag* FlagToEquip)
 {
 	if (FlagToEquip == nullptr) return;
@@ -401,6 +524,16 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 	if (HandSocket)
 	{
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::AttachActorToBackpackUlt(AActor* ActorToAttach)
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
+	const USkeletalMeshSocket* BackpackUltSocket = Character->GetMesh()->GetSocketByName(FName("MainWeaponSocketDuringUlt"));
+	if (BackpackUltSocket)
+	{
+		BackpackUltSocket->AttachActor(ActorToAttach, Character->GetMesh());
 	}
 }
 
@@ -480,6 +613,8 @@ void UCombatComponent::Reload()
 	bool bCanReload = CarriedAmmo > 0 && 
 		CombatState == ECombatState::ECS_Unoccupied &&
 		EquippedWeapon && !EquippedWeapon->IsFull() && 
+		!bIsSliding &&
+		!bIsProne &&
 		!bLocallyReloading;
 
 	if (bCanReload)
@@ -629,6 +764,115 @@ void UCombatComponent::Launchgrenade()
 	}
 }
 
+void UCombatComponent::Server_PhantomStride_Implementation()
+{
+	Multicast_PhantomStride();
+}
+
+void UCombatComponent::Multicast_PhantomStride_Implementation()
+{
+	ABlasterPlayerState* PS = Cast<ABlasterPlayerState>(Character->GetPlayerState());
+	PS->SubtractToKillStreak(5);
+
+	Character->PlayPhantomStrideStartMontage();
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Character->GetController());
+	if (PC)
+	{
+		PC->UpdatePhantomStrideIcon(true);
+	}
+	CombatState = ECombatState::ECS_PhantomStride;
+	bInitiatingPhantomStride = true;
+	Character->DisableInput(PC);
+	EquipBladeStart();
+	FTimerHandle TimerHandleInput;
+	FTimerHandle TimerHandleBladeOn;
+	FTimerHandle TimerEndPhantomStrideAnim;
+	FTimerHandle TimerEndPhantomStride;
+
+	//OnPhantomStrideActivated.Broadcast(PhantomStrideAbilityDuration);
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandleInput, this, &UCombatComponent::ReEnableInput, 2.f, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandleBladeOn, this, &UCombatComponent::SpawnBlade, BladeSpawnerTimer, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerEndPhantomStrideAnim, this, &UCombatComponent::Multicast_PhantomStrideFinishedAnim, PhantomStrideAbilityDuration - 1.f, false);
+	GetWorld()->GetTimerManager().SetTimer(TimerEndPhantomStride, this, &UCombatComponent::Multicast_PhantomStrideFinished, PhantomStrideAbilityDuration, false);
+
+	if (Character->IsElimmed())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerEndPhantomStride);
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+}
+
+void UCombatComponent::SpawnBlade_Implementation()
+{
+
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_PhantomBlade)
+	{
+		ABlade* BladeWeapon = Cast<ABlade>(EquippedWeapon);
+		if (BladeWeapon)
+		{
+			BladeWeapon->MulticastSetBladeMaterialOn();
+			BladeWeapon->MulticastSetBladeParticlesOn();
+		}
+	}
+	if (Character && PhantomStrideStartShake)
+	{
+		FVector CameraLocation = Character->GetFollowCamera()->GetComponentLocation();
+		Character->PlayCameraShake(PhantomStrideStartShake, CameraLocation);
+	}
+}
+
+void UCombatComponent::Multicast_PhantomStrideFinishedAnim_Implementation()
+{
+	bEndingPhantomStride = true;
+	Character->PlayPhantomStrideEndMontage();
+
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Character->GetPlayerState()->GetPlayerController());
+	Character->DisableInput(PC);
+	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
+}
+
+void UCombatComponent::Multicast_PhantomStrideFinished_Implementation()
+{
+
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Character->GetController());
+	if (PC)
+	{
+		PC->UpdatePhantomStrideIcon(false);
+	}
+	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_PhantomBlade)
+	{
+
+		ABlade* BladeWeapon = Cast<ABlade>(EquippedWeapon);
+		BladeWeapon->MulticastSetBladeMaterialOff();
+		BladeWeapon->MulticastSetBladeParticlesOff();
+		EquipBladeStart();
+	}
+	if (Character && PhantomStrideStartShake)
+	{
+		FVector CameraLocation = Character->GetFollowCamera()->GetComponentLocation();
+		Character->PlayCameraShake(PhantomStrideStartShake, CameraLocation);
+	}
+	CombatState = ECombatState::ECS_Unoccupied;
+	ReEnableInput();
+}
+
+void UCombatComponent::ReEnableInput()
+{
+	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Character->GetPlayerState()->GetPlayerController());
+	bInitiatingPhantomStride = false;
+	bEndingPhantomStride = false;
+	Character->EnableInput(PC);
+}
+
+void UCombatComponent::FinishPhantomStrideTrail()
+{
+	if (Character->GetPhantomStrideTrailComponent() != nullptr)
+	{
+		Character->MulticastPhantomStrideTrailEnd();
+	}
+}
+
 void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target)
 {
 	if (Character && GrenadeClass && Character->GetAttachedGrenade())
@@ -682,6 +926,12 @@ void UCombatComponent::OnRep_CombatState()
 		if (Character && !Character->IsLocallyControlled())
 		{
 			Character->PlaySwapMontage();
+		}
+		break;
+	case ECombatState::ECS_PhantomStride:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			//Character->PlayPhantomStrideStartMontage();
 		}
 		break;
 	case ECombatState::ECS_MAX:
@@ -776,6 +1026,16 @@ void UCombatComponent::OnRep_SecondaryWeapon()
 		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBackpack(SecondaryWeapon);
 		PlayEquipWeaponSound(EquippedWeapon);
+	}
+}
+
+void UCombatComponent::OnRep_TertiaryWeapon()
+{
+	if (TertiaryWeapon && Character)
+	{
+		TertiaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedTertiary);
+		AttachActorToBackpackUlt(TertiaryWeapon);
+		//PlayEquipWeaponSound(TertiaryWeapon);
 	}
 }
 
@@ -1161,6 +1421,7 @@ void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	if (CombatState == ECombatState::ECS_PhantomStride) return;
 	bAiming = bIsAiming;
 	CombatState = ECombatState::ECS_Unoccupied;
 	ServerSetAiming(bIsAiming);
@@ -1211,7 +1472,14 @@ bool UCombatComponent::CanFire()
 	if (EquippedWeapon == nullptr) return false;
 	if (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) return true;
 	if (bLocallyReloading) return false;
-	return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+	if (EquippedWeapon->GetWeaponType() != EWeaponType::EWT_PhantomBlade)
+	{
+		return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+	}
+	else
+	{
+		return !EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_PhantomStride;
+	}
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
@@ -1403,3 +1671,6 @@ void UCombatComponent::MulticastStopProne_Implementation()
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
+
+
+

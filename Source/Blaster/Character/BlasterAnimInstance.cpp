@@ -41,8 +41,9 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bElimmed = BlasterCharacter->IsElimmed();
 	bIsSliding = BlasterCharacter->GetCombat()->bIsSliding;
 	bIsProne = BlasterCharacter->GetCombat()->bIsProne;
-
-
+	bIsPhantomStriding = BlasterCharacter->GetCombatState() == ECombatState::ECS_PhantomStride;
+	bIsInitiatingPhantomStride = BlasterCharacter->GetCombat()->GetbInitiatingPhantomStride();
+	bIsEndingPhantomStride = BlasterCharacter->GetCombat()->GetbEndingPhantomStride();
 
 	// Offset Yaw for Strafing
 	FRotator AimRotation = BlasterCharacter->GetBaseAimRotation();
@@ -89,11 +90,12 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		*/
 	}
 
-	bUseFABRIK = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+	bUseFABRIK = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied || (BlasterCharacter->GetCombatState() == ECombatState::ECS_PhantomStride && bIsAccelerating);
 
 	bool bFabrikOverride = BlasterCharacter->IsLocallyControlled() && 
-		BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade
-		&& BlasterCharacter->bFinishedSwapping;
+		BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade && 
+		//BlasterCharacter->GetCombatState() != ECombatState::ECS_PhantomStride &&
+		BlasterCharacter->bFinishedSwapping;
 
 	if (bFabrikOverride)
 	{

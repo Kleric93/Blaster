@@ -26,7 +26,7 @@
 AWeapon::AWeapon()
 //ClipBoneName(TEXT("Clip_Bone"))
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 	SetReplicateMovement(true);
 
@@ -50,7 +50,7 @@ AWeapon::AWeapon()
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
 
-	if (WeaponType == EWeaponType::EWT_RocketLauncher || WeaponType == EWeaponType::EWT_GrenadeLauncher)
+	if (WeaponType == EWeaponType::EWT_RocketLauncher || WeaponType == EWeaponType::EWT_GrenadeLauncher || WeaponType == EWeaponType::EWT_PhantomBlade)
 	{
 		bUseServerSideRewindDefault = false;
 		bUseServerSideRewind = false;
@@ -225,7 +225,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if (WeaponType == EWeaponType::EWT_SMG)
+		if (WeaponType == EWeaponType::EWT_SMG || WeaponType == EWeaponType::EWT_PhantomBlade)
 		{
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);
@@ -262,6 +262,43 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		if (WeaponType == EWeaponType::EWT_SMG)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+		}
+		GetWorldTimerManager().ClearTimer(DestroyTimer);
+
+		EnableCustomDepth(false);
+
+		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+		if (BlasterOwnerCharacter && bUseServerSideRewind)
+		{
+			BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+			if (BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
+			{
+				BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+			}
+		}
+
+		// Call the OnWeaponStateChanged delegate
+		if (!bHasStateChanged)
+		{
+			OnWeaponStateChanged.Broadcast(State);
+			bHasStateChanged = true;
+		}
+
+		break;
+
+	case EWeaponState::EWS_EquippedTertiary:
+
+		ShowPickupWidget(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (WeaponType == EWeaponType::EWT_SMG || WeaponType == EWeaponType::EWT_PhantomBlade)
 		{
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);
@@ -395,6 +432,36 @@ void AWeapon::OnRep_WeaponState()
 		}
 		break;
 
+	case EWeaponState::EWS_EquippedTertiary:
+
+		ShowPickupWidget(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (WeaponType == EWeaponType::EWT_SMG)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+		}
+		GetWorldTimerManager().ClearTimer(DestroyTimer);
+
+		EnableCustomDepth(false);
+
+		BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+		if (BlasterOwnerCharacter && bUseServerSideRewind)
+		{
+			BlasterOwnerController = BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+			if (BlasterOwnerController && HasAuthority() && BlasterOwnerController->HighPingDelegate.IsBound())
+			{
+				BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+			}
+		}
+
+		break;
+
 	case EWeaponState::EWS_Dropped:
 		if (HasAuthority())
 		{
@@ -494,11 +561,11 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 
 void AWeapon::Fire(const FVector& HitTarget)
 {
-	if (FireAnimation)
+	if (FireAnimation && WeaponType != EWeaponType::EWT_PhantomBlade)
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
-	if (CasingClass && WeaponType != EWeaponType::EWT_SniperRifle && WeaponType != EWeaponType::EWT_Shotgun)
+	if (CasingClass && WeaponType != EWeaponType::EWT_SniperRifle && WeaponType != EWeaponType::EWT_Shotgun && WeaponType != EWeaponType::EWT_PhantomBlade)
 	{
 		SpawnCasing();
 	}
@@ -516,7 +583,10 @@ void AWeapon::Fire(const FVector& HitTarget)
 		TimerCallback.BindUFunction(this, FName("SpawnCasing"));
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerCallback, .5f, false);
 	}
-	SpendRound();
+	if (WeaponType != EWeaponType::EWT_PhantomBlade)
+	{
+		SpendRound();
+	}
 }
 
 

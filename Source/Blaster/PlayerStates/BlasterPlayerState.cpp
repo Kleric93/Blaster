@@ -17,6 +17,7 @@
 #include "Blaster/Pickups/BerserkPickup.h"
 #include "Blaster/Pickups/PickupSpawnPoint.h"
 #include "Blaster/BlasterUserSettings.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Sound/SoundCue.h"
 #include "EngineUtils.h"
 #include "NiagaraComponent.h"
@@ -31,6 +32,7 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
+	DOREPLIFETIME(ABlasterPlayerState, KillStreak);
 	DOREPLIFETIME(ABlasterPlayerState, Team);
 	DOREPLIFETIME(ABlasterPlayerState, TeamChoice);
 
@@ -53,6 +55,7 @@ void ABlasterPlayerState::AddToScore(float ScoreAmount)
 			Multicast_UpdatePlayerKD(PlayerName, NewKills, NewDeaths);
 
 			//UE_LOG(LogTemp, Error, TEXT("Server_UpdatePlayerKills_Implementation called for player: %s, kills: %d"), *PlayerName, NewKills);
+
 		}
 	}
 }
@@ -68,6 +71,60 @@ void ABlasterPlayerState::OnRep_Score()
 		if (Controller)
 		{
 			Controller->SetHUDScore(GetScore());
+		}
+	}
+}
+
+void ABlasterPlayerState::AddToKillStreak(int32 InKillStrakAmount)
+{
+	if (Character->GetCombatState() != ECombatState::ECS_PhantomStride)
+	{
+		KillStreak += InKillStrakAmount;
+	}	
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->SetHUDKillStreak(KillStreak);
+		}
+	}
+}
+
+void ABlasterPlayerState::SubtractToKillStreak(int32 InKillStrakAmount)
+{
+	if (KillStreak <= 4)
+	{
+		KillStreak = 0;
+
+		Controller->SetHUDKillStreak(KillStreak);
+	}
+	else
+	{
+		KillStreak -= InKillStrakAmount;
+
+		Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+		if (Character)
+		{
+			Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+			if (Controller)
+			{
+				Controller->SetHUDKillStreak(KillStreak);
+			}
+		}
+	}
+}
+
+void ABlasterPlayerState::OnRep_KillStreak()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->SetHUDKillStreak(KillStreak);
 		}
 	}
 }
@@ -127,6 +184,11 @@ void ABlasterPlayerState::SetTeam(ETeam TeamToSet)
 		GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, TimerforBeginPlay, false);
 	}
 
+}
+
+void ABlasterPlayerState::SetKillStreak(int32 InKillStreak)
+{
+	KillStreak = InKillStreak;
 }
 
 void ABlasterPlayerState::DelayedMulticastUpdateTeam()

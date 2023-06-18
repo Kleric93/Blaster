@@ -44,6 +44,7 @@ public:
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	void SetHUDDefeats(int32 Defeats);
+	void SetHUDKillStreak(int32 InKillStreak);
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDWeaponType(EWeaponType WeaponType);
@@ -103,6 +104,10 @@ public:
 	void UpdateBerserkBuffIcon(bool bIsBuffActive);
 
 	UFUNCTION(Client, Reliable)
+	void UpdatePhantomStrideIcon(bool bIsBuffActive);
+
+
+	UFUNCTION(Client, Reliable)
 		void EventBorderDamage();
 
 	UFUNCTION(Client, Reliable)
@@ -119,6 +124,10 @@ public:
 
 	UFUNCTION(Client, Reliable)
 		void EventPlayerEliminated();
+
+	UFUNCTION(Client, Reliable)
+		void EventPhantomStrideReady();
+
 
 	void ClientJoinedAnimation(FString ClientName);
 
@@ -224,6 +233,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 		USoundBase* EndSoundtrack;
+
+	UPROPERTY(EditAnywhere)
+		USoundBase* KillStreakReady;
 
 	bool bEndSoundtrackHasStarted = false;
 
@@ -384,6 +396,8 @@ private:
 	bool bInitializeScore = false;
 	int32 HUDDefeats;
 	bool bInitializeDefeats = false;
+	int32 HUDKillStreak;
+	bool bInitializeKillStreak = false;
 	EWeaponType HUDWeaponType;
 
 	EFlagState FlagState;
@@ -456,6 +470,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 		UTexture2D* BerserkBuffIconOff;
+
+	UPROPERTY(EditAnywhere)
+		UTexture2D* PhantomStrideBuffIconON;
+
+	UPROPERTY(EditAnywhere)
+		UTexture2D* PhantomStrideBuffIconOFF;
 
 	FString InputMappingSlot = "InputMappingSlot";
 };

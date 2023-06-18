@@ -38,7 +38,12 @@ public:
 	UFUNCTION()
 		virtual void OnRep_Defeats();
 
+	UFUNCTION()
+	void OnRep_KillStreak();
+
 	void AddToScore(float ScoreAmount);
+	void AddToKillStreak(int32 InKillStrakAmount);
+	void SubtractToKillStreak(int32 InKillStrakAmount);
 	void AddToDefeats(int32 DefeatsAmount);
 
 	UFUNCTION()
@@ -120,6 +125,8 @@ public:
 	UFUNCTION(Client, Reliable)
 	void EventKilledPlayer();
 
+	void SetKillStreak(int32 InKillStreak);
+
 
 private:
 
@@ -134,6 +141,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Defeats)
 		int32 Defeats;
+
+	UPROPERTY(ReplicatedUsing = OnRep_KillStreak)
+		int32 KillStreak;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Team)
 		ETeam Team = ETeam::ET_NoTeam;
@@ -163,4 +173,5 @@ public:
 
 	void SetTeam(ETeam TeamToSet);
 	FORCEINLINE	ETeam GetTeam() const { return Team; }
+	FORCEINLINE	int32 GetKillStreak() const { return KillStreak; }
 };

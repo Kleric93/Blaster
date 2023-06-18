@@ -50,6 +50,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "PlayerMappableInputConfig.h"
 #include "Blaster/HUD/OverheadWidget.h"
+#include "Blaster/Weapon/Blade.h"
 
 
 
@@ -140,7 +141,6 @@ ABlasterCharacter::ABlasterCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
 
 	//
 	/// Hit Boxes for Server-side Rewind
@@ -343,6 +343,7 @@ ETeam ABlasterCharacter::GetTeam()
 
 void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {		
+
 	if (Combat)
 	{
 		if (Combat->EquippedWeapon)
@@ -352,6 +353,10 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 		if (Combat->SecondaryWeapon)
 		{
 			DropOrDestroyWeapon(Combat->SecondaryWeapon);
+		}
+		if (Combat->TertiaryWeapon)
+		{
+			DropOrDestroyWeapon(Combat->TertiaryWeapon);
 		}
 		if (Combat->EquippedFlag)
 		{
@@ -371,6 +376,7 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 	if (PC)
 	{
 		PC->EventBorderDeath();
+		PC->UpdatePhantomStrideIcon(false);
 	}
 	MulticastElim(bPlayerLeftGame);
 }
@@ -462,6 +468,12 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	{
 		OverheadBuffComponent->DestroyComponent();
 	}
+
+	if (Combat && Combat->DeathCameraShake)
+	{
+		FVector CameraLocation = GetFollowCamera()->GetComponentLocation();
+		PlayCameraShake(Combat->DeathCameraShake, CameraLocation);
+	}
 	
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -501,6 +513,10 @@ void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 	{
 		Weapon->Destroy();
 	}
+	if (Weapon->GetWeaponType() == EWeaponType::EWT_PhantomBlade)
+	{
+		Weapon->Destroy();
+	}
 	else
 	{
 		Weapon->Dropped();
@@ -510,6 +526,7 @@ void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 void ABlasterCharacter::OnPlayerStateInitialized()
 {
 	BlasterPlayerState->AddToScore(0.f);
+	BlasterPlayerState->AddToKillStreak(0);
 	BlasterPlayerState->AddToDefeats(0);
 
 	SetTeamColor(BlasterPlayerState->GetTeam());
@@ -546,6 +563,40 @@ void ABlasterCharacter::OnPlayerStateInitialized()
 		}
 		OverheadWidget->ShowPlayerName(this);
 		OverheadWidget->ChangeOWColor(GetTeam());
+	}
+
+	if (Combat)
+	{
+		if (Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_PhantomBlade)
+		{
+			ABlade* BladeWeapon = Cast<ABlade>(Combat->EquippedWeapon);
+			if (BladeWeapon)
+			{
+				BladeWeapon->MulticastSetBladeMaterialOff();
+			}
+		}
+		else if (Combat->TertiaryWeapon && Combat->TertiaryWeapon->GetWeaponType() == EWeaponType::EWT_PhantomBlade)
+		{
+			ABlade* BladeWeapon = Cast<ABlade>(Combat->TertiaryWeapon);
+			if (BladeWeapon)
+			{
+				BladeWeapon->MulticastSetBladeMaterialOff();
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("BladeIsNullptr"));
+		}
+
+		if (Combat->EquippedWeapon)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("EquippedWeapon is: %s"), *Combat->EquippedWeapon->GetClass()->GetName());
+		}
+		if (Combat->TertiaryWeapon)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("TertiaryWeapon is: %s"), *Combat->TertiaryWeapon->GetClass()->GetName());
+		}
+
 	}
 
 }
@@ -630,6 +681,36 @@ void ABlasterCharacter::MulticastLostTheLead_Implementation()
 	}
 }
 
+void ABlasterCharacter::MulticastPhantomStrideTrail_Implementation()
+{
+	if (PhantomStrideTrail == nullptr) return;
+	if (PhantomStrideTrailComponent == nullptr)
+	{
+		PhantomStrideTrailComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			PhantomStrideTrail,
+			GetMesh(),
+			FName(),
+			GetActorLocation(),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
+	if (PhantomStrideTrailComponent)
+	{
+		PhantomStrideTrailComponent->Activate();
+	}
+}
+
+void ABlasterCharacter::MulticastPhantomStrideTrailEnd_Implementation()
+{
+	if (PhantomStrideTrailComponent)
+	{
+		PhantomStrideTrailComponent->DestroyComponent();
+		PhantomStrideTrailComponent = nullptr;
+	}
+}
+
 void ABlasterCharacter::SetTeamColor(ETeam Team)
 {
 	if (GetMesh() == nullptr || OriginalMaterial == nullptr) return;
@@ -709,6 +790,31 @@ void ABlasterCharacter::BeginPlay()
 			MinimapCamera->TextureTarget = MinimapRenderTarget;
 		}
 	}
+	FTimerHandle KillstreakCheckTimerHandle;
+	bIsPhantomStrideTriggered = false;
+	GetWorld()->GetTimerManager().SetTimer(KillstreakCheckTimerHandle, this, &ABlasterCharacter::CheckKillStreak, 1.0f, true);
+}
+
+void ABlasterCharacter::CheckKillStreak()
+{
+	if (BlasterPlayerController && BlasterPlayerState && !bIsPhantomStrideTriggered)
+	{
+		int32 Killstreak = BlasterPlayerState->GetKillStreak();
+
+		bool bKillStreakConditions =
+			Killstreak == 5 ||
+			Killstreak == 10 ||
+			Killstreak == 15 ||
+			Killstreak == 20 ||
+			Killstreak == 25 ||
+			Killstreak == 30;
+
+		if (bKillStreakConditions)
+		{
+			BlasterPlayerController->EventPhantomStrideReady();
+			bIsPhantomStrideTriggered = true;
+		}
+	}
 }
 
 void ABlasterCharacter::Tick(float DeltaTime)
@@ -719,7 +825,6 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	HideCharacterAndWeaponsIfScopingOrCameraClose();
 	PollInit();
 	UpdateHUDFlag();
-
 	/*
 	if (CurrentBuffComponent.IsValid())
 	{
@@ -864,6 +969,7 @@ void ABlasterCharacter::ServerSwapButtonPressed_Implementation()
 // no inputactionvalue needed, cause no value in signature
 void ABlasterCharacter::CrouchButtonPressed()
 {
+	if (GetCombatState() == ECombatState::ECS_PhantomStride) return;
 	float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
@@ -893,6 +999,7 @@ void ABlasterCharacter::CrouchButtonPressed()
 
 void ABlasterCharacter::ProneButtonPressed()
 {
+	if (GetCombatState() == ECombatState::ECS_PhantomStride) return;
 	float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 	bool bIsSliding = Combat->bIsSliding;
@@ -955,6 +1062,17 @@ void ABlasterCharacter::GrenadeButtonPressed()
 	}
 }
 
+void ABlasterCharacter::PhantomStrideButtonPressed()
+{
+	if (Combat == nullptr || Combat->CombatState != ECombatState::ECS_Unoccupied || Combat->bIsSliding || Combat->bIsProne || Combat->bAiming) return;
+
+	if (Combat && BlasterPlayerState->GetKillStreak() >= PhantomStrideKillstreakThreshold)
+	{
+		Combat->Server_PhantomStride();
+		bIsPhantomStrideTriggered = false;
+	}
+}
+
 #pragma endregion EnhancedInput
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
@@ -1003,6 +1121,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Fire, ETriggerEvent::Triggered, this, &ABlasterCharacter::Fire);
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Reload, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Grenade, ETriggerEvent::Triggered, this, &ABlasterCharacter::GrenadeButtonPressed);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_PhantomStride, ETriggerEvent::Triggered, this, &ABlasterCharacter::PhantomStrideButtonPressed);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -1163,6 +1282,34 @@ void ABlasterCharacter::PlaySwapMontage()
 		AnimInstance->Montage_Play(SwapMontage);
 	}
 }
+
+void ABlasterCharacter::PlayPhantomStrideStartMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && PhantomStrideStartMontage)
+	{
+		AnimInstance->Montage_Play(PhantomStrideStartMontage);
+	}
+}
+
+void ABlasterCharacter::PlayPhantomStrideEndMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && PhantomStrideStartMontage)
+	{
+		AnimInstance->Montage_Play(PhantomStrideEndMontage);
+	}
+}
+
+void ABlasterCharacter::PlayPhantomStrideAttackMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && PhantomStrideAttackMontage)
+	{
+		AnimInstance->Montage_Play(PhantomStrideAttackMontage);
+	}
+}
+
 
 void ABlasterCharacter::PlayHitReactMontage()
 {
@@ -1440,10 +1587,13 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 		//UE_LOG(LogTemp, Warning, TEXT("Current game mode: InstaKillGameMode"));
 
 		StartingWeapon = World->SpawnActor<AWeapon>(InstaKillWeaponClass);
+		StartingBlade = World->SpawnActor<AWeapon>(DefaultBladeClass);
+
 		StartingWeapon->bDestroyWeapon = true;
 		if (Combat)
 		{
 			Combat->EquipWeapon(StartingWeapon);
+			Combat->EquipTertiaryWeapon(StartingBlade);
 		}
 	}
 	else if (BlasterGameMode && World && !bElimmed && DefaultWeaponClass)
@@ -1451,10 +1601,14 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 		//UE_LOG(LogTemp, Warning, TEXT("Current game mode: BlasterGameMode"));
 
 		StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingBlade = World->SpawnActor<AWeapon>(DefaultBladeClass);
+
 		StartingWeapon->bDestroyWeapon = true;
 		if (Combat)
 		{
 			Combat->EquipWeapon(StartingWeapon);
+			Combat->EquipTertiaryWeapon(StartingBlade);
+
 		}
 	}
 }
@@ -1607,7 +1761,7 @@ void ABlasterCharacter::SpawnOverheadBuff(UNiagaraSystem* BuffType)
 		OverheadBuffComponent->SetAsset(BuffType);
 		OverheadBuffComponent->Activate();
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 void ABlasterCharacter::DeactivateOverheadBuffComponent()
@@ -1616,7 +1770,7 @@ void ABlasterCharacter::DeactivateOverheadBuffComponent()
 	{
 		OverheadBuffComponent->DestroyComponent();
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
 
 /*
@@ -1762,4 +1916,9 @@ void ABlasterCharacter::MulticastShowDamageIndicator_Implementation(AActor* Dama
 			PlayerController->SetHUDDamageIndicator(Angle);
 		}
 	}
+}
+
+void ABlasterCharacter::PlayCameraShake(TSubclassOf<class UCameraShakeBase> CameraShake, FVector CameraLocation)
+{
+	UGameplayStatics::PlayWorldCameraShake(this, CameraShake, CameraLocation, 0.f, 400.f);
 }

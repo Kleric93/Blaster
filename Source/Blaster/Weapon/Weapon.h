@@ -13,6 +13,7 @@ enum class EWeaponState : uint8
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
 	EWS_EquippedSecondary UMETA(DisplayName = "Equipped Secondary"),
+	EWS_EquippedTertiary UMETA(DisplayName = "Equipped Tertiary"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 
 	EWS_MAX UMETA(DisplayName = "DefaultMAX"),
@@ -25,11 +26,13 @@ enum class EFireType : uint8
 	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
 	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
 	EFT_Shotgun UMETA(DisplayName = "Shotgun  Weapon"),
+	EFT_Blade UMETA(DisplayName = "Blade  Weapon"),
 	EFT_MAX UMETA(DisplayName = "DefaultMax")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponStateChanged, EWeaponState, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitscanDamage, const FString&, PlayerName, int32, HitscanDamage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnBladeDamage, const FString&, PlayerName, int32, BladeDamage);
 
 
 
@@ -57,11 +60,17 @@ public:
 	UFUNCTION()
 		void SpawnCasing();
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> FireCameraShake;
+
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FOnWeaponStateChanged OnWeaponStateChanged;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHitscanDamage OnHitscanDamage;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+		FOnBladeDamage OnBladeDamage;
 	/*
 	* Textures for the weapon Crosshairs
 	*/

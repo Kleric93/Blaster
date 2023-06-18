@@ -30,6 +30,9 @@ public:
 	UPROPERTY()
 	UBlasterUserSettings* Settings;
 
+	UFUNCTION()
+	void CheckKillStreak();
+
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -43,6 +46,12 @@ public:
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
 	void PlaySwapMontage();
+
+	void PlayPhantomStrideStartMontage();
+
+	void PlayPhantomStrideEndMontage();
+
+	void PlayPhantomStrideAttackMontage();
 
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim(bool PlayerLeftGame);
@@ -88,6 +97,13 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLostTheLead();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPhantomStrideTrail();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastPhantomStrideTrailEnd();
+
 
 	void SetTeamColor(ETeam Team);
 
@@ -172,10 +188,12 @@ protected:
 	void Fire(const FInputActionValue& Value);
 	void ReloadButtonPressed();
 	void GrenadeButtonPressed();
+	void PhantomStrideButtonPressed();
 
 
 
 	virtual void BeginPlay() override;
+
 	void ARMagazineAnimation();
 	void AimOffset(float DeltaTime);
 	void CalculateAO_Pitch();
@@ -327,6 +345,8 @@ private:
 
 	AWeapon* StartingWeapon;
 
+	AWeapon* StartingBlade;
+
 	//
 	/// Animation Montages
 	//
@@ -356,6 +376,15 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* SwapMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	class UAnimMontage* PhantomStrideStartMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+		class UAnimMontage* PhantomStrideEndMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+		class UAnimMontage* PhantomStrideAttackMontage;
+
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
 	FRotator ProxyRotationLastFrame;
@@ -363,6 +392,9 @@ private:
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;
 	float CalculateSpeed();
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+		int32 PhantomStrideKillstreakThreshold = 5;
 
 	//
 	/// Player Health
@@ -403,6 +435,7 @@ private:
 
 	void ElimTimerFinished();
 
+	bool bIsPhantomStrideTriggered;
 	bool bLeftGame = false;
 	bool bHasAlreadyJoined;
 
@@ -484,13 +517,18 @@ private:
 	UPROPERTY()
 	class UNiagaraComponent* CrownComponent;
 
+	UPROPERTY(EditAnywhere)
+		class UNiagaraSystem* PhantomStrideTrail;
+
+	UPROPERTY()
+		class UNiagaraComponent* PhantomStrideTrailComponent;
+
 	//
 	/// Grenade
 	//
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade;
-
 
 	//
 	/// Default Weapon
@@ -501,6 +539,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> InstaKillWeaponClass;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultBladeClass;
 
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
@@ -556,6 +597,7 @@ public:
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UAnimMontage* GetPhantomStrideMontage() const { return PhantomStrideStartMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UBuffComponent* Getbuff() const { return Buff; }
 	bool IsLocallyReloading();
@@ -566,6 +608,8 @@ public:
 	FORCEINLINE UNiagaraSystem* GetSpeedBuffSystem() { return SpeedBuffSystem; }
 	FORCEINLINE UNiagaraSystem* GetBerserkBuffSystem() { return BerserkBuffSystem; }
 	FORCEINLINE UNiagaraComponent* GetOverheadBuffComponent() { return OverheadBuffComponent; }
+	FORCEINLINE UNiagaraSystem* GetPhantomStrideTrail() { return PhantomStrideTrail; }
+	FORCEINLINE UNiagaraComponent* GetPhantomStrideTrailComponent() { return PhantomStrideTrailComponent; }
 
 
 	//FORCEINLINE float GetTurnSpeedMultiplier() { return BaseTurnSpeedMultiplier; }
@@ -609,6 +653,8 @@ public:
 	void DeactivateOverheadBuffComponent();
 
 	void ShowDamageIndicator(AActor* DamagedActor, AActor* DamageCauser);
+
+	void PlayCameraShake(TSubclassOf<class UCameraShakeBase> CameraShake, FVector CameraLocation);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShowDamageIndicator(AActor* DamagedActor, AActor* DamageCauser);

@@ -20,6 +20,9 @@ public:
 	class UProgressBar* HealthBar;
 
 	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* KillStreak;
+
+	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* YouDiedText;
 
 	UPROPERTY(meta = (BindWidget))
@@ -104,6 +107,12 @@ public:
 		UWidgetAnimation* DamageIndicatorAnim;
 
 	UPROPERTY(meta = (BindWidget))
+	UImage* PhantomStrideReadyImage;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+		UWidgetAnimation* PhantomStrideCallAnim;
+
+	UPROPERTY(meta = (BindWidget))
 	UImage* SpeedBuffIcon;
 
 	UPROPERTY(meta = (BindWidget))
@@ -111,6 +120,9 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* BerserkBuffIcon;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* PhantomStrideBuffIcon;
 
 	UPROPERTY(meta = (BindWidget))
 		UImage* DamageIndicator;

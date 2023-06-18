@@ -194,6 +194,7 @@ void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacte
         }
 
         AttackerPlayerState->AddToScore(1.f);
+        AttackerPlayerState->AddToKillStreak(1);
         AttackerPlayerState->EventKilledPlayer();
         BlasterGameState->UpdateTopScore(AttackerPlayerState);
         if (BlasterGameState->TopScoringPlayers.Contains(AttackerPlayerState))
@@ -221,6 +222,7 @@ void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacte
     if (VictimPlayerState)
     {
         VictimPlayerState->AddToDefeats(1);
+        VictimPlayerState->SubtractToKillStreak(5);
     }
 
 	if (ElimmedCharacter)

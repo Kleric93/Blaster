@@ -33,5 +33,7 @@ enum class EWeaponType : uint8
 
 	EWT_GrenadeLauncher UMETA(DisplayName = "Grenade Launcher"),
 
+	EWT_PhantomBlade UMETA(DisplayName = "Phantom Blade"),
+
 	EWT_MAX UMETA(DisplayName = "DefaultMAX"),
 };
