@@ -61,6 +61,7 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FStr
 	}
 	if (ServerIDInputBox)
 	{
+		ServerIDInputBox->SetIsReadOnly(true);
 		ServerIDInputBox->OnTextChanged.AddDynamic(this, &ThisClass::OnServerIDConfirmed);
 	}
 }
@@ -69,6 +70,12 @@ void UMenu::OnServerIDConfirmed(const FText& ServerIDText)
 {
 	FString ServerIDString = ServerIDText.ToString();
 	FOnlineSessionSearchResult* SessionToJoin = nullptr;
+
+	if (!SessionSearchResults)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Please search for servers before trying to join one by name."));
+		return;
+	}
 
 	// Find the correct session based on ServerID
 	for (FOnlineSessionSearchResult& SessionSearchResult : *SessionSearchResults)
@@ -81,6 +88,10 @@ void UMenu::OnServerIDConfirmed(const FText& ServerIDText)
 			{
 				SessionToJoin = &SessionSearchResult;
 				break;
+			}
+			else
+			{
+				return;
 			}
 		}
 	}
@@ -108,6 +119,7 @@ void UMenu::RefreshServerList()
 		}
 		if (SessionSearchResults != nullptr && SessionSearchResults->Num() > 0)
 		{
+			ServerIDInputBox->SetIsReadOnly(false);
 			for (FOnlineSessionSearchResult& SessionSearchResult : *SessionSearchResults)
 			{
 				ServerListLineWidget = CreateWidget<UServerListLine>(GetWorld(), ServerListLine);

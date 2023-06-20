@@ -384,11 +384,14 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
 	bLeftGame = bPlayerLeftGame;
+	bElimmed = true;
+
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDWeaponAmmo(0);
+		BlasterPlayerController->SetCharacterOverlayVisibility(bElimmed);
 	}
-	bElimmed = true;
+	
 	PlayElimMontage();
 	RespawnSentence();
 
@@ -1366,7 +1369,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	}
 
 	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(this->GetController());
-	if (PC)
+	if (PC != nullptr)
 	{
 		PC->EventBorderDamage();
 		ClientPlayDamageReceivedSound();

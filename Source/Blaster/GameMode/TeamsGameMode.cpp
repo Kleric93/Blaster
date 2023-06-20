@@ -63,7 +63,6 @@ void ATeamsGameMode::OnTeamChosen(ABlasterPlayerController* BPController, ETeam 
 			BGameState->BlueTeam.AddUnique(BPState);
 			BPState->SetTeam(ETeam::ET_BlueTeam);
 		}
-	
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }

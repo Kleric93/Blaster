@@ -691,6 +691,7 @@ void ABlasterPlayerController::Server_InstaKillSMVoteCast_Implementation()
 	}
 }
 
+
 void ABlasterPlayerController::Server_RedTeamChosen_Implementation()
 {
 	OnTeamChosen.Broadcast(this, ETeam::ET_RedTeam);

@@ -72,7 +72,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 		// Broadcast our own custom delegate
 		MultiplayerOnCreateSessionComplete.Broadcast(false);
 	}
-	UE_LOG(LogTemp, Error, TEXT("Match Type: %s"), *MatchType);
+	//UE_LOG(LogTemp, Error, TEXT("Match Type: %s"), *MatchType);
 
 }
 

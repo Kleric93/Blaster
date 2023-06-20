@@ -287,14 +287,14 @@ void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 		if (Character && CombatState == ECombatState::ECS_PhantomStride)
 		{
 			Character->PlayPhantomStrideAttackMontage();
-			Character->MulticastPhantomStrideTrail();
+			//Character->MulticastPhantomStrideTrail();
 			Character->DisableInput(Character->GetPlayerState()->GetPlayerController());
 			FTimerHandle TimerHandle;
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UCombatComponent::ReEnableInput, 1.f, false);
 			EquippedWeapon->Fire(TraceHitTarget);
 
 			FTimerHandle TimerHandleTrail;
-			GetWorld()->GetTimerManager().SetTimer(TimerHandleTrail, this, &UCombatComponent::FinishPhantomStrideTrail, 2.5f, false);
+			//GetWorld()->GetTimerManager().SetTimer(TimerHandleTrail, this, &UCombatComponent::FinishPhantomStrideTrail, 2.5f, false);
 
 		}
 	}
@@ -796,6 +796,7 @@ void UCombatComponent::Multicast_PhantomStride_Implementation()
 	GetWorld()->GetTimerManager().SetTimer(TimerEndPhantomStrideAnim, this, &UCombatComponent::Multicast_PhantomStrideFinishedAnim, PhantomStrideAbilityDuration - 1.f, false);
 	GetWorld()->GetTimerManager().SetTimer(TimerEndPhantomStride, this, &UCombatComponent::Multicast_PhantomStrideFinished, PhantomStrideAbilityDuration, false);
 
+
 	if (Character->IsElimmed())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(TimerEndPhantomStride);
@@ -819,15 +820,18 @@ void UCombatComponent::SpawnBlade_Implementation()
 	{
 		FVector CameraLocation = Character->GetFollowCamera()->GetComponentLocation();
 		Character->PlayCameraShake(PhantomStrideStartShake, CameraLocation);
+		Character->MulticastPhantomStrideTrail();
 	}
 }
 
 void UCombatComponent::Multicast_PhantomStrideFinishedAnim_Implementation()
 {
+	if (bFireButtonPressed == true) bFireButtonPressed = false;
 	bEndingPhantomStride = true;
 	Character->PlayPhantomStrideEndMontage();
 
 	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Character->GetPlayerState()->GetPlayerController());
+	FinishPhantomStrideTrail();
 	Character->DisableInput(PC);
 	UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance();
 }
