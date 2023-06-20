@@ -695,13 +695,25 @@ void ABlasterPlayerController::Server_InstaKillSMVoteCast_Implementation()
 void ABlasterPlayerController::Server_RedTeamChosen_Implementation()
 {
 	OnTeamChosen.Broadcast(this, ETeam::ET_RedTeam);
-	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->FillRedPlayerStatesArray(this->PlayerState);
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);awdad
 }
 
 void ABlasterPlayerController::Server_BlueTeamChosen_Implementation()
 {
 	OnTeamChosen.Broadcast(this, ETeam::ET_BlueTeam);
-	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
+
+	ABlasterGameState* GameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState)
+	{
+		GameState->FillBluePlayerStatesArray(this->PlayerState);
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);awdad
 }
 
 void ABlasterPlayerController::OnRep_ShowTeamScores()

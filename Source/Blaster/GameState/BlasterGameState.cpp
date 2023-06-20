@@ -425,12 +425,7 @@ float ABlasterGameState::GetScoreToWinFromServer()
 	return ScoreToWin;
 }*/
 
-void ABlasterGameState::ServerFillPendingPlayerStatesArray_Implementation()
-{
-	MulticastFillPendingPlayerStatesArray();
-}
-
-void ABlasterGameState::MulticastFillPendingPlayerStatesArray_Implementation()
+void ABlasterGameState::FillPendingPlayerStatesArray()
 {
 	PendingChoicePlayerArray.Empty(); // Clear the array before populating
 
@@ -450,23 +445,56 @@ void ABlasterGameState::MulticastFillPendingPlayerStatesArray_Implementation()
 	}
 }
 
-void ABlasterGameState::ServerChosenRed_Implementation(APlayerState* PState)
-{
-	MulticastFillRedPlayerStatesArray(PState);
-}
-
-void ABlasterGameState::MulticastFillRedPlayerStatesArray_Implementation(APlayerState* PState)
+void ABlasterGameState::FillRedPlayerStatesArray(APlayerState* PState)
 {
 	// Retrieve the game state
 	AGameStateBase* GameState = GetWorld()->GetGameState();
 	if (GameState)
 	{
-		// Loop through each player state and add it to the pending choice array
-		for (APlayerState* PlayerState : RedPlayersArray)
+		// Check if PState is valid
+		if (PState)
 		{
-			if (PlayerState)
+			// Remove PState from PendingChoicePlayerArray if it exists there
+			if (PendingChoicePlayerArray.Contains(PState))
+			{
+				PendingChoicePlayerArray.Remove(PState);
+			}
+
+			// Remove PState from BluePlayersArray if it exists there
+			if (BluePlayersArray.Contains(PState))
+			{
+				BluePlayersArray.Remove(PState);
+			}
+
+			// If PState is not in RedPlayersArray, add it there
+			if (!RedPlayersArray.Contains(PState))
 			{
 				RedPlayersArray.Add(PState);
+			}
+		}
+	}
+}
+
+void ABlasterGameState::FillBluePlayerStatesArray(APlayerState* PState)
+{
+	AGameStateBase* GameState = GetWorld()->GetGameState();
+	if (GameState)
+	{
+		if (PState)
+		{
+			if (PendingChoicePlayerArray.Contains(PState))
+			{
+				PendingChoicePlayerArray.Remove(PState);
+			}
+
+			if (RedPlayersArray.Contains(PState))
+			{
+				RedPlayersArray.Remove(PState);
+			}
+
+			if (!BluePlayersArray.Contains(PState))
+			{
+				BluePlayersArray.Add(PState);
 			}
 		}
 	}

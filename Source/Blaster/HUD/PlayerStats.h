@@ -34,6 +34,15 @@ public:
 	UPROPERTY()
 		UPlayerStatsLine* PlayerStatsLineWidget;
 
+	UPROPERTY(meta = (BindWidget))
+		class UOverlay* BlueTeamOverlay;
+
+	UPROPERTY(meta = (BindWidget))
+		class UOverlay* RedTeamOverlay;
+
+	UPROPERTY(meta = (BindWidget))
+		class UOverlay* NoTeamOverlay;
+
 	void WidgetSetup(TArray<class ABlasterPlayerState*> BlasterPlayerStateArray);
 
 	void WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPlayerStateArray);

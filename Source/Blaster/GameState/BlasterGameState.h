@@ -58,6 +58,7 @@ public:
 
 	UPROPERTY(Replicated)
 	TArray<APlayerState*> RedPlayersArray;
+
 	UPROPERTY(Replicated)
 	TArray<APlayerState*> BluePlayersArray;
 
@@ -75,17 +76,11 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetScoreToWinFromServer();
 
-	UFUNCTION(Server, Reliable)
-	void ServerChosenRed(APlayerState* PState);
+	void FillRedPlayerStatesArray(APlayerState* PState);
 
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFillRedPlayerStatesArray(APlayerState* PState);
+	void FillBluePlayerStatesArray(APlayerState* PState);
 
-	UFUNCTION(Server, Reliable)
-	void ServerFillPendingPlayerStatesArray();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFillPendingPlayerStatesArray();
+	void FillPendingPlayerStatesArray();
 
 	TArray<ABlasterPlayerState*> RedTeam;
 	TArray<ABlasterPlayerState*> BlueTeam;

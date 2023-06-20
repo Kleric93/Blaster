@@ -26,6 +26,7 @@ class BLASTER_API UTeamChoice : public UUserWidget
 	GENERATED_BODY()
 
 public:
+
 	UPROPERTY(meta = (BindWidget))
 		UScrollBox* RedTeamChosenScrollBox;
 
@@ -46,10 +47,11 @@ public:
 
 	void WidgetSetup();
 
-	UFUNCTION()
 	void InitNoTeamScrollBox();
 
 	void InitRedTeamScrollBox();
+
+	void InitBlueTeamScrollBox();
 
 	void UpdateScrollBoxes();
 
@@ -74,5 +76,9 @@ public:
 
 	UPROPERTY()
 		UTeamChoiceLine* TeamChoiceLineWidget;
+
+protected:
+
+	FTimerHandle UpdateTimerHandle;
 
 };

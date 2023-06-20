@@ -29,7 +29,7 @@ void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
 			BlasterController->OnTeamChosen.AddDynamic(this, &ATeamsGameMode::OnTeamChosen);
 			if (BPState->GetTeam() == ETeam::ET_NoTeam)
 			{
-				BlasterGameState->ServerFillPendingPlayerStatesArray();
+				BlasterGameState->FillPendingPlayerStatesArray();
 
 				if (BlasterGameState->BlueTeam.Num() >= BlasterGameState->RedTeam.Num())
 				{

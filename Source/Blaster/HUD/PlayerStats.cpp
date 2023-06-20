@@ -15,12 +15,17 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/Overlay.h"
+
 
 
 void UPlayerStats::WidgetSetup(TArray<class ABlasterPlayerState*> BlasterPlayerStateArray)
 {
     RedTeamScore->SetText(FText::FromString(""));
     BlueTeamScore->SetText(FText::FromString(""));
+    BlueTeamOverlay->SetVisibility(ESlateVisibility::Hidden);
+    RedTeamOverlay->SetVisibility(ESlateVisibility::Hidden);
+    NoTeamOverlay->SetVisibility(ESlateVisibility::Visible);
 
     if (PlayerStatsScrollBox)
     {
@@ -64,6 +69,9 @@ void UPlayerStats::WidgetSetupTeams(TArray<class ABlasterPlayerState*> BlasterPl
 
     RedTeamScore->SetText(FText::FromString("0"));
     BlueTeamScore->SetText(FText::FromString("0"));
+    BlueTeamOverlay->SetVisibility(ESlateVisibility::Visible);
+    RedTeamOverlay->SetVisibility(ESlateVisibility::Visible);
+    NoTeamOverlay->SetVisibility(ESlateVisibility::Hidden);
 
     if (BlasterPlayerStateArray.Num() > 0)
     {

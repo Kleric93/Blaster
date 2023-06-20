@@ -7,6 +7,7 @@
 #include "TeamChoiceLine.generated.h"
 
 class UTextBlock;
+class UImage;
 
 /**
  * 
@@ -20,5 +21,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Playername;
+
+	UPROPERTY(meta = (BindWidget))
+	UImage* PlayerNameBorder;
 	
 };
