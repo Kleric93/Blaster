@@ -94,7 +94,7 @@ void ABlasterPlayerState::AddToKillStreak(int32 InKillStrakAmount)
 
 void ABlasterPlayerState::SubtractToKillStreak(int32 InKillStrakAmount)
 {
-	if (KillStreak <= 4)
+	if (KillStreak <= Character->GetPhantomStrideKillStreakThreshold() - 1)
 	{
 		KillStreak = 0;
 
