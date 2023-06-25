@@ -29,9 +29,7 @@
 
 ABlade::ABlade()
 {
-    BladeHumComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("Blade Hum Component"));
-    BladeHumComponent->SetupAttachment(GetRootComponent());
-    BladeHumComponent->SetIsReplicated(true);
+
 }
 
 void ABlade::Tick(float DeltaTime)
@@ -56,15 +54,6 @@ void ABlade::Tick(float DeltaTime)
         {
             bIsTeleporting = false;
         }
-    }
-
-    if (!BladeHumComponent)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("BladeHumComponent is nullptr in Tick"));
-    }
-    if (BladeHumComponent)
-    {
-        //UE_LOG(LogTemp, Warning, TEXT("BladeHumComponent VALID!!!! in Tick"));
     }
 }
 
@@ -213,40 +202,10 @@ void ABlade::MulticastSetBladeParticlesOn_Implementation()
     // Set the length of the particle system to match the blade
     BladeSystemComponent->SetNiagaraVariableVec3("ParticleSystemLength", ParticleSystemLength);
     BladeSystemComponent->Activate();
-
-    if (BladeHum && BladeHumComponent)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Before spawning sound, BladeHumComponent is: %s"), (BladeHumComponent ? *BladeHumComponent->GetName() : TEXT("nullptr")));
-        BladeHumComponent = UGameplayStatics::SpawnSoundAttached(
-            BladeHum,
-            GetRootComponent(),
-            FName(),
-            GetActorLocation(),
-            EAttachLocation::KeepWorldPosition,
-            false,
-            1.f,
-            1.f,
-            0.f,
-            BladeHumAttenuation,
-            (USoundConcurrency*)nullptr,
-            false
-        );
-        UE_LOG(LogTemp, Warning, TEXT("After spawning sound, BladeHumComponent is: %s"), (BladeHumComponent ? *BladeHumComponent->GetName() : TEXT("nullptr")));
-    }
 }
 
 void ABlade::MulticastSetBladeParticlesOff_Implementation()
 {
     BladeSystemComponent->Deactivate();
-
-    if (BladeHum && BladeHumComponent && BladeHumComponent->IsPlaying())
-    {
-        BladeHumComponent->Stop();
-        //BladeHumComponent = nullptr;
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("fucking component is NULLPTR"));
-    }
-    GEngine->AddOnScreenDebugMessage(-1, 8.F, FColor::FromHex("#FFD801"), __FUNCTION__);
 }
+

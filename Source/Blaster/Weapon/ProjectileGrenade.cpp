@@ -8,6 +8,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Sound/SoundCue.h"
 #include "DrawDebugHelpers.h"
+#include "Blaster/BlasterTypes/Team.h"
 
 
 AProjectileGrenade::AProjectileGrenade()
@@ -56,11 +57,27 @@ void AProjectileGrenade::OnBounce(const FHitResult& ImpactResult, const FVector&
 void AProjectileGrenade::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor == this->GetOwner()) return;
+	ABlasterCharacter* BlasterCharacterOwner = Cast<ABlasterCharacter>(this->GetOwner());
+	ETeam OwnersTeam = BlasterCharacterOwner->GetTeam();
 	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if (BlasterCharacter)
+	ETeam CharacterExplodingTeam = BlasterCharacter->GetTeam();
+	
+	bool bGrenadeCanGoBoom =
+		BlasterCharacter &&
+		BlasterCharacterOwner &&
+		(OwnersTeam == ETeam::ET_RedTeam && CharacterExplodingTeam == ETeam::ET_BlueTeam) ||
+		BlasterCharacter &&
+		BlasterCharacterOwner &&
+		(OwnersTeam == ETeam::ET_BlueTeam && CharacterExplodingTeam == ETeam::ET_RedTeam) ||
+		BlasterCharacter&&
+		BlasterCharacterOwner &&
+		(OwnersTeam == ETeam::ET_NoTeam && CharacterExplodingTeam == ETeam::ET_NoTeam);
+
+	if (BlasterCharacter && bGrenadeCanGoBoom)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Overlap with BlasterCharacter detected."));
 		ExplodeDamage();
+		UE_LOG(LogTemp, Warning, TEXT("Damage Dealt %f"), Damage);
+
 		DestroyTimerFinished();
 		Destroyed();
 		Destroy();

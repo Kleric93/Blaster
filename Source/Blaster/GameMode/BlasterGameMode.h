@@ -10,6 +10,7 @@ class UBlasterUserSettings;
 class ABlasterGameState;
 class UAudioComponent;
 class USoundCue;
+class UMultiplayerSessionsSubsystem;
 
 namespace MatchState
 {
@@ -78,6 +79,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	FVector DefaultLocation = FVector(0, 0, 0);
+
+	UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
 public:
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }

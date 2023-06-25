@@ -11,6 +11,7 @@
 #include "CombatComponent.generated.h"
 
 class UBlasterUserSettings;
+class UAudioComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPhantomStrideActivated, float, Duration);
 
@@ -88,6 +89,15 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 		void SpawnBlade();
+	
+	UFUNCTION(Server, Reliable)
+	void Server_MeleeAttack();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_MeleeAttack();
+
+	UFUNCTION()
+	void StopMelee();
 
 	UFUNCTION()
 	void ReEnableInput();
@@ -298,6 +308,8 @@ private:
 
 	bool bFireButtonPressed;
 
+	bool bIsUsingMelee = false;
+
 	UPROPERTY(EditAnywhere)
 	class USoundCue* FlagPickupSound;
 
@@ -442,6 +454,15 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float PhantomStrideAbilityDuration = 20.f;
+
+	UPROPERTY(EditAnywhere)
+		class USoundCue* BladeHum;
+
+	UPROPERTY()
+		class UAudioComponent* BladeHumComponent;
+
+	UPROPERTY(EditAnywhere)
+		USoundAttenuation* BladeHumAttenuation;
 
 public:	
 

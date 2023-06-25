@@ -53,6 +53,8 @@ public:
 
 	void PlayPhantomStrideAttackMontage();
 
+	void PlayMeleeAttackMontage();
+
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim(bool PlayerLeftGame);
 
@@ -189,6 +191,7 @@ protected:
 	void ReloadButtonPressed();
 	void GrenadeButtonPressed();
 	void PhantomStrideButtonPressed();
+	void MeleeButtonPressed();
 
 
 
@@ -290,6 +293,9 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class UBoxComponent* OverheadWidgetBox;
 
+	UPROPERTY(VisibleAnywhere, Category = Camera)
+	UBoxComponent* MeleeCollisionBox;
+
 	UPROPERTY(VisibleAnywhere, Category = "AimAssist")
 	class USphereComponent* AimAssistSphere;
 
@@ -385,6 +391,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 		class UAnimMontage* PhantomStrideAttackMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+		class UAnimMontage* MeleeAttackMontage;
+
 	bool bRotateRootBone;
 	float TurnThreshold = 0.5f;
 	FRotator ProxyRotationLastFrame;
@@ -432,6 +441,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	float ElimDelay = 3.f;
+
+	UPROPERTY(EditAnywhere)
+	float MeleeDamage = 50.f;
 
 	void ElimTimerFinished();
 
@@ -573,6 +585,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = NiagaraBuffs)
 	UNiagaraSystem* BerserkBuffSystem;
 
+	UPROPERTY(EditAnywhere, Category = Audio)
+		USoundBase* MeleeAttackSound;
+
+	UPROPERTY(EditAnywhere, Category = Audio)
+		USoundBase* MeleeAttackHitSound;
+
+
 	//void ClearBuff();
 
 public:	
@@ -610,6 +629,9 @@ public:
 	FORCEINLINE UNiagaraComponent* GetOverheadBuffComponent() { return OverheadBuffComponent; }
 	FORCEINLINE UNiagaraSystem* GetPhantomStrideTrail() { return PhantomStrideTrail; }
 	FORCEINLINE UNiagaraComponent* GetPhantomStrideTrailComponent() { return PhantomStrideTrailComponent; }
+	FORCEINLINE int32 GetPhantomStrideKillStreakThreshold() const { return PhantomStrideKillstreakThreshold; }
+	FORCEINLINE UBoxComponent* GetMeleeCollisionBox() const { return MeleeCollisionBox; }
+
 
 
 	//FORCEINLINE float GetTurnSpeedMultiplier() { return BaseTurnSpeedMultiplier; }
@@ -655,6 +677,9 @@ public:
 	void ShowDamageIndicator(AActor* DamagedActor, AActor* DamageCauser);
 
 	void PlayCameraShake(TSubclassOf<class UCameraShakeBase> CameraShake, FVector CameraLocation);
+
+	UFUNCTION()
+	void OnBeginOverlapMeleeBox(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastShowDamageIndicator(AActor* DamagedActor, AActor* DamageCauser);

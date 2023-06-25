@@ -33,7 +33,7 @@ public:
 	FGameplayTag InputTag_Reload;
 	FGameplayTag InputTag_Grenade;
 	FGameplayTag InputTag_PhantomStride;
-
+	FGameplayTag InputTag_Melee;
 
 protected:
 

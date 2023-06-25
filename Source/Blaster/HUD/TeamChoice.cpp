@@ -129,6 +129,8 @@ void UTeamChoice::OnBlueButtonClicked()
 
 void UTeamChoice::InitNoTeamScrollBox()
 {
+    FLinearColor GreenColor(0.0f, 1.0f, 0.0f, 1.0f);
+
     ABlasterGameState* GS = Cast<ABlasterGameState>(GetWorld()->GetGameState());
     if (NoTeamScrollBox && GS)
     {
@@ -146,6 +148,19 @@ void UTeamChoice::InitNoTeamScrollBox()
             if (TeamChoiceLineWidget == nullptr) continue;
 
             TeamChoiceLineWidget->Playername->SetText(FText::FromString(InGamePlayer->GetPlayerName()));
+
+            APlayerController* LocalPlayerController = GetWorld()->GetFirstPlayerController();
+
+            if (InGamePlayer == LocalPlayerController->PlayerState)
+            {
+                TeamChoiceLineWidget->Playername->SetColorAndOpacity(GreenColor);
+                TeamChoiceLineWidget->PlayerNameBorder->SetColorAndOpacity(GreenColor);
+            }
+            else
+            {
+                TeamChoiceLineWidget->Playername->SetColorAndOpacity(FLinearColor::White);
+                TeamChoiceLineWidget->PlayerNameBorder->SetColorAndOpacity(FLinearColor::White);
+            }
 
             NoTeamScrollBox->AddChild(TeamChoiceLineWidget);
         }

@@ -66,14 +66,4 @@ private:
 	UPROPERTY()
 	FVector NewPosition; // Add this property
 
-	UPROPERTY(EditAnywhere)
-		class USoundCue* BladeHum;
-
-	UPROPERTY()
-	class UAudioComponent* BladeHumComponent;
-
-	UPROPERTY(EditAnywhere)
-		USoundAttenuation* BladeHumAttenuation;
-
-
 };

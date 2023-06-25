@@ -16,6 +16,9 @@
 #include "Blaster/HUD/VotingSyastem.h"
 #include "Blaster/BlasterUserSettings.h"
 #include "Components/AudioComponent.h"
+#include "MultiplayerSessionsSubsystem.h"
+#include "OnlineSubsystem.h"
+#include "OnlineSessionSettings.h"
 
 
 namespace MatchState
@@ -218,11 +221,13 @@ void ABlasterGameMode::PlayerEliminated(class ABlasterCharacter* ElimmedCharacte
             }
         }
     }
-
-    if (VictimPlayerState)
+    if (VictimPlayerState == nullptr) return;
+    ABlasterCharacter* Character = Cast<ABlasterCharacter>(VictimPlayerState->GetPawn());
+    if (Character == nullptr) return;
+    if (VictimPlayerState && Character)
     {
         VictimPlayerState->AddToDefeats(1);
-        VictimPlayerState->SubtractToKillStreak(5);
+        VictimPlayerState->SubtractToKillStreak(Character->GetPhantomStrideKillStreakThreshold());
     }
 
 	if (ElimmedCharacter)
@@ -322,6 +327,19 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
         CharacterLeaving->Elim(true);
         BlasterGameState->Multicast_RemovePlayerLeft(PlayerLeaving);
         //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("PlayerLeftGame: PlayerLeaving is %s"), *PlayerLeaving->GetName()));
+        if (CharacterLeaving->HasAuthority())
+        {
+            UGameInstance* GameInstance = GetGameInstance();
+            if (GameInstance)
+            {
+                MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+                
+                if (MultiplayerSessionsSubsystem)
+                {
+                    MultiplayerSessionsSubsystem->DestroySession();
+                }
+            }
+        }
     }
 }
 

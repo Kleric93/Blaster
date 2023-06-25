@@ -33,6 +33,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Blaster/Weapon/Blade.h"
+#include "Components/AudioComponent.h"
+
 
 UCombatComponent::UCombatComponent()
 {
@@ -83,6 +85,26 @@ void UCombatComponent::BeginPlay()
 		{
 			InitializeCarriedAmmo();
 		}
+	}
+
+	if (BladeHum)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Before spawning sound, BladeHumComponent is: %s"), (BladeHumComponent ? *BladeHumComponent->GetName() : TEXT("nullptr")));
+		BladeHumComponent = UGameplayStatics::SpawnSoundAttached(
+			BladeHum,
+			Character->GetRootComponent(),
+			FName(),
+			Character->GetActorLocation(),
+			EAttachLocation::KeepWorldPosition,
+			false,
+			0.f,
+			1.f,
+			0.f,
+			BladeHumAttenuation,
+			(USoundConcurrency*)nullptr,
+			false
+		);
+		BladeHumComponent->SetVolumeMultiplier(0.f);
 	}
 }
 
@@ -772,9 +794,13 @@ void UCombatComponent::Server_PhantomStride_Implementation()
 void UCombatComponent::Multicast_PhantomStride_Implementation()
 {
 	ABlasterPlayerState* PS = Cast<ABlasterPlayerState>(Character->GetPlayerState());
-	PS->SubtractToKillStreak(5);
+	PS->SubtractToKillStreak(Character->GetPhantomStrideKillStreakThreshold());
 
 	Character->PlayPhantomStrideStartMontage();
+	Character->SetHealth(100.f);
+	Character->SetShield(100.f);
+	Character->UpdateHUDHealth();
+	Character->UpdateHUDShield();
 	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Character->GetController());
 	if (PC)
 	{
@@ -806,6 +832,7 @@ void UCombatComponent::Multicast_PhantomStride_Implementation()
 
 void UCombatComponent::SpawnBlade_Implementation()
 {
+	BladeHumComponent->SetVolumeMultiplier(1.f);
 
 	if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_PhantomBlade)
 	{
@@ -826,6 +853,8 @@ void UCombatComponent::SpawnBlade_Implementation()
 
 void UCombatComponent::Multicast_PhantomStrideFinishedAnim_Implementation()
 {
+	BladeHumComponent->SetVolumeMultiplier(0.f);
+
 	if (bFireButtonPressed == true) bFireButtonPressed = false;
 	bEndingPhantomStride = true;
 	Character->PlayPhantomStrideEndMontage();
@@ -838,7 +867,6 @@ void UCombatComponent::Multicast_PhantomStrideFinishedAnim_Implementation()
 
 void UCombatComponent::Multicast_PhantomStrideFinished_Implementation()
 {
-
 	ABlasterPlayerController* PC = Cast<ABlasterPlayerController>(Character->GetController());
 	if (PC)
 	{
@@ -1129,6 +1157,9 @@ void UCombatComponent::TraceForObjects()
 		CrosshairWorldDirection
 	);
 
+	FCollisionQueryParams TraceObjectsParams(FName(TEXT("TraceObjectsParams")), true, Character);
+	TraceObjectsParams.AddIgnoredActor(Character);
+
 	if (bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;
@@ -1136,7 +1167,7 @@ void UCombatComponent::TraceForObjects()
 		if (Character)
 		{
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
-			Start += CrosshairWorldDirection * (DistanceToCharacter + 500.f);
+			Start += CrosshairWorldDirection * (DistanceToCharacter /* + 500.f*/);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
@@ -1145,7 +1176,8 @@ void UCombatComponent::TraceForObjects()
 			HitResult,
 			Start,
 			End,
-			ECollisionChannel::ECC_GameTraceChannel3 // Common channel for both walls and widgets
+			ECollisionChannel::ECC_GameTraceChannel3, // Common channel for both walls and widgets
+			TraceObjectsParams
 		);
 
 		if (bHit)
@@ -1219,6 +1251,10 @@ void UCombatComponent::TraceForAimAssist()
 	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
+
+	FCollisionQueryParams TraceParams(FName(TEXT("AimAssistParams")), true, Character);
+	TraceParams.AddIgnoredActor(Character);
+
 	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
 		UGameplayStatics::GetPlayerController(this, 0),
 		CrosshairLocation,
@@ -1233,7 +1269,7 @@ void UCombatComponent::TraceForAimAssist()
 		if (Character)
 		{
 			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
-			Start += CrosshairWorldDirection * (DistanceToCharacter + AimAssistTraceStartLocation);
+			Start += CrosshairWorldDirection * (DistanceToCharacter /* + AimAssistTraceStartLocation*/);
 		}
 
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
@@ -1242,7 +1278,8 @@ void UCombatComponent::TraceForAimAssist()
 			HitResult,
 			Start,
 			End,
-			ECC_EngineTraceChannel4
+			ECC_EngineTraceChannel4,
+			TraceParams
 		);
 
 		if (bHit)
@@ -1677,4 +1714,32 @@ void UCombatComponent::MulticastStopProne_Implementation()
 }
 
 
+void UCombatComponent::Server_MeleeAttack_Implementation()
+{
+	Multicast_MeleeAttack();
+}
+
+void UCombatComponent::Multicast_MeleeAttack_Implementation()
+{
+	if (bIsUsingMelee == false)
+	{
+		bIsUsingMelee = true;
+		Character->PlayMeleeAttackMontage();
+
+		// Enable the collision and set response to overlap
+		Character->GetMeleeCollisionBox()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Character->GetMeleeCollisionBox()->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Overlap);
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(SlidingTimerHandle, this, &UCombatComponent::StopMelee, 0.5f, false);
+}
+
+void UCombatComponent::StopMelee()
+{
+	bIsUsingMelee = false;
+
+	// Disable the collision after attack
+	Character->GetMeleeCollisionBox()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Character->GetMeleeCollisionBox()->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Ignore);
+}
 

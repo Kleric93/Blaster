@@ -29,7 +29,7 @@ void FBlasterGameplayTags::AddAllTags(UGameplayTagsManager& Manager)
 	AddTag(InputTag_Reload, "InputTag.Reload", "Reload input.");
 	AddTag(InputTag_Grenade, "InputTag.Grenade", "Grenade input.");
 	AddTag(InputTag_PhantomStride, "InputTag.PhantomStride", "PhantomStride input.");
-
+	AddTag(InputTag_Melee, "InputTag.Melee", "Melee input.");
 }
 
 void FBlasterGameplayTags::AddTag(FGameplayTag& OutTag, const ANSICHAR* TagName, const ANSICHAR* TagComment)

@@ -3,7 +3,6 @@
 
 #include "BlasterCharacter.h"
 #include "Blaster/BlasterUserSettings.h"
-
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Blaster/BlasterEnhancedInputComponent.h"
@@ -73,6 +72,14 @@ ABlasterCharacter::ABlasterCharacter()
 	OverheadBoom->TargetArmLength = 600.f;
 	OverheadBoom->bUsePawnControlRotation = true;
 	OverheadBoom->bDoCollisionTest = false;
+
+	MeleeCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Melee Collision Box"));
+	MeleeCollisionBox->SetupAttachment(GetCapsuleComponent());
+	MeleeCollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	MeleeCollisionBox->SetCollisionObjectType(ECC_SkeletalMesh);
+	MeleeCollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	MeleeCollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Ignore);
+	MeleeCollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ABlasterCharacter::OnBeginOverlapMeleeBox);
 
 	OverheadWidgetBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Overhead Widget COllision Box"));
 	OverheadWidgetBox->SetupAttachment(GetCapsuleComponent());
@@ -419,6 +426,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetAimAssistSphereComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	OverheadWidgetBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Spawn Elim Bot
 	if (ElimBotEffect)
@@ -804,18 +812,13 @@ void ABlasterCharacter::CheckKillStreak()
 	{
 		int32 Killstreak = BlasterPlayerState->GetKillStreak();
 
-		bool bKillStreakConditions =
-			Killstreak == 5 ||
-			Killstreak == 10 ||
-			Killstreak == 15 ||
-			Killstreak == 20 ||
-			Killstreak == 25 ||
-			Killstreak == 30;
-
-		if (bKillStreakConditions)
+		if (Killstreak >= PhantomStrideKillstreakThreshold && Killstreak <= PhantomStrideKillstreakThreshold * 100)
 		{
-			BlasterPlayerController->EventPhantomStrideReady();
-			bIsPhantomStrideTriggered = true;
+			if (Killstreak % PhantomStrideKillstreakThreshold == 0)
+			{
+				BlasterPlayerController->EventPhantomStrideReady();
+				bIsPhantomStrideTriggered = true;
+			}
 		}
 	}
 }
@@ -1076,6 +1079,13 @@ void ABlasterCharacter::PhantomStrideButtonPressed()
 	}
 }
 
+void ABlasterCharacter::MeleeButtonPressed()
+{
+	if (Combat == nullptr || Combat->bAiming || Combat->bIsProne || Combat->CombatState != ECombatState::ECS_Unoccupied || Combat->bIsSliding) return;
+
+	Combat->Server_MeleeAttack();
+}
+
 #pragma endregion EnhancedInput
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
@@ -1125,6 +1135,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Reload, ETriggerEvent::Triggered, this, &ABlasterCharacter::ReloadButtonPressed);
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Grenade, ETriggerEvent::Triggered, this, &ABlasterCharacter::GrenadeButtonPressed);
 	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_PhantomStride, ETriggerEvent::Triggered, this, &ABlasterCharacter::PhantomStrideButtonPressed);
+	EnhancedInputComponent->BindActionByTag(InputConfig, GameplayTags.InputTag_Melee, ETriggerEvent::Triggered, this, &ABlasterCharacter::MeleeButtonPressed);
 }
 
 void ABlasterCharacter::PostInitializeComponents()
@@ -1313,6 +1324,14 @@ void ABlasterCharacter::PlayPhantomStrideAttackMontage()
 	}
 }
 
+void ABlasterCharacter::PlayMeleeAttackMontage()
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && MeleeAttackMontage)
+	{
+		AnimInstance->Montage_Play(MeleeAttackMontage);
+	}
+}
 
 void ABlasterCharacter::PlayHitReactMontage()
 {
@@ -1330,6 +1349,7 @@ void ABlasterCharacter::PlayHitReactMontage()
 
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+	if (Combat->CombatState == ECombatState::ECS_PhantomStride) return;
 	BlasterGameMode = BlasterGameMode == nullptr ? GetWorld()->GetAuthGameMode<ABlasterGameMode>() : BlasterGameMode;
 	if (bElimmed || BlasterGameMode == nullptr) return;
 	Damage = BlasterGameMode->CalculateDamage(InstigatorController, Controller, Damage);
@@ -1925,3 +1945,42 @@ void ABlasterCharacter::PlayCameraShake(TSubclassOf<class UCameraShakeBase> Came
 {
 	UGameplayStatics::PlayWorldCameraShake(this, CameraShake, CameraLocation, 0.f, 400.f);
 }
+
+void ABlasterCharacter::OnBeginOverlapMeleeBox(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor != nullptr && OtherActor != this && OtherComp != nullptr)
+	{
+		// Check if the other actor is a character
+		ABlasterCharacter* OtherCharacter = Cast<ABlasterCharacter>(OtherActor);
+
+		if (OtherCharacter != nullptr && OtherCharacter->GetPlayerState() != nullptr)
+		{
+			ABlasterPlayerController* InstigatorController = Cast<ABlasterPlayerController>(OtherCharacter->GetPlayerState()->GetPlayerController());
+
+			if (InstigatorController != nullptr)
+			{
+				UGameplayStatics::ApplyDamage(
+					OtherCharacter,
+					MeleeDamage,
+					this->GetController(),
+					this->GetController(),  // Pass the controller of the attacking player
+					UDamageType::StaticClass()
+				);
+
+				// Play hit sound
+				UGameplayStatics::PlaySoundAtLocation(this, MeleeAttackHitSound, GetActorLocation());
+
+				UE_LOG(LogTemp, Warning, TEXT("Damage applied to: %s"), *OtherCharacter->GetName());
+
+				// Exit the function to prevent the miss sound from being played
+				return;
+			}
+		}
+	}
+
+	// Play attack sound if the function hasn't returned yet
+	UGameplayStatics::PlaySoundAtLocation(this, MeleeAttackSound, GetActorLocation());
+}
+
+
+

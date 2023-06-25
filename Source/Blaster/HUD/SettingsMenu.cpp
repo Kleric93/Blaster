@@ -133,22 +133,22 @@ void USettingsMenu::MenuSetup()
 
 	if (MasterVolumeSpinBox)
 	{
-		MasterVolumeSpinBox->SetValue(CurrentMasterVolume);
+		//MasterVolumeSpinBox->SetValue(CurrentMasterVolume);
 		MasterVolumeSpinBox->OnValueChanged.AddDynamic(this, &USettingsMenu::OnMasterSliderValueChanged);
 	}
 	if (MusicVolumeSpinBox)
 	{
-		MusicVolumeSpinBox->SetValue(CurrentMusicVolume);
+		//MusicVolumeSpinBox->SetValue(CurrentMusicVolume);
 		MusicVolumeSpinBox->OnValueChanged.AddDynamic(this, &USettingsMenu::OnMusicSliderValueChanged);
 	}
 	if (SFXVolumeSpinBox)
 	{
-		SFXVolumeSpinBox->SetValue(CurrentSFXVolume);
+		//SFXVolumeSpinBox->SetValue(CurrentSFXVolume);
 		SFXVolumeSpinBox->OnValueChanged.AddDynamic(this, &USettingsMenu::OnSFXSliderValueChanged);
 	}
 	if (VoiceVolumeSpinBox)
 	{
-		VoiceVolumeSpinBox->SetValue(CurrentVoiceVolume);
+		//VoiceVolumeSpinBox->SetValue(CurrentVoiceVolume);
 		VoiceVolumeSpinBox->OnValueChanged.AddDynamic(this, &USettingsMenu::OnVoiceSliderValueChanged);
 	}
 	if (Character == nullptr) return;
